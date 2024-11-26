@@ -18,6 +18,10 @@
   cursor: default;
 }
 
+input.login::-webkit-contacts-auto-fill-button {
+  background-color: hsl(var(--login-foreground)) !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

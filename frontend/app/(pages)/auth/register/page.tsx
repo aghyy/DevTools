@@ -87,7 +87,7 @@ export default function Register() {
               onBlur={() => handleBlur('firstName')}
               onFocus={() => handleFocus('firstName')}
               required
-              className={`w-full p-3 border bg-login-card-background ${touchedFields.firstName && !firstName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
+              className={`login w-full p-3 border bg-login-card-background ${touchedFields.firstName && !firstName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
             />
 
             <input
@@ -99,7 +99,7 @@ export default function Register() {
               onBlur={() => handleBlur('lastName')}
               onFocus={() => handleFocus('lastName')}
               required
-              className={`w-full p-3 border bg-login-card-background ${touchedFields.lastName && !lastName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
+              className={`login w-full p-3 border bg-login-card-background ${touchedFields.lastName && !lastName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
             />
           </div>
 
@@ -124,7 +124,7 @@ export default function Register() {
             onBlur={() => handleBlur('email')}
             onFocus={() => handleFocus('email')}
             required
-            className={`w-full p-3 border bg-login-card-background ${touchedFields.email && (!email || !validateEmail(email)) ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
+            className={`login w-full p-3 border bg-login-card-background ${touchedFields.email && (!email || !validateEmail(email)) ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
           />
 
           <div className="relative">
