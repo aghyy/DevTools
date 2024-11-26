@@ -14,6 +14,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <>
       {isAuthPage ? (
         <main className="w-full">
+          <ThemeSwitcher />
           {children}
         </main>
       ) : (

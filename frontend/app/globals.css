@@ -54,6 +54,19 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --secondary-hover: 240 4.8% 90%;
+    --login-background: 210, 12%, 96%;
+    --login-card-background: 0, 0%, 100%;
+    --login-title-foreground: 210, 13%, 23%;
+    --login-border: 210, 11%, 85%;
+    --login-focus: 209, 94%, 56%;
+    --login-show-password-icon: 210, 4%, 44%;
+    --login-show-password-icon-hover: 210, 6%, 31%;
+    --login-foreground: 210, 7%, 39%;
+    --login-accent: 213, 85%, 57%;
+    --login-accent-hover: 213, 83%, 53%;
+    --login-disabled: 210, 8%, 68%;
+    --login-error-foreground: 0, 89%, 58%;
+    --login-success-foreground: 150, 60%, 50%;
   }
 
   .dark {
@@ -90,6 +103,19 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --secondary-hover: 240 3.7% 20%;
+    --login-background: 240 10% 3.9%;
+    --login-card-background: 240 5.9% 10%;
+    --login-title-foreground: 210, 15%, 85%;
+    --login-border: 210, 15%, 35%;
+    --login-focus: 209, 85%, 45%;
+    --login-show-password-icon: 210, 6%, 60%;
+    --login-show-password-icon-hover: 210, 8%, 40%;
+    --login-foreground: 210, 10%, 80%;
+    --login-accent: 213, 85%, 45%;
+    --login-accent-hover: 213, 83%, 40%;
+    --login-disabled: 210, 5%, 30%;
+    --login-error-foreground: 0, 85%, 50%;
+    --login-success-foreground: 150, 60%, 50%;
   }
 
   * {

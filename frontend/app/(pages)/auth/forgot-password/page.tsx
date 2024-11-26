@@ -27,11 +27,11 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+    <div className="flex justify-center items-center min-h-screen bg-login-background">
+      <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg">
         <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
           <img className='size-16' src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
-          <h1 className='text-2xl font-semibold text-center text-gray-800 my-2'>DevTools</h1>
+          <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -43,25 +43,25 @@ export default function ForgotPassword() {
               placeholder="Enter your email"
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-login-border bg-login-card-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
+            className="w-full py-3 bg-login-accent text-white rounded-md font-medium hover:bg-login-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
             {loading ? 'Sending reset link...' : 'Send Reset Link'}
           </button>
         </form>
 
-        {error && <p className="mt-4 text-red-500 text-sm text-center">{error}</p>}
-        {successMessage && <p className="mt-4 text-green-500 text-sm text-center">{successMessage}</p>}
+        {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
+        {successMessage && <p className="mt-4 text-login-success-foreground text-sm text-center">{successMessage}</p>}
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-login-foreground">
             Remember your password?{' '}
-            <a href="/auth/login" className="text-blue-600 hover:underline">
+            <a href="/auth/login" className="text-login-accent hover:underline">
               Log in here
             </a>
           </p>

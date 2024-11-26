@@ -69,11 +69,11 @@ export default function Register() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg">
+    <div className="flex justify-center items-center min-h-screen bg-login-background">
+      <div className="w-full max-w-lg bg-login-card-background p-8 rounded-lg shadow-lg">
         <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
           <img className='size-16' src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
-          <h1 className='text-2xl font-semibold text-center text-gray-800 my-2'>DevTools</h1>
+          <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -87,7 +87,7 @@ export default function Register() {
               onBlur={() => handleBlur('firstName')}
               onFocus={() => handleFocus('firstName')}
               required
-              className={`w-full p-3 border ${touchedFields.firstName && !firstName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full p-3 border bg-login-card-background ${touchedFields.firstName && !firstName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
             />
 
             <input
@@ -99,7 +99,7 @@ export default function Register() {
               onBlur={() => handleBlur('lastName')}
               onFocus={() => handleFocus('lastName')}
               required
-              className={`w-full p-3 border ${touchedFields.lastName && !lastName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full p-3 border bg-login-card-background ${touchedFields.lastName && !lastName ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
             />
           </div>
 
@@ -112,7 +112,7 @@ export default function Register() {
             onBlur={() => handleBlur('username')}
             onFocus={() => handleFocus('username')}
             required
-            className={`w-full p-3 border ${touchedFields.username && !username ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full p-3 border bg-login-card-background ${touchedFields.username && !username ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
           />
 
           <input
@@ -124,7 +124,7 @@ export default function Register() {
             onBlur={() => handleBlur('email')}
             onFocus={() => handleFocus('email')}
             required
-            className={`w-full p-3 border ${touchedFields.email && (!email || !validateEmail(email)) ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full p-3 border bg-login-card-background ${touchedFields.email && (!email || !validateEmail(email)) ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
           />
 
           <div className="relative">
@@ -137,12 +137,12 @@ export default function Register() {
               onBlur={() => handleBlur('password')}
               onFocus={() => handleFocus('password')}
               required
-              className={`w-full p-3 border ${touchedFields.password && !password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
+              className={`w-full p-3 border bg-login-card-background ${touchedFields.password && !password ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus pr-10`}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 transform -translate-y-1/2 right-3 text-gray-500"
+              className="absolute inset-y-0 right-3 flex items-center text-login-show-password-icon hover:text-login-show-password-icon-hover focus:outline-none"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -158,41 +158,41 @@ export default function Register() {
               onBlur={() => handleBlur('confirmPassword')}
               onFocus={() => handleFocus('confirmPassword')}
               required
-              className={`w-full p-3 border ${touchedFields.confirmPassword && !confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
+              className={`w-full p-3 border bg-login-card-background ${touchedFields.confirmPassword && !confirmPassword ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus pr-10`}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-1/2 transform -translate-y-1/2 right-3 text-gray-500"
+              className="absolute inset-y-0 right-3 flex items-center text-login-show-password-icon hover:text-login-show-password-icon-hover focus:outline-none"
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
           {!validatePassword() && touchedFields.confirmPassword && (
-            <p className="text-sm text-red-500 mt-2">Passwords do not match</p>
+            <p className="text-sm text-login-error-foreground mt-2">Passwords do not match</p>
           )}
 
           <button
             type="submit"
             disabled={loading || !isFormValid()}
-            className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
+            className="w-full py-3 bg-login-accent text-white rounded-md font-medium hover:bg-login-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
 
-        {error && <p className="mt-4 text-red-500 text-sm text-center">{error}</p>}
+        {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-login-foreground">
             Already have an account?{' '}
-            <a href="/auth/login" className="text-blue-600 hover:underline">
+            <a href="/auth/login" className="text-login-accent hover:underline">
               Log in
             </a>
           </p>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
