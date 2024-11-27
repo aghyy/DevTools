@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const db = require('./models');
 const userRoutes = require('./routes/userRoutes');
+const md5Routes = require('./routes/md5Routes');
 
 const PORT = process.env.PORT || 5039;
 const app = express();
@@ -25,7 +26,6 @@ db.sequelize.sync({ force: false }).then(() => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/tools', md5Routes);
 
 app.listen(PORT, () => console.log(`Server is connected on ${PORT}`));
-
-console.log("Secret Key:", process.env.secretKey);

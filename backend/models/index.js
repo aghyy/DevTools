@@ -3,7 +3,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 // Set up Sequelize connection
 const sequelize = new Sequelize("postgres://postgres:postgres@localhost:5432/devtools", {
   dialect: "postgres",
-  logging: console.log, // Enable query logging for debugging
+  logging: false, // Enable query logging for debugging
 });
 
 // Test the database connection
