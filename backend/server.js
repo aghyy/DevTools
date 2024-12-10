@@ -1,11 +1,9 @@
 const express = require('express');
-const sequelize = require('sequelize');
-const dotenv = require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const db = require('./models');
 const userRoutes = require('./routes/userRoutes');
-const md5Routes = require('./routes/md5Routes');
+const toolRoutes = require('./routes/toolRoutes');
 
 const PORT = process.env.PORT || 5039;
 const app = express();
@@ -26,6 +24,6 @@ db.sequelize.sync({ force: false }).then(() => {
 });
 
 app.use('/api/users', userRoutes);
-app.use('/api/tools', md5Routes);
+app.use('/api/tools', toolRoutes);
 
 app.listen(PORT, () => console.log(`Server is connected on ${PORT}`));

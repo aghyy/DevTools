@@ -22,8 +22,6 @@ export default function MD5() {
   const [encodedText, setEncodedText] = useState("");
   const [error, setError] = useState("");
 
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-
   const handleClear = () => {
     setDecodedText("");
     setEncodedText("");
@@ -31,58 +29,58 @@ export default function MD5() {
   };
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text).then(
-      () => alert("Copied to clipboard!"),
-      () => alert("Failed to copy. Please try again.")
-    );
+    navigator.clipboard.writeText(text);
   };
 
   const handlePaste = (setter: React.Dispatch<React.SetStateAction<string>>) => {
     navigator.clipboard.readText().then(
-      (text) => setter(text),
-      () => alert("Failed to paste. Please try again.")
+      (text) => setter(text)
     );
   };
 
   const fetchDecryptedText = async (hash: string) => {
     if (!hash) {
-      console.log("Hash is empty. Skipping decryption.");
       return;
     }
 
     try {
       const response = await apiWithoutCredentials.get(`/api/tools/decrypt-md5?hash=${hash}`);
-      console.log('Decrypted Text:', response.data.decryptedText);
+
       if (response.data.decryptedText) {
         setDecodedText(response.data.decryptedText);
       } else {
-        setError("Failed to decrypt hash: hash not found in dictionary.");
+        setError("Hash not found in dictionary.");
       }
     } catch (err) {
       setError("An error occurred while trying to decrypt the hash.");
     }
   };
 
-  // Debounced MD5 encryption
-  useEffect(() => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+  const addWordToDictionary = async (word: string) => {
+    try {
+      await apiWithoutCredentials.post("/api/tools/add-to-wordlist", { word });
+    } catch (err) {
+      console.error("Failed to add word to dictionary.");
+    }
+  }
 
-    debounceTimeout.current = setTimeout(() => {
-      if (!decodedText) {
-        setEncodedText("");
-        return;
-      }
-      setEncodedText(CryptoJS.MD5(decodedText).toString(CryptoJS.enc.Hex));
-    }, 500);
-  }, [decodedText]);
+  const encryptText = (text: string) => {
+    setEncodedText(CryptoJS.MD5(text).toString(CryptoJS.enc.Hex));
 
-  // useEffect(() => {
-  //   if (encodedText) {
-  //     fetchDecryptedText(encodedText);
-  //   } else {
-  //     setDecodedText("");
-  //   }
-  // }, [encodedText]);
+    if (!text.includes('\n') && text !== '') {
+      addWordToDictionary(text);
+    }
+  }
+
+  const handleChangeEncodedText = (text: string) => {
+    setEncodedText(text);
+    setDecodedText("");
+  }
+
+  const handleChangeDecodedText = (text: string) => {
+    setDecodedText(text);
+    setEncodedText("");
+  }
 
   return (
     <div className="h-full w-full">
@@ -117,7 +115,7 @@ export default function MD5() {
             label="Plain Text (Decoded)"
             placeholder="Type or paste your plain text here..."
             value={decodedText}
-            onChange={setDecodedText}
+            onChange={handleChangeDecodedText}
             onCopy={() => handleCopy(decodedText)}
             onPaste={() => handlePaste(setDecodedText)}
           />
@@ -127,11 +125,28 @@ export default function MD5() {
             label="MD5 Hash (Encoded)"
             placeholder="Type or paste your MD5 hash here..."
             value={encodedText}
-            onChange={setEncodedText}
+            onChange={handleChangeEncodedText}
             onCopy={() => handleCopy(encodedText)}
             onPaste={() => handlePaste(setEncodedText)}
           />
         </div>
+
+        <div className="flex gap-5 justify-start">
+          <div
+            className="flex flex-1 justify-center items-center bg-blue-accent text-gray-200 px-6 py-2 font-medium rounded-lg shadow cursor-pointer hover:bg-blue-accent-hover"
+            onClick={() => encryptText(decodedText)}
+          >
+            Encrypt
+          </div>
+          <div
+            className="flex flex-1 justify-center items-center bg-blue-accent text-gray-200 px-6 py-2 font-medium rounded-lg shadow cursor-pointer hover:bg-blue-accent-hover"
+            onClick={() => fetchDecryptedText(encodedText)}
+          >
+            Decrypt
+          </div>
+        </div>
+
+        <br />
 
         {/* Error Message */}
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}

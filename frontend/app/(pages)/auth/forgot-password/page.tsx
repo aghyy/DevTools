@@ -49,7 +49,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-login-accent text-white rounded-md font-medium hover:bg-login-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
+            className="w-full py-3 bg-blue-accent text-white rounded-md font-medium hover:bg-blue-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
             {loading ? 'Sending reset link...' : 'Send Reset Link'}
           </button>
@@ -61,7 +61,7 @@ export default function ForgotPassword() {
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">
             Remember your password?{' '}
-            <a href="/auth/login" className="text-login-accent hover:underline">
+            <a href="/auth/login" className="text-blue-accent hover:underline">
               Log in here
             </a>
           </p>

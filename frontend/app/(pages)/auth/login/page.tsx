@@ -72,14 +72,14 @@ export default function Login() {
             </div>
           </div>
           <p className="text-sm text-login-foreground mt-2">
-            <a href="/auth/forgot-password" className="text-login-accent text-right hover:underline">
+            <a href="/auth/forgot-password" className="text-blue-accent text-right hover:underline">
               Forgot Password?
             </a>
           </p>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-login-accent text-white rounded-md font-medium hover:bg-login-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
+            className="w-full py-3 bg-blue-accent text-white rounded-md font-medium hover:bg-blue-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
             {loading ? 'Logging in...' : 'Log in'}
           </button>
@@ -88,7 +88,7 @@ export default function Login() {
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">
             Don't have an account?{' '}
-            <a href="/auth/register" className="text-login-accent hover:underline">
+            <a href="/auth/register" className="text-blue-accent hover:underline">
               Register here
             </a>
           </p>
