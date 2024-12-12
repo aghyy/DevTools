@@ -43,8 +43,8 @@ export function AppSidebar() {
     tools: true,
   })
 
-  const [userData, setUserData] = useState({ username: "", firstName: "", lastName: "", email: "", avatar: "" })
   const router = useRouter()
+  const [userData, setUserData] = useState({ username: "", firstName: "", lastName: "", email: "", avatar: "" })
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,10 +52,10 @@ export function AppSidebar() {
         const user = await getUser()
         if (user) {
           setUserData({
-            username: user.username || "Guest",
-            firstName: user.firstName || "User",
-            lastName: user.lastName || "User",
-            email: user.email || "N/A",
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
             avatar: `/images/avatar/${user.id}.png`,
           })
         }
@@ -81,12 +81,8 @@ export function AppSidebar() {
     setOpenStates(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const routeToSettings = () => {
-    router.push("/settings")
-  }
-
-  const routeToAccount = () => {
-    router.push("/settings/account")
+  const routeTo = (path: string) => {
+    router.push(path);
   }
 
   return (
@@ -107,10 +103,10 @@ export function AppSidebar() {
               {sidebarItems.general.map(({ title, url, icon }) => (
                 <SidebarMenuItem key={title}>
                   <SidebarMenuButton asChild>
-                    <a href={url}>
+                    <div className="cursor-default" onClick={() => routeTo(url)}>
                       {renderIcon(icon)}
                       <span>{title}</span>
-                    </a>
+                    </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -121,11 +117,11 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton asChild>
-                          <a href="#">
+                          <div className="cursor-default">
                             {renderIcon(icon)}
                             <span>{title}</span>
                             {openStates[key as keyof typeof openStates] ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
-                          </a>
+                          </div>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
@@ -133,10 +129,10 @@ export function AppSidebar() {
                           {items.map(({ title, url, icon }) => (
                             <SidebarMenuSubItem key={title}>
                               <SidebarMenuButton asChild>
-                                <a href={url}>
+                                <div className="cursor-default" onClick={() => routeTo(url)}>
                                   {renderIcon(icon)}
                                   <span>{title}</span>
-                                </a>
+                                </div>
                               </SidebarMenuButton>
                             </SidebarMenuSubItem>
                           ))}
@@ -168,11 +164,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="right" className="w-[--radix-popper-anchor-width] mb-2">
-                <DropdownMenuItem onClick={routeToSettings}>
+                <DropdownMenuItem onClick={() => routeTo('/settings')}>
                   <Settings />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={routeToAccount}>
+                <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
                   <CircleUserRound />
                   <span>Account</span>
                 </DropdownMenuItem>

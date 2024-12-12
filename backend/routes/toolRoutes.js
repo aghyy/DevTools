@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { decryptMD5, addToWordlist } = require('../controllers/toolController');
+const { decryptMD5, decryptSHA1, addToWordlist } = require('../controllers/toolController');
 
 router.get('/decrypt-md5', decryptMD5);
+router.get('/decrypt-sha1', decryptSHA1);
 router.post('/add-to-wordlist', addToWordlist);
 
 module.exports = router;

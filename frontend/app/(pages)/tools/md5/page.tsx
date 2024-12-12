@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { TopSpacing } from "@/components/top-spacing";
-import { TextAreaWithActions } from "@/components/text-area-with-actions";
-import { Trash } from "lucide-react";
-import { useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
 import CryptoJS from "crypto-js";
 
+import { Trash } from "lucide-react";
+
+import { TopSpacing } from "@/components/top-spacing";
+import { TextAreaWithActions } from "@/components/text-area-with-actions";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,25 +20,23 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+import { handleCopy, handlePaste } from '@/utils/clipboard';
+
 export default function MD5() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
   const [error, setError] = useState("");
 
+  const router = useRouter();
+
+  const routeTo = (path: string) => {
+    router.push(path);
+  }
+
   const handleClear = () => {
     setDecodedText("");
     setEncodedText("");
     setError("");
-  };
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const handlePaste = (setter: React.Dispatch<React.SetStateAction<string>>) => {
-    navigator.clipboard.readText().then(
-      (text) => setter(text)
-    );
   };
 
   const fetchDecryptedText = async (hash: string) => {
@@ -88,11 +89,11 @@ export default function MD5() {
         <Breadcrumb className="absolute left-20 top-[22px] w-max">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/dashboard')}>Dashboard</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/tools">Tools</BreadcrumbLink>
+              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/tools')}>Tools</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -105,63 +106,64 @@ export default function MD5() {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold mt-5 text-center">MD5 Encoder/Decoder</h1>
+      <h1 className="text-3xl font-bold my-3 text-center">MD5 Encoder/Decoder</h1>
 
       {/* Content */}
-      <div className="mx-12 mt-12 mb-24 flex flex-col gap-5">
+      <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
         <div className="flex flex-col md:flex-row gap-6">
-          <TextAreaWithActions
-            id="decoded-text"
-            label="Plain Text (Decoded)"
-            placeholder="Type or paste your plain text here..."
-            value={decodedText}
-            onChange={handleChangeDecodedText}
-            onCopy={() => handleCopy(decodedText)}
-            onPaste={() => handlePaste(setDecodedText)}
-          />
+          <Card className="flex flex-col flex-1 p-6 gap-6">
+            <TextAreaWithActions
+              id="decoded-text"
+              label="Plain Text (Decoded)"
+              placeholder="Type or paste your plain text here..."
+              value={decodedText}
+              onChange={handleChangeDecodedText}
+              onCopy={() => handleCopy(decodedText)}
+              onPaste={() => handlePaste(setDecodedText)}
+            />
 
-          <TextAreaWithActions
-            id="encoded-text"
-            label="MD5 Hash (Encoded)"
-            placeholder="Type or paste your MD5 hash here..."
-            value={encodedText}
-            onChange={handleChangeEncodedText}
-            onCopy={() => handleCopy(encodedText)}
-            onPaste={() => handlePaste(setEncodedText)}
-          />
+            <Button
+              className="flex-1"
+              onClick={() => encryptText(decodedText)}
+            >
+              Encrypt
+            </Button>
+          </Card>
+
+          <Card className="flex flex-col flex-1 p-6 gap-6">
+            <TextAreaWithActions
+              id="encoded-text"
+              label="MD5 Hash (Encoded)"
+              placeholder="Type or paste your MD5 hash here..."
+              value={encodedText}
+              onChange={handleChangeEncodedText}
+              onCopy={() => handleCopy(encodedText)}
+              onPaste={() => handlePaste(setEncodedText)}
+            />
+
+            <Button
+              className="flex-1"
+              onClick={() => fetchDecryptedText(encodedText)}
+            >
+              Decrypt
+            </Button>
+          </Card>
         </div>
-
-        <div className="flex gap-5 justify-start">
-          <div
-            className="flex flex-1 justify-center items-center bg-blue-accent text-gray-200 px-6 py-2 font-medium rounded-lg shadow cursor-pointer hover:bg-blue-accent-hover"
-            onClick={() => encryptText(decodedText)}
-          >
-            Encrypt
-          </div>
-          <div
-            className="flex flex-1 justify-center items-center bg-blue-accent text-gray-200 px-6 py-2 font-medium rounded-lg shadow cursor-pointer hover:bg-blue-accent-hover"
-            onClick={() => fetchDecryptedText(encodedText)}
-          >
-            Decrypt
-          </div>
-        </div>
-
-        <br />
 
         {/* Error Message */}
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
 
         {/* Clear Button */}
         <div className="flex gap-5 justify-start">
-          <div
+          <Button
             onClick={handleClear}
-            className="w-full flex items-center justify-center gap-2 px-6 py-2 bg-red-600 text-gray-200 font-medium rounded-lg shadow hover:bg-red-700 cursor-pointer"
+            className="w-full bg-white text-red-600 dark:text-red-600 border border-red-600 dark:border-none hover:bg-red-300/5"
           >
             <Trash className="h-5 w-5" />
             Clear All
-          </div>
+          </Button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

@@ -1,5 +1,8 @@
-import { TopSpacing } from "@/components/top-spacing";
+"use client";
 
+import { useRouter } from "next/navigation";
+
+import { TopSpacing } from "@/components/top-spacing";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,22 +12,24 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-export default function About() {
+export default function Tools() {
+  const router = useRouter();
+  
+  const routeTo = (path: string) => {
+    router.push(path);
+  }
+
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
         <Breadcrumb className="absolute left-20 top-[22px] w-max">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/dashboard')}>Dashboard</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/settings">Settings</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>About</BreadcrumbPage>
+              <BreadcrumbPage>Tools</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -33,7 +38,7 @@ export default function About() {
       <TopSpacing />
 
       <div className="mx-12 mb-24">
-        
+
       </div>
     </div>
   );
