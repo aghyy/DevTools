@@ -2,8 +2,6 @@
 backend/.env
 backend/package-lock.json
 backend/node_modules
-backend/dictionaries/crackstation.txt
-backend/utils/crackstation.txt
 frontend/node_modules
 frontend/.env
 frontend/.next
