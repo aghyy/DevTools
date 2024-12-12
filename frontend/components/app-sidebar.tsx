@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Home, Library, GraduationCap, Book, Code, Hammer, Binary, Hash, Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut } from "lucide-react"
+import { Home, Library, GraduationCap, Book, Code, Hammer, Binary, Hash, Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Braces, Waypoints, Link } from "lucide-react"
 import { IoLockClosedOutline } from "react-icons/io5";
 import { logout as authLogout, getUser } from "@/services/auth"
 
@@ -22,9 +22,11 @@ const sidebarItems = {
   tools: {
     title: "Tools", icon: Hammer, items: [
       { title: "Base64", url: "/tools/base64", icon: Binary },
-      { title: "MD5 Hash", url: "/tools/md5", icon: Hash },
-      { title: "SHA1 Hash", url: "/tools/sha1", icon: Hash },
+      { title: "Hash", url: "/tools/hash", icon: Hash },
       { title: "Steganography", url: "/tools/steganography", icon: IoLockClosedOutline },
+      { title: "URL Shortener", url: "/tools/url-shortener", icon: Link },
+      { title: "JSON", url: "/tools/json", icon: Braces },
+      { title: "Proxy", url: "/tools/proxy", icon: Waypoints },
     ]
   },
 }

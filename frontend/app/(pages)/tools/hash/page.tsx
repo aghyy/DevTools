@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
 import CryptoJS from "crypto-js";
@@ -19,13 +19,15 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 
-export default function SHA1() {
+export default function Hash() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
   const [error, setError] = useState("");
+  const [algorithm, setAlgorithm] = useState("md5");
 
   const router = useRouter();
 
@@ -45,7 +47,7 @@ export default function SHA1() {
     }
 
     try {
-      const response = await apiWithoutCredentials.get(`/api/tools/decrypt-sha1?hash=${hash}`);
+      const response = await apiWithoutCredentials.get(`/api/tools/decrypt-${algorithm}?hash=${hash}`);
 
       if (response.data.decryptedText) {
         setDecodedText(response.data.decryptedText);
@@ -66,7 +68,11 @@ export default function SHA1() {
   }
 
   const encryptText = (text: string) => {
-    setEncodedText(CryptoJS.SHA1(text).toString(CryptoJS.enc.Hex));
+    if (algorithm === 'sha1') {
+      setEncodedText(CryptoJS.SHA1(text).toString(CryptoJS.enc.Hex));
+    } else if (algorithm === 'md5') {
+      setEncodedText(CryptoJS.MD5(text).toString(CryptoJS.enc.Hex));
+    }
 
     if (!text.includes('\n') && text !== '') {
       addWordToDictionary(text);
@@ -76,6 +82,7 @@ export default function SHA1() {
   const handleChangeEncodedText = (text: string) => {
     setEncodedText(text);
     setDecodedText("");
+    setError("");
   }
 
   const handleChangeDecodedText = (text: string) => {
@@ -83,21 +90,21 @@ export default function SHA1() {
     setEncodedText("");
   }
 
+  useEffect(() => {
+    setError("");
+  }, [algorithm]);
+
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
         <Breadcrumb className="absolute left-20 top-[22px] w-max">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/dashboard')}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
               <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/tools')}>Tools</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>SHA1</BreadcrumbPage>
+              <BreadcrumbPage>Hash</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -106,10 +113,24 @@ export default function SHA1() {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">SHA1 Encoder/Decoder</h1>
+      <h1 className="text-3xl font-bold my-3 text-center">Hash Encrypt/Decrypt</h1>
 
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
+
+        <div className="flex flex-col gap-4">
+          {/* <label htmlFor="algorithm" className="text-lg font-semibold">Algorithm</label> */}
+          <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>
+            <SelectTrigger className="w-1/4 p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500">
+              <span>Select Algorithm</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="md5">MD5</SelectItem>
+              <SelectItem value="sha1">SHA1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex flex-col md:flex-row gap-6">
           <Card className="flex flex-col flex-1 p-6 gap-6">
             <TextAreaWithActions
@@ -133,8 +154,8 @@ export default function SHA1() {
           <Card className="flex flex-col flex-1 p-6 gap-6">
             <TextAreaWithActions
               id="encoded-text"
-              label="SHA1 Hash (Encoded)"
-              placeholder="Type or paste your SHA1 hash here..."
+              label={`${algorithm.toUpperCase()} Hash (Encoded)`}
+              placeholder={`Type or paste your ${algorithm.toUpperCase()} hash here...`}
               value={encodedText}
               onChange={handleChangeEncodedText}
               onCopy={() => handleCopy(encodedText)}

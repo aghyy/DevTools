@@ -25,7 +25,7 @@ export default function Base64() {
   const [encodedText, setEncodedText] = useState("");
 
   const router = useRouter();
-  
+
   const routeTo = (path: string) => {
     router.push(path);
   }
@@ -69,10 +69,6 @@ export default function Base64() {
       <div className="relative size-0">
         <Breadcrumb className="absolute left-20 top-[22px] w-max">
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/dashboard')}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/tools')}>Tools</BreadcrumbLink>
             </BreadcrumbItem>

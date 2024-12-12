@@ -331,10 +331,6 @@ const Steganography: React.FC = () => {
         <Breadcrumb className="absolute left-20 top-[22px] w-max">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/dashboard')}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
               <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/tools')}>Tools</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
