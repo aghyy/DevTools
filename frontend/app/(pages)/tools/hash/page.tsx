@@ -42,7 +42,8 @@ export default function Hash() {
   };
 
   const fetchDecryptedText = async (hash: string) => {
-    if (!hash) {
+    if (!checkIfHash(hash, algorithm)) {
+      setError("Invalid hash format.");
       return;
     }
 
@@ -90,6 +91,22 @@ export default function Hash() {
     setEncodedText("");
   }
 
+  const checkIfHash = (value: string, algorithm: string): boolean => {
+    const hashPatterns: Record<string, RegExp> = {
+      md5: /^[a-f0-9]{32}$/,
+      sha1: /^[a-f0-9]{40}$/,
+      sha256: /^[a-f0-9]{64}$/,
+      sha512: /^[a-f0-9]{128}$/
+    };
+
+    const pattern = hashPatterns[algorithm.toLowerCase()];
+    if (!pattern) {
+      throw new Error(`Unsupported algorithm: ${algorithm}`);
+    }
+
+    return pattern.test(value);
+  };
+
   useEffect(() => {
     setError("");
   }, [algorithm]);
@@ -122,7 +139,7 @@ export default function Hash() {
           {/* <label htmlFor="algorithm" className="text-lg font-semibold">Algorithm</label> */}
           <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>
             <SelectTrigger className="w-1/4 p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500">
-              <span>Select Algorithm</span>
+              <span>{algorithm.toUpperCase()}</span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="md5">MD5</SelectItem>
@@ -178,7 +195,8 @@ export default function Hash() {
         <div className="flex gap-5 justify-start">
           <Button
             onClick={handleClear}
-            className="w-full bg-white text-red-600 dark:text-red-600 border border-red-600 dark:border-none hover:bg-red-300/5"
+            variant={"destructive"}
+            className="w-full"
           >
             <Trash className="h-5 w-5" />
             Clear All

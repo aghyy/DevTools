@@ -117,7 +117,8 @@ export default function Base64() {
         <div className="flex gap-5 justify-start">
           <Button
             onClick={handleClear}
-            className="w-full bg-white text-red-600 dark:text-red-600 border border-red-600 dark:border-none hover:bg-red-300/5"
+            variant={"destructive"}
+            className="w-full"
           >
             <Trash className="h-5 w-5" />
             Clear All

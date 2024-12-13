@@ -25,7 +25,7 @@ const sidebarItems = {
       { title: "Hash", url: "/tools/hash", icon: Hash },
       { title: "Steganography", url: "/tools/steganography", icon: IoLockClosedOutline },
       { title: "URL Shortener", url: "/tools/url-shortener", icon: Link },
-      { title: "JSON", url: "/tools/json", icon: Braces },
+      { title: "JSON Formatter", url: "/tools/json-formatter", icon: Braces },
       { title: "Proxy", url: "/tools/proxy", icon: Waypoints },
     ]
   },

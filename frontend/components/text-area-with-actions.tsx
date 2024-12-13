@@ -7,6 +7,8 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 
+import { Textarea } from "@/components/ui/textarea";
+
 interface TextAreaWithActionsProps {
   id: string;
   label: string;
@@ -66,13 +68,13 @@ export const TextAreaWithActions: React.FC<TextAreaWithActionsProps> = ({
           </TooltipProvider>
         </div>
       </div>
-      <textarea
+      <Textarea
         id={id}
-        className="bg-secondary border border-border rounded-lg p-5 w-full h-96 resize-none outline-none"
+        className=""
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-      ></textarea>
+      ></Textarea>
     </div>
   );
 };

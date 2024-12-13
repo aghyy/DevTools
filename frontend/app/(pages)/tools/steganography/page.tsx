@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { FileUpload } from "@/components/ui/file-upload";
+import { Textarea } from '@/components/ui/textarea';
 
 // F5 Algorithm Implementation
 class F5Steganography {
@@ -177,7 +178,7 @@ const Steganography: React.FC = () => {
   const [password, setPassword] = useState('');
   const [baseImage, setBaseImage] = useState<string | null>(null);
   const [encodedImage, setEncodedImage] = useState<string | null>(null);
-  
+
   const [decodeFiles, setDecodeFiles] = useState<File[]>([]);
   const [encodeFiles, setEncodeFiles] = useState<File[]>([]);
 
@@ -186,7 +187,7 @@ const Steganography: React.FC = () => {
   const [decodedMessage, setDecodedMessage] = useState('');
 
   const router = useRouter();
-  
+
   const routeTo = (path: string) => {
     router.push(path);
   }
@@ -371,8 +372,8 @@ const Steganography: React.FC = () => {
                 </div>
               )}
 
-              <textarea
-                className="w-full min-h-[100px] bg-background border p-2 mb-2 rounded-md"
+              <Textarea
+                className="min-h-[100px] p-2 mb-2"
                 placeholder="Enter your message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -462,7 +463,8 @@ const Steganography: React.FC = () => {
         <div className="flex gap-5 justify-start">
           <Button
             onClick={handleClear}
-            className="w-full bg-white text-red-600 dark:text-red-600 border border-red-600 dark:border-none hover:bg-red-300/5"
+            variant={"destructive"}
+            className="w-full"
           >
             <Trash className="h-5 w-5" />
             Clear All
