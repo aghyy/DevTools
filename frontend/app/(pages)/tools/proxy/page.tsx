@@ -68,7 +68,7 @@ export default function Proxy() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="font-semibold">Proxy URL:</span>
+              <span className="font-semibold min-w-fit">Proxy URL:</span>
               <Input value={proxyUrl} readOnly className="w-full" />
               <Button onClick={copyToClipboard} variant="outline">
                 <Copy size={18} className="mr-2" />

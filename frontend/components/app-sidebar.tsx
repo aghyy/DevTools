@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Home, Library, GraduationCap, Book, Code, Hammer, Binary, Hash, Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Braces, Waypoints, Link } from "lucide-react"
+import { Home, Library, GraduationCap, Book, Code, Hammer, Binary, Hash, Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Braces, Waypoints, Link, Regex } from "lucide-react"
 import { IoLockClosedOutline } from "react-icons/io5";
 import { logout as authLogout, getUser } from "@/services/auth"
 
@@ -27,6 +27,7 @@ const sidebarItems = {
       { title: "URL Shortener", url: "/tools/url-shortener", icon: Link },
       { title: "JSON Formatter", url: "/tools/json-formatter", icon: Braces },
       { title: "Proxy", url: "/tools/proxy", icon: Waypoints },
+      { title: "Regex", url: "/tools/regex", icon: Regex },
     ]
   },
 }
