@@ -77,13 +77,13 @@ export default function Proxy() {
             </div>
             <div className="flex flex-col space-y-2">
               <span className="font-semibold">Usage Example:</span>
-              <code className="bg-gray-100 p-3 rounded-md text-sm">
+              <code className="bg-gray-100 dark:bg-secondary p-3 rounded-md text-sm">
                 fetch("{proxyUrl}/example-endpoint", &#123; method: 'GET' &#125;)
               </code>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Badge variant="secondary">Status: Online</Badge>
+            <Badge variant="active">Status: Online</Badge>
           </CardFooter>
         </Card>
 
@@ -97,7 +97,7 @@ export default function Proxy() {
             <ul className="list-disc list-inside space-y-2">
               <li>
                 <strong>Endpoint Usage:</strong> You can route any request through the proxy using:
-                <code className="bg-gray-100 p-1 rounded-md text-sm mx-1">{proxyUrl}/your-endpoint</code>
+                <code className="bg-gray-100 dark:bg-secondary p-1 rounded-md text-sm mx-1">{proxyUrl}/your-endpoint</code>
               </li>
               <li>
                 <strong>Example Use Case:</strong> If an API you need has CORS restrictions, simply prepend the proxy URL to your API call.
