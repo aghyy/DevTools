@@ -1,5 +1,46 @@
 const { checkMD5AgainstWordlist, checkSHA1AgainstWordlist, addToWordlistHelper } = require('../utils/toolHelper');
 
+const useProxy = async (req, res) => {
+  // Extract the URL from the query parameters
+  const { url } = req.query;
+
+  // Check if the URL is provided
+  if (!url) {
+    return res.status(400).json({ error: "URL parameter is required" });
+  }
+
+  try {
+    // Make a request to the provided URL
+    console.log('[PROXY] Requesting URL:', url);
+    const response = await fetch(url);
+    console.log('[PROXY] Response status:', response.status);
+
+    // Extract the response body
+    let body = await response.text();
+
+    // Ensure the correct Content-Type is set for HTML content
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+    // Remove the <base> tag if present in the HTML content
+    body = body.replace(/<base[^>]*>/gi, '');
+
+    // Also remove any <meta> tags that could trigger redirection, like a meta-refresh tag
+    body = body.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
+
+    // Remove any JavaScript or HTML that might cause navigation or redirect the URL
+    // This regex removes script tags (optional depending on your use case)
+    // body = body.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+    // Send the proxied body back to the client
+    return res.send(body);
+
+  } catch (error) {
+    // Log the error and return a 500 status code if there's an issue
+    console.error('Error while making request to URL:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 const decryptMD5 = async (req, res) => {
   // Extract hash from the query parameters
   const { hash } = req.query;
@@ -66,4 +107,4 @@ const addToWordlist = async (req, res) => {
   }
 }
 
-module.exports = { decryptMD5, decryptSHA1, addToWordlist };
+module.exports = { decryptMD5, decryptSHA1, addToWordlist, useProxy };

@@ -19,7 +19,7 @@ import {
 
 export default function Proxy() {
   const router = useRouter();
-  const proxyUrl = "http://localhost:5039/api/tools/proxy";
+  const proxyUrl = "http://localhost:5039/api/tools/proxy?url=";
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -55,7 +55,7 @@ export default function Proxy() {
       <div className="pt-16"></div>
 
       {/* Title */}
-      <h1 className="text-4xl font-extrabold my-6 text-center">Proxy Guide (Demo)</h1>
+      <h1 className="text-3xl font-bold my-3 text-center">Proxy Guide (Demo)</h1>
 
       {/* Info Section */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
@@ -78,12 +78,12 @@ export default function Proxy() {
             <div className="flex flex-col space-y-2">
               <span className="font-semibold">Usage Example:</span>
               <code className="bg-gray-100 dark:bg-secondary p-3 rounded-md text-sm">
-                fetch("{proxyUrl}/example-endpoint", &#123; method: 'GET' &#125;)
+                fetch("{proxyUrl}example-endpoint", &#123; method: 'GET' &#125;)
               </code>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Badge variant="active">Status: Online</Badge>
+            <Badge variant="secondary">Status: Online</Badge>
           </CardFooter>
         </Card>
 
@@ -97,7 +97,7 @@ export default function Proxy() {
             <ul className="list-disc list-inside space-y-2">
               <li>
                 <strong>Endpoint Usage:</strong> You can route any request through the proxy using:
-                <code className="bg-gray-100 dark:bg-secondary p-1 rounded-md text-sm mx-1">{proxyUrl}/your-endpoint</code>
+                <code className="bg-gray-100 dark:bg-secondary p-1 rounded-md text-sm mx-1">{proxyUrl}your-endpoint</code>
               </li>
               <li>
                 <strong>Example Use Case:</strong> If an API you need has CORS restrictions, simply prepend the proxy URL to your API call.

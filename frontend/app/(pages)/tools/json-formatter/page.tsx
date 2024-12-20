@@ -79,7 +79,7 @@ export default function JSONFormatter() {
       <div className="pt-16"></div>
 
       {/* Title */}
-      <h1 className="text-4xl font-extrabold my-6 text-center">JSON Formatter & Validator</h1>
+      <h1 className="text-3xl font-bold my-3 text-center">JSON Formatter & Validator</h1>
 
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
 
