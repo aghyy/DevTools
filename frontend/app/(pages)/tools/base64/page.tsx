@@ -62,7 +62,7 @@ export default function Base64() {
     setDecodedText("");
     setEncodedText("");
   };
-
+  
   return (
     <div className="h-full w-full">
       {/* Breadcrumb */}
