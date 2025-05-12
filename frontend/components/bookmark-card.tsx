@@ -42,7 +42,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
   const renderFavicon = () => {
     if (bookmark.favicon) {
       return (
-        <div className="w-6 h-6 p-1 mr-2 overflow-hidden rounded-full bg-white">
+        <div className="w-6 h-6 p-1 mr-2 overflow-hidden rounded-full bg-white border">
           <Image
             src={bookmark.favicon}
             alt={`${bookmark.title} favicon`}
