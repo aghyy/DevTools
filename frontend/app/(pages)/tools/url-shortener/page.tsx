@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
-import { Link2, Copy, ExternalLink, Trash } from "lucide-react";
+import { Link2, Copy, ExternalLink, Trash, RefreshCw } from "lucide-react";
 
 import { TopSpacing } from "@/components/top-spacing";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { handleCopy } from "@/utils/clipboard";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 import {
   Breadcrumb,
@@ -20,14 +22,27 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+interface ApiError {
+  response?: {
+    status: number;
+    data?: {
+      error?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function URLShortener() {
   const router = useRouter();
 
   const [url, setUrl] = useState("");
+  const [customCode, setCustomCode] = useState("");
+  const [useCustomCode, setUseCustomCode] = useState(false);
   const [shortenedUrl, setShortenedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [codeConflict, setCodeConflict] = useState(false);
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -35,8 +50,10 @@ export default function URLShortener() {
 
   const handleClear = () => {
     setUrl("");
+    setCustomCode("");
     setShortenedUrl(null);
     setError(null);
+    setCodeConflict(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +62,7 @@ export default function URLShortener() {
     // Reset states
     setError(null);
     setShortenedUrl(null);
+    setCodeConflict(false);
     setIsLoading(true);
     
     try {
@@ -57,17 +75,40 @@ export default function URLShortener() {
         return;
       }
 
+      // Validate custom code if used
+      if (useCustomCode && customCode) {
+        // Only alphanumeric and hyphens allowed, 3-20 characters
+        const codeRegex = /^[a-zA-Z0-9-]{3,20}$/;
+        if (!codeRegex.test(customCode)) {
+          setError("Custom URL code must be 3-20 characters and can only contain letters, numbers, and hyphens.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Call the API to shorten the URL
-      const response = await apiWithoutCredentials.post('/api/tools/shorten-url', { url });
+      const payload = { 
+        url,
+        ...(useCustomCode && customCode ? { customCode } : {})
+      };
+      
+      const response = await apiWithoutCredentials.post('/api/tools/shorten-url', payload);
       
       if (response.data.shortUrl) {
         setShortenedUrl(response.data.shortUrl);
       } else {
         setError("Failed to shorten URL. Please try again.");
       }
-    } catch (error) {
-      console.error("Error shortening URL:", error);
-      setError("An error occurred while shortening the URL. Please try again.");
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      
+      // Handle code conflict error
+      if (apiError.response && apiError.response.status === 409) {
+        setCodeConflict(true);
+        setError("This custom URL code is already taken. Please choose another.");
+      } else {
+        setError("An error occurred while shortening the URL. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +126,15 @@ export default function URLShortener() {
     if (shortenedUrl) {
       window.open(shortenedUrl, "_blank");
     }
+  };
+
+  const generateRandomCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    setCustomCode(result);
   };
 
   return (
@@ -127,10 +177,44 @@ export default function URLShortener() {
                 className="flex-1"
                 required
               />
-              <Button type="submit" disabled={isLoading || !url.trim()}>
-                {isLoading ? "Shortening..." : "Shorten"}
-              </Button>
             </div>
+
+            <div className="flex items-center space-x-2 mt-2">
+              <Switch 
+                id="custom-url" 
+                checked={useCustomCode}
+                onCheckedChange={setUseCustomCode}
+              />
+              <Label htmlFor="custom-url">Use custom URL code <span className="text-muted-foreground italic">(returns local URL)</span></Label>
+            </div>
+
+            {useCustomCode && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  type="text"
+                  placeholder="my-custom-code"
+                  value={customCode}
+                  onChange={(e) => setCustomCode(e.target.value)}
+                  className={`flex-1 ${codeConflict ? 'border-red-500' : ''}`}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={generateRandomCode}
+                  title="Generate random code"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
+            <Button 
+              type="submit" 
+              disabled={isLoading || !url.trim() || (useCustomCode && !customCode.trim())}
+              className="mt-2"
+            >
+              {isLoading ? "Shortening..." : "Shorten URL"}
+            </Button>
           </form>
         </Card>
 

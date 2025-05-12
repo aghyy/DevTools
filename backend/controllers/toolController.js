@@ -9,7 +9,7 @@ const generateShortCode = () => {
 
 // Create a shortened URL
 const shortenUrl = async (req, res) => {
-  const { url } = req.body;
+  const { url, customCode } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: "URL is required" });
@@ -23,24 +23,49 @@ const shortenUrl = async (req, res) => {
   }
 
   try {
-    // Generate a unique short code
-    let shortCode;
-    let existingUrl;
+    // If custom code is provided, we'll still use our own implementation
+    if (customCode) {
+      // Validate custom code
+      const codeRegex = /^[a-zA-Z0-9-]{3,20}$/;
+      if (!codeRegex.test(customCode)) {
+        return res.status(400).json({ 
+          error: "Custom URL code must be 3-20 characters and can only contain letters, numbers, and hyphens."
+        });
+      }
+
+      // Check if custom code is already taken
+      const existingUrl = await db.shortenedUrls.findOne({ where: { shortCode: customCode } });
+      if (existingUrl) {
+        return res.status(409).json({ error: "This custom URL code is already taken." });
+      }
+
+      // Create a new shortened URL entry
+      const shortenedUrl = await db.shortenedUrls.create({
+        originalUrl: url,
+        shortCode: customCode
+      });
+
+      return res.status(201).json({ 
+        shortCode: customCode,
+        shortUrl: `${req.protocol}://${req.get('host')}/s/${customCode}`
+      });
+    }
     
-    do {
-      shortCode = generateShortCode();
-      existingUrl = await db.shortenedUrls.findOne({ where: { shortCode } });
-    } while (existingUrl);
-
-    // Create a new shortened URL entry
-    const shortenedUrl = await db.shortenedUrls.create({
-      originalUrl: url,
-      shortCode
-    });
-
+    // For non-custom codes, use TinyURL API
+    const tinyUrlApi = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`;
+    
+    // Use node-fetch or axios to call the TinyURL API
+    const response = await fetch(tinyUrlApi);
+    
+    if (!response.ok) {
+      throw new Error(`TinyURL API error: ${response.status}`);
+    }
+    
+    const shortUrl = await response.text();
+    
+    // Return the shortened URL from TinyURL
     return res.status(201).json({ 
-      shortCode,
-      shortUrl: `${req.protocol}://${req.get('host')}/s/${shortCode}`
+      shortUrl: shortUrl.trim()
     });
   } catch (error) {
     console.error('Error shortening URL:', error);

@@ -27,14 +27,25 @@ db.sequelize.sync({ force: false }).then(() => {
   console.log("db has been re sync");
 });
 
-// URL Shortener redirect handler
-app.get('/s/:shortCode', async (req, res) => {
+// URL Shortener redirect handler - handle both /s/:shortCode and /:shortCode paths
+app.get('/s/:shortCode', handleRedirect);
+app.get('/:shortCode', handleRedirect);
+
+// Redirect handler function
+async function handleRedirect(req, res) {
   try {
     const { shortCode } = req.params;
+    
+    // Skip API routes and static paths
+    if (shortCode.startsWith('api') || shortCode === 'favicon.ico') {
+      return res.status(404).send('Not found');
+    }
+    
+    // Check our database for custom codes
     const shortenedUrl = await db.shortenedUrls.findOne({ where: { shortCode } });
     
     if (!shortenedUrl) {
-      return res.status(404).send('URL not found');
+      return res.status(404).send('URL not found. This short code does not exist in our system.');
     }
     
     // Check if URL has expired
@@ -49,7 +60,7 @@ app.get('/s/:shortCode', async (req, res) => {
     console.error('Error redirecting to original URL:', error);
     return res.status(500).send('Internal Server Error');
   }
-});
+}
 
 app.use('/api/users', userRoutes);
 app.use('/api/tools', toolRoutes);
