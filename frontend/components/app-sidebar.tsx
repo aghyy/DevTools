@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
@@ -24,6 +25,7 @@ const sidebarItems = {
       { title: "Base64", url: "/tools/base64", icon: Binary },
       { title: "Hash", url: "/tools/hash", icon: Hash },
       { title: "Steganography", url: "/tools/steganography", icon: IoLockClosedOutline },
+      { title: "Vigenère Cipher", url: "/tools/vigenere", icon: IoLockClosedOutline },
       { title: "URL Shortener", url: "/tools/url-shortener", icon: Link },
       { title: "JSON Formatter", url: "/tools/json-formatter", icon: Braces },
       { title: "Proxy", url: "/tools/proxy", icon: Waypoints },
@@ -32,7 +34,7 @@ const sidebarItems = {
   },
 }
 
-const renderIcon = (icon: string | React.ComponentType<any>) => {
+const renderIcon = (icon: string | React.ComponentType<{ className?: string }>) => {
   if (typeof icon === 'string') {
     return <Icon src={icon} />
   }
@@ -93,7 +95,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center justify-center p-3">
           <div className="size-10 absolute left-3 pointer-events-none">
-            <img src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
+            <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={40} height={40} />
           </div>
           <div className="font-semibold">DevTools</div>
         </div>
