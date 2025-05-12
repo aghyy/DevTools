@@ -82,10 +82,10 @@ export default function Dashboard() {
       description: "Use our suite of developer tools"
     },
     {
-      name: "Documentation",
-      href: "/docs",
+      name: "Bookmarks",
+      href: "/bookmarks",
       icon: Book,
-      description: "Browse through detailed documentation"
+      description: "Browse through your bookmarks"
     },
     {
       name: "Knowledge Base",

@@ -4,7 +4,7 @@ import { LucideIcon } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
 
 // Type definitions for the tools
-export type ToolType = 'tool' | 'doc' | 'knowledge' | 'library';
+export type ToolType = 'tool' | 'bookmark' | 'knowledge' | 'library';
 
 export interface Tool {
   title: string;
@@ -80,7 +80,7 @@ export const sidebarItems = {
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Libraries", url: "/libraries", icon: Library },
     { title: "Knowledge Base", url: "/knowledge-base", icon: GraduationCap },
-    { title: "Docs", url: "/docs", icon: Book },
+    { title: "Bookmarks", url: "/bookmarks", icon: Book },
     { title: "Code Snippets", url: "/code-snippets", icon: Code },
   ],
   tools: {
@@ -106,9 +106,8 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/json-formatter": { name: "JSON Formatter", type: "tool", icon: "Code" },
   "/tools/steganography": { name: "Steganography", type: "tool", icon: "Lock" },
   "/tools/vigenere": { name: "Vigenère Cipher", type: "tool", icon: "Lock" },
-  // Docs
-  "/docs": { name: "Documentation", type: "doc", icon: "Book" },
-  "/docs/getting-started": { name: "Getting Started", type: "doc", icon: "Book" },
+  // Bookmarks
+  "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
   // Libraries
   "/libraries": { name: "Libraries", type: "library", icon: "Library" },
   "/libraries/javascript": { name: "JavaScript Libraries", type: "library", icon: "Library" },

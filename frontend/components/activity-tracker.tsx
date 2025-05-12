@@ -4,10 +4,10 @@ import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackActivity } from '@/services/activity';
 
-// Activity tracking component that should be used in tool and documentation pages
+// Activity tracking component that should be used in tool and bookmark pages
 interface ActivityTrackerProps {
   name: string;
-  type: 'tool' | 'doc' | 'knowledge' | 'library';
+  type: 'tool' | 'bookmark';
   icon: string;
   children: React.ReactNode;
 }

@@ -7,6 +7,7 @@ const db = require('./models');
 const userRoutes = require('./routes/userRoutes');
 const toolRoutes = require('./routes/toolRoutes');
 const activityRoutes = require('./routes/activityRoutes');
+const bookmarkRoutes = require('./routes/bookmarkRoutes');
 
 const PORT = process.env.PORT || 5039;
 const app = express();
@@ -29,5 +30,6 @@ db.sequelize.sync({ force: false }).then(() => {
 app.use('/api/users', userRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
 
 app.listen(PORT, () => console.log(`Server is connected on ${PORT}`));

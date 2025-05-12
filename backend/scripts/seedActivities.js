@@ -11,7 +11,7 @@ const sampleActivities = [
   { name: 'Hash Generator', path: '/tools/hash', type: 'tool', icon: 'Hash' },
   { name: 'Base64 Converter', path: '/tools/base64', type: 'tool', icon: 'Binary' },
   { name: 'Regex Tester', path: '/tools/regex', type: 'tool', icon: 'Regex' },
-  { name: 'Documentation', path: '/docs', type: 'doc', icon: 'Book' },
+  { name: 'Bookmarks', path: '/bookmarks', type: 'bookmark', icon: 'Bookmark' },
   { name: 'Libraries', path: '/libraries', type: 'library', icon: 'Library' },
   { name: 'Knowledge Base', path: '/knowledge-base', type: 'knowledge', icon: 'GraduationCap' }
 ];

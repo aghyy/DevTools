@@ -24,13 +24,13 @@ export default function PagesLayout({
     if (routeToActivityMap[pathname]) {
       activity = routeToActivityMap[pathname];
     } else {
-      // Check for parent paths (e.g., /tools, /docs)
+      // Check for parent paths (e.g., /tools, /bookmarks)
       const mainPath = '/' + pathname.split('/')[1];
       
       // Default activity metadata based on section
-      const defaultActivityMap: Record<string, {name: string; type: 'tool' | 'doc' | 'knowledge' | 'library'; icon: string}> = {
+      const defaultActivityMap: Record<string, {name: string; type: 'tool' | 'bookmark' | 'knowledge' | 'library'; icon: string}> = {
         "/tools": { name: "Tools", type: "tool", icon: "Hammer" },
-        "/docs": { name: "Documentation", type: "doc", icon: "Book" },
+        "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Bookmark" },
         "/libraries": { name: "Libraries", type: "library", icon: "Library" },
         "/knowledge-base": { name: "Knowledge Base", type: "knowledge", icon: "GraduationCap" },
       };

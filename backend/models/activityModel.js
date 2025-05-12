@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     type: {
-      type: DataTypes.ENUM('tool', 'doc', 'knowledge', 'library'),
-      allowNull: false
+      type: DataTypes.ENUM("tool", "bookmark", "knowledge", "library"),
+      allowNull: false,
     },
     name: {
       type: DataTypes.STRING,

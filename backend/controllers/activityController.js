@@ -78,10 +78,10 @@ const getActivityStats = async (req, res) => {
       }
     });
     
-    const docCount = await Activity.count({
+    const bookmarkCount = await Activity.count({
       where: { 
         userId,
-        type: 'doc'
+        type: 'bookmark'
       }
     });
     
@@ -101,10 +101,10 @@ const getActivityStats = async (req, res) => {
     
     return res.status(200).json({
       tools: toolCount,
-      docs: docCount,
+      bookmarks: bookmarkCount,
       knowledge: knowledgeCount,
       libraries: libraryCount,
-      total: toolCount + docCount + knowledgeCount + libraryCount
+      total: toolCount + bookmarkCount + knowledgeCount + libraryCount
     });
   } catch (error) {
     console.error("Error fetching activity stats:", error);

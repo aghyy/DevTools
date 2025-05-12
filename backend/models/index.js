@@ -19,10 +19,14 @@ db.sequelize = sequelize;
 // Load models
 db.users = require("./userModel")(sequelize, DataTypes);
 db.activities = require("./activityModel")(sequelize, DataTypes);
+db.bookmarks = require("./bookmarkModel")(sequelize, DataTypes);
 
 // Define relationships
-db.users.hasMany(db.activities, { foreignKey: 'userId' });
-db.activities.belongsTo(db.users, { foreignKey: 'userId' });
+db.users.hasMany(db.activities, { foreignKey: "userId" });
+db.activities.belongsTo(db.users, { foreignKey: "userId" });
+
+db.users.hasMany(db.bookmarks, { foreignKey: "userId" });
+db.bookmarks.belongsTo(db.users, { foreignKey: "userId" });
 
 // Synchronize models with the database
 db.sequelize.sync({ alter: true }) // Use `alter: true` to avoid data loss during development
