@@ -174,16 +174,16 @@ export default function Dashboard() {
       <div className="w-full px-8 pt-8 pb-24 mx-auto">
         {/* User welcome section */}
         <div className="mb-8">
-          <Card className="bg-gradient-to-r from-slate-800 to-slate-900 text-white border-0 shadow-lg">
+          <Card className="bg-primary/5 border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
                   {loading ? (
                     <Skeleton className="h-16 w-16 rounded-full" />
                   ) : (
-                    <Avatar className="h-16 w-16 border-2 border-white/20">
+                    <Avatar className="h-16 w-16 border-4 border-white/20">
                       <AvatarImage src={userData?.id ? `/images/avatar/${userData.id}.png` : undefined} />
-                      <AvatarFallback className="text-lg">
+                      <AvatarFallback className="bg-primary/5 text-lg">
                         {userData?.firstName?.charAt(0)}{userData?.lastName?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
@@ -197,17 +197,17 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <h2 className="text-2xl font-bold">Welcome, {userData?.firstName || 'User'}</h2>
-                        <p className="text-slate-300">@{userData?.username || 'username'}</p>
+                        <p className="text-primary/50">@{userData?.username || 'username'}</p>
                       </>
                     )}
                   </div>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                <div className="bg-primary/5 rounded-lg p-4 backdrop-blur-sm">
                   <div className="flex items-center gap-2">
                     <Activity className="h-5 w-5 text-emerald-400" />
                     <span className="text-sm text-emerald-400 font-medium">Active Session</span>
                   </div>
-                  <p className="text-xs text-slate-300 mt-1">Last login: {new Date().toLocaleDateString()}</p>
+                  <p className="text-xs text-primary/50 mt-1">Last login: {new Date().toLocaleDateString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -239,16 +239,16 @@ export default function Dashboard() {
                 return (
                   <Card 
                     key={item.id} 
-                    className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                    className="cursor-pointer hover:bg-primary/5 transition-colors"
                     onClick={() => routeTo(item.path)}
                   >
                     <CardContent className="p-4 flex items-center gap-4">
-                      <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full">
-                        <IconComponent className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+                      <div className="bg-primary/5 p-3 rounded-full">
+                        <IconComponent className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <div className="flex items-center text-xs text-slate-500">
+                        <div className="flex items-center text-xs text-primary/50">
                           <Clock className="h-3 w-3 mr-1" />
                           {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}
                         </div>
@@ -280,17 +280,17 @@ export default function Dashboard() {
                 return (
                   <Card 
                     key={idx} 
-                    className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                    className="cursor-pointer hover:bg-primary/5 transition-colors"
                     onClick={() => routeTo(item.path)}
                   >
                     <CardContent className="p-4 flex items-center gap-4">
-                      <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full">
-                        <IconComponent className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+                      <div className="bg-primary/5 p-3 rounded-full">
+                        <IconComponent className="h-5 w-5" />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex flex-col flex-1 gap-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <div className="flex items-center text-xs text-slate-500">
-                          <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded-full text-xs">
+                        <div className="flex items-center text-xs text-primary/50">
+                          <span className="px-2 py-0.5 bg-primary/5 rounded-full text-xs">
                             Used {count} time{count !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -309,11 +309,11 @@ export default function Dashboard() {
           {featuredLinks.map((link, index) => (
             <Card 
               key={index} 
-              className="cursor-pointer overflow-hidden hover:shadow-md transition-all duration-300 border-slate-200"
+              className="cursor-pointer overflow-hidden hover:shadow-md transition-all duration-300"
               onClick={() => routeTo(link.href)}
             >
               <CardHeader className="p-4 pb-0">
-                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full w-fit">
+                <div className="p-2 bg-primary/5 rounded-full w-fit">
                   <link.icon className="h-5 w-5" />
                 </div>
               </CardHeader>
