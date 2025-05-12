@@ -80,6 +80,7 @@ export function MagicCard({
           `,
           opacity: gradientOpacity,
         }}
+        suppressHydrationWarning
       />
     </div>
   );
