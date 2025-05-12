@@ -40,6 +40,7 @@ import {
 } from "@/services/activity";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MagicCard } from "@/components/ui/magic-card";
 
 // Interface for user data
 interface UserData {
@@ -221,24 +222,26 @@ export default function Dashboard() {
               {recentItems.map((item) => {
                 const IconComponent = getIconComponent(item.icon);
                 return (
-                  <Card 
+                  <MagicCard 
                     key={item.id} 
-                    className="cursor-pointer hover:bg-primary/5 transition-colors"
+                    className="overflow-hidden cursor-pointer"
                     onClick={() => routeTo(item.path)}
                   >
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="bg-primary/5 p-3 rounded-full">
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <div className="flex items-center text-xs text-primary/50">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}
+                    <Card className="h-full border-0 bg-transparent">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="bg-primary/5 p-3 rounded-full">
+                          <IconComponent className="h-5 w-5" />
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{item.name}</h3>
+                          <div className="flex items-center text-xs text-primary/50">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </MagicCard>
                 );
               })}
             </div>
@@ -262,25 +265,27 @@ export default function Dashboard() {
                 // Ensure count is a number
                 const count = typeof item.count === 'number' ? item.count : parseInt(String(item.count), 10) || 0;
                 return (
-                  <Card 
+                  <MagicCard 
                     key={idx} 
-                    className="cursor-pointer hover:bg-primary/5 transition-colors"
+                    className="overflow-hidden cursor-pointer"
                     onClick={() => routeTo(item.path)}
                   >
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="bg-primary/5 p-3 rounded-full">
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <div className="flex flex-col flex-1 gap-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <div className="flex items-center text-xs text-primary/50">
-                          <span className="px-2 py-0.5 bg-primary/5 rounded-full text-xs">
-                            Used {count} time{count !== 1 ? 's' : ''}
-                          </span>
+                    <Card className="h-full border-0 bg-transparent">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="bg-primary/5 p-3 rounded-full">
+                          <IconComponent className="h-5 w-5" />
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex flex-col flex-1 gap-1">
+                          <h3 className="font-medium">{item.name}</h3>
+                          <div className="flex items-center text-xs text-primary/50">
+                            <span className="px-2 py-0.5 bg-primary/5 rounded-full text-xs">
+                              Used {count} time{count !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </MagicCard>
                 );
               })}
             </div>
@@ -291,21 +296,23 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {featuredLinks.map((link, index) => (
-            <Card 
+            <MagicCard 
               key={index} 
-              className="cursor-pointer overflow-hidden hover:shadow-md transition-all duration-300"
+              className="overflow-hidden cursor-pointer h-[180px]"
               onClick={() => routeTo(link.href)}
             >
-              <CardHeader className="p-4 pb-0">
-                <div className="p-2 bg-primary/5 rounded-full w-fit">
-                  <link.icon className="h-5 w-5" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <CardTitle className="text-lg">{link.name}</CardTitle>
-                <CardDescription className="mt-1">{link.description}</CardDescription>
-              </CardContent>
-            </Card>
+              <Card className="h-full border-0 bg-transparent">
+                <CardHeader className="p-4 pb-0">
+                  <div className="p-2 bg-primary/5 rounded-full w-fit">
+                    <link.icon className="h-5 w-5" />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <CardTitle className="text-lg">{link.name}</CardTitle>
+                  <CardDescription className="mt-1">{link.description}</CardDescription>
+                </CardContent>
+              </Card>
+            </MagicCard>
           ))}
         </div>
       </div>

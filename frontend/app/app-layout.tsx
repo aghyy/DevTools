@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
-import ThemeSwitcher from "@/components/theme-switcher";
+import ThemeSwitcher from "@/components/theme/theme-switcher";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

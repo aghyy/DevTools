@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AppLayout } from "./app-layout";
+import { Provider as JotaiProvider } from "jotai";
+import { ThemeProvider } from "@/components/wrappers/themes/theme-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overscroll-none no-scrollbar scroll-smooth">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
@@ -35,11 +37,19 @@ export default function RootLayout({
         <link rel="manifest" href="/favicon/site.webmanifest" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overscroll-none no-scrollbar scroll-smooth`}
       >
-        <AppLayout>
-          {children}
-        </AppLayout>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+        >
+          <JotaiProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </JotaiProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
