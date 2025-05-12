@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
 import CryptoJS from "crypto-js";
@@ -55,7 +55,7 @@ export default function Hash() {
       } else {
         setError("Hash not found in dictionary.");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while trying to decrypt the hash.");
     }
   };
@@ -63,7 +63,7 @@ export default function Hash() {
   const addWordToDictionary = async (word: string) => {
     try {
       await apiWithoutCredentials.post("/api/tools/add-to-wordlist", { word });
-    } catch (err) {
+    } catch {
       console.error("Failed to add word to dictionary.");
     }
   }
@@ -136,9 +136,8 @@ export default function Hash() {
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
 
         <div className="flex flex-col gap-4">
-          {/* <label htmlFor="algorithm" className="text-lg font-semibold">Algorithm</label> */}
           <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>
-            <SelectTrigger className="w-1/4 p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className="w-1/4">
               <span>{algorithm.toUpperCase()}</span>
             </SelectTrigger>
             <SelectContent>
@@ -203,6 +202,6 @@ export default function Hash() {
           </Button>
         </div>
       </div>
-    </div >
+    </div>
   );
 }

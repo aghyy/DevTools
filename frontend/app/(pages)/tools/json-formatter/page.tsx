@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle, Copy } from "lucide-react";
+import { AlertTriangle, Copy } from "lucide-react";
 
 import { handleCopy } from "@/utils/clipboard";
 
@@ -38,7 +36,7 @@ export default function JSONFormatter() {
       const formatted = JSON.stringify(parsedJson, null, 2);
       setFormattedJson(formatted);
       setValidationStatus('valid');
-    } catch (error) {
+    } catch {
       setValidationStatus('invalid');
     }
   }
@@ -47,7 +45,7 @@ export default function JSONFormatter() {
     try {
       JSON.parse(jsonInput);
       setValidationStatus('valid');
-    } catch (error) {
+    } catch {
       setValidationStatus('invalid');
     }
   }
@@ -84,7 +82,7 @@ export default function JSONFormatter() {
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
 
         {/* Input Section */}
-        <Card className="shadow-lg border border-gray-200">
+        <Card>
           <CardHeader>
             <CardTitle>✍️ JSON Input</CardTitle>
             <CardDescription>Enter your JSON here to validate and format it.</CardDescription>
@@ -135,7 +133,7 @@ export default function JSONFormatter() {
 
         {/* Formatted JSON Output */}
         {formattedJson && (
-          <Card className="shadow-lg border border-gray-200">
+          <Card>
             <CardHeader>
               <CardTitle>📜 Formatted JSON</CardTitle>
               <CardDescription>This is the formatted version of your JSON.</CardDescription>
@@ -144,7 +142,7 @@ export default function JSONFormatter() {
               <Textarea
                 value={formattedJson}
                 readOnly
-                className="h-40 bg-gray-100"
+                className="h-40"
               />
               <div className="flex justify-end">
                 <Button variant="outline" onClick={() => handleCopy(formattedJson)}>

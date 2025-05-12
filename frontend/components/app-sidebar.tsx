@@ -8,31 +8,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Home, Library, GraduationCap, Book, Code, Hammer, Binary, Hash, Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Braces, Waypoints, Link, Regex } from "lucide-react"
-import { IoLockClosedOutline } from "react-icons/io5";
+import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut } from "lucide-react"
 import { logout as authLogout, getUser } from "@/services/auth"
-
-const sidebarItems = {
-  general: [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Libraries", url: "/libraries", icon: Library },
-    { title: "Knowledge Base", url: "/knowledge-base", icon: GraduationCap },
-    { title: "Docs", url: "/docs", icon: Book },
-    { title: "Code Snippets", url: "/code-snippets", icon: Code },
-  ],
-  tools: {
-    title: "Tools", icon: Hammer, items: [
-      { title: "Base64", url: "/tools/base64", icon: Binary },
-      { title: "Hash", url: "/tools/hash", icon: Hash },
-      { title: "Steganography", url: "/tools/steganography", icon: IoLockClosedOutline },
-      { title: "Vigenère Cipher", url: "/tools/vigenere", icon: IoLockClosedOutline },
-      { title: "URL Shortener", url: "/tools/url-shortener", icon: Link },
-      { title: "JSON Formatter", url: "/tools/json-formatter", icon: Braces },
-      { title: "Proxy", url: "/tools/proxy", icon: Waypoints },
-      { title: "Regex", url: "/tools/regex", icon: Regex },
-    ]
-  },
-}
+import { sidebarItems } from "@/utils/tools"
 
 const renderIcon = (icon: string | React.ComponentType<{ className?: string }>) => {
   if (typeof icon === 'string') {

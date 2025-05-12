@@ -6,7 +6,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Copy } from "lucide-react";
+import { ClipboardCopy, Copy, Globe } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import Image from "next/image";
 
 import {
   Breadcrumb,
@@ -17,9 +20,32 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+import { allExamples, ExampleOption } from ".";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { handleCopy } from "@/utils/clipboard";
+
 export default function Proxy() {
   const router = useRouter();
-  const proxyUrl = "http://localhost:5039/api/tools/proxy?url=";
+  const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/tools/proxy?url=`;
+  const [targetUrl, setTargetUrl] = useState("https://jsonplaceholder.typicode.com/todos/1");
+  const [selectedExampleId, setSelectedExampleId] = useState("javascript-fetch");
+  
+  // For the Live Test card
+  const [testUrl, setTestUrl] = useState("https://jsonplaceholder.typicode.com/todos/1");
+  const [isLoading, setIsLoading] = useState(false);
+  const [response, setResponse] = useState<null | {
+    data: unknown;
+    status: number;
+    headers: Record<string, string>;
+    error?: string;
+    errorDetails?: string;
+  }>(null);
+
+  // Get the current example
+  const getCurrentExample = (): ExampleOption => {
+    const example = allExamples.find(ex => ex.id === selectedExampleId);
+    return example || allExamples[0];
+  };
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -29,10 +55,90 @@ export default function Proxy() {
     try {
       await navigator.clipboard.writeText(proxyUrl);
       alert("Proxy URL copied to clipboard!");
-    } catch (err) {
+    } catch {
       alert("Failed to copy the URL.");
     }
   }
+
+  // Get the code example based on selected language
+  const getCodeExample = (): string => {
+    const example = getCurrentExample();
+    if (!example) return "// No example available";
+    
+    // Replace both placeholder variables
+    return example.code
+      .replace(/\$PROXY_URL\$/g, proxyUrl)
+      .replace(/\$TARGET_URL\$/g, targetUrl);
+  };
+
+  // Make a test request through the proxy
+  const makeProxyRequest = async () => {
+    if (!testUrl.trim()) return;
+    
+    setIsLoading(true);
+    setResponse(null);
+    
+    try {
+      const fullUrl = `${proxyUrl}${testUrl}`;
+      const res = await fetch(fullUrl);
+      
+      // Get headers
+      const headers: Record<string, string> = {};
+      res.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+      
+      // Check if the response is an error
+      if (!res.ok) {
+        // Try to parse the error response
+        try {
+          const errorData = await res.json();
+          setResponse({
+            data: null,
+            status: res.status,
+            headers,
+            error: errorData.error || `Error: ${res.status} ${res.statusText}`,
+            errorDetails: errorData.details || ''
+          });
+          return;
+        } catch {
+          // If we can't parse the error as JSON, use the status text
+          setResponse({
+            data: null,
+            status: res.status,
+            headers,
+            error: `Error: ${res.status} ${res.statusText}`
+          });
+          return;
+        }
+      }
+      
+      // Get response data for successful responses
+      let data;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        data = await res.text();
+      }
+      
+      setResponse({
+        data,
+        status: res.status,
+        headers
+      });
+    } catch (error) {
+      setResponse({
+        data: null,
+        status: 0,
+        headers: {},
+        error: error instanceof Error ? error.message : 'An unknown error occurred',
+        errorDetails: 'There was a problem connecting to the proxy server. Please check your connection and try again.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="h-full w-full">
@@ -55,13 +161,13 @@ export default function Proxy() {
       <div className="pt-16"></div>
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">Proxy Guide (Demo)</h1>
+      <h1 className="text-3xl font-bold my-3 text-center">Proxy</h1>
 
       {/* Info Section */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
 
         {/* Proxy Information */}
-        <Card className="shadow-lg border border-gray-200">
+        <Card>
           <CardHeader>
             <CardTitle>📡 Proxy Overview</CardTitle>
             <CardDescription>This proxy is primarily used to handle CORS issues, but it can be utilized for other purposes as well.</CardDescription>
@@ -75,10 +181,62 @@ export default function Proxy() {
                 Copy
               </Button>
             </div>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold min-w-fit">Target URL:</span>
+              <Input 
+                value={targetUrl} 
+                onChange={(e) => setTargetUrl(e.target.value)} 
+                placeholder="Enter target API URL"
+                className="w-full" 
+              />
+            </div>
             <div className="flex flex-col space-y-2">
-              <span className="font-semibold">Usage Example:</span>
-              <code className="bg-gray-100 dark:bg-secondary p-3 rounded-md text-sm">
-                fetch("{proxyUrl}example-endpoint", &#123; method: 'GET' &#125;)
+              <span className="font-semibold">Usage Examples:</span>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span>Select example:</span>
+                <Select value={selectedExampleId} onValueChange={setSelectedExampleId}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select example" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allExamples.map((example) => (
+                      <SelectItem key={example.id} value={example.id}>
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-5 h-5">
+                            <Image
+                              src={example.icon}
+                              alt={example.label}
+                              width={20}
+                              height={20}
+                              className="object-contain"
+                            />
+                          </div>
+                          <span>{example.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <code className="bg-primary/5 p-6 rounded-md text-sm whitespace-pre overflow-x-auto relative">
+                <div className="absolute top-2 right-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                      <span>
+                        <div
+                          onClick={() => handleCopy(getCodeExample())}
+                          className="p-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-[hsl(var(--secondary-hover))] border font-sans"
+                        >
+                          <ClipboardCopy className="h-3 w-3" />
+                        </div>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                {getCodeExample()}
               </code>
             </div>
           </CardContent>
@@ -87,11 +245,78 @@ export default function Proxy() {
           </CardFooter>
         </Card>
 
+        {/* Live Test Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>🧪 Live Test</CardTitle>
+            <CardDescription>Test the proxy with any URL and see the response in real-time.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <Input 
+                value={testUrl} 
+                onChange={(e) => setTestUrl(e.target.value)} 
+                placeholder="Enter URL to test"
+                className="flex-1"
+              />
+              <Button 
+                onClick={makeProxyRequest} 
+                disabled={isLoading}
+                className="min-w-[120px]"
+              >
+                {isLoading ? "Loading..." : "Send Request"}
+              </Button>
+            </div>
+            
+            <div className="mt-4">
+              {response ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge className={response.error ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
+                      Status: {response.error ? "Error" : response.status}
+                    </Badge>
+                    {!response.error && 
+                      <Badge variant="outline" className="text-xs">
+                        Content-Type: {response.headers['content-type'] || 'Unknown'}
+                      </Badge>
+                    }
+                  </div>
+                  
+                  <div className="bg-black/5 dark:bg-white/5 rounded-md p-4 max-h-[400px] overflow-auto">
+                    <div className="font-semibold mb-2">Response:</div>
+                    {response.error ? (
+                      <div className="space-y-2">
+                        <div className="text-red-600 dark:text-red-400 font-semibold">{response.error}</div>
+                        {response.errorDetails && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {response.errorDetails}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <pre className="text-xs whitespace-pre-wrap break-words font-mono">
+                        {typeof response.data === 'object' && response.data !== null
+                          ? JSON.stringify(response.data, null, 2) 
+                          : String(response.data)}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+                  <Globe size={40} className="mb-3 opacity-30" />
+                  <p>Enter a URL and click &quot;Send Request&quot; to test the proxy</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* How it Works */}
-        <Card className="shadow-lg border border-gray-200">
+        <Card>
           <CardHeader>
             <CardTitle>📚 How It Works</CardTitle>
-            <CardDescription>Here's a quick guide on how to make the most of the proxy.</CardDescription>
+            <CardDescription>Here&apos;s a quick guide on how to make the most of the proxy.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ul className="list-disc list-inside space-y-2">
@@ -108,23 +333,6 @@ export default function Proxy() {
             </ul>
           </CardContent>
         </Card>
-
-        {/* Possible Improvements */}
-        {/* <Card className="shadow-lg border border-gray-200">
-          <CardHeader>
-            <CardTitle>🚀 Possible Improvements</CardTitle>
-            <CardDescription>These are some potential enhancements to extend the proxy's capabilities.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ul className="list-disc list-inside space-y-2">
-              <li>Add authentication to prevent abuse of the proxy.</li>
-              <li>Limit request size and rate to protect the backend from overload.</li>
-              <li>Support file uploads via <span className="font-mono">multipart/form-data</span>.</li>
-              <li>Integrate better logging and debugging tools to track incoming requests.</li>
-              <li>Implement a caching mechanism for improved performance and reduced latency.</li>
-            </ul>
-          </CardContent>
-        </Card> */}
       </div>
     </div >
   );

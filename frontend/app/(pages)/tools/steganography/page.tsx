@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 import { Trash } from "lucide-react";
 
@@ -133,7 +134,11 @@ class F5Steganography {
       const completeMessage = [...lengthBytes, ...messageBytes];
 
       const encodedData = this.matrixEncode(coverImage.data, completeMessage);
-      return new ImageData(encodedData, coverImage.width, coverImage.height);
+      return new ImageData(
+        new Uint8ClampedArray(encodedData), 
+        coverImage.width, 
+        coverImage.height
+      );
     } catch (error) {
       console.error('Encoding Error:', error);
       throw new Error('Failed to encode the image.');
@@ -217,7 +222,7 @@ const Steganography: React.FC = () => {
     }
 
     // Create canvas to manipulate image
-    const img = new Image();
+    const img = document.createElement('img');
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -258,7 +263,7 @@ const Steganography: React.FC = () => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -364,10 +369,14 @@ const Steganography: React.FC = () => {
               {/* Preview of Base Image */}
               {baseImage && (
                 <div className="mb-10">
-                  <img
+                  <Image
                     src={baseImage}
                     alt="Base Image"
                     className="w-auto max-h-96 mx-auto mb-2"
+                    width={500}
+                    height={500}
+                    style={{ maxHeight: '24rem', width: 'auto' }}
+                    unoptimized
                   />
                 </div>
               )}
@@ -429,10 +438,14 @@ const Steganography: React.FC = () => {
             {encodedImage && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Encoded Image</h3>
-                <img
+                <Image
                   src={encodedImage}
                   alt="Encoded"
                   className="w-auto max-h-96 mx-auto mb-2"
+                  width={500}
+                  height={500}
+                  style={{ maxHeight: '24rem', width: 'auto' }}
+                  unoptimized
                 />
                 <Button
                   onClick={() => {
@@ -451,7 +464,7 @@ const Steganography: React.FC = () => {
             {decodedMessage && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Hidden Message</h3>
-                <div className="border p-2 bg-gray-100 rounded-sm">
+                <div className="border p-2 rounded-sm">
                   {decodedMessage}
                 </div>
               </div>

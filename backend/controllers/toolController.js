@@ -9,35 +9,108 @@ const useProxy = async (req, res) => {
     return res.status(400).json({ error: "URL parameter is required" });
   }
 
+  // Validate URL format
+  try {
+    new URL(url); // This will throw if the URL is invalid
+  } catch (err) {
+    return res.status(400).json({ 
+      error: "Invalid URL format", 
+      details: "The provided URL is not valid. Please check the format and try again.",
+      url: url 
+    });
+  }
+
   try {
     // Make a request to the provided URL
     console.log('[PROXY] Requesting URL:', url);
-    const response = await fetch(url);
+    
+    // Set a reasonable timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    const response = await fetch(url, { 
+      signal: controller.signal 
+    }).catch(err => {
+      if (err.name === 'AbortError') {
+        throw new Error('Request timeout - the server took too long to respond');
+      }
+      throw err;
+    });
+    
+    clearTimeout(timeoutId);
+    
     console.log('[PROXY] Response status:', response.status);
+
+    // Handle non-200 responses
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: `Target server returned ${response.status}`,
+        details: `The requested URL returned a ${response.status} ${response.statusText} response`,
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+
+    // Get content type from response
+    const contentType = response.headers.get('Content-Type') || 'text/plain';
+    res.setHeader('Content-Type', contentType);
+
+    // For JSON responses, we don't need to manipulate the content
+    if (contentType.includes('application/json')) {
+      const jsonData = await response.json();
+      return res.json(jsonData);
+    }
 
     // Extract the response body
     let body = await response.text();
 
-    // Ensure the correct Content-Type is set for HTML content
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    // If it's HTML content, perform some safety modifications
+    if (contentType.includes('text/html')) {
+      // Remove the <base> tag if present in the HTML content
+      body = body.replace(/<base[^>]*>/gi, '');
 
-    // Remove the <base> tag if present in the HTML content
-    body = body.replace(/<base[^>]*>/gi, '');
-
-    // Also remove any <meta> tags that could trigger redirection, like a meta-refresh tag
-    body = body.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
-
-    // Remove any JavaScript or HTML that might cause navigation or redirect the URL
-    // This regex removes script tags (optional depending on your use case)
-    // body = body.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+      // Also remove any <meta> tags that could trigger redirection, like a meta-refresh tag
+      body = body.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
+    }
 
     // Send the proxied body back to the client
     return res.send(body);
 
   } catch (error) {
-    // Log the error and return a 500 status code if there's an issue
+    // Log the error
     console.error('Error while making request to URL:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    
+    // Return appropriate error response with details
+    if (error.code === 'ENOTFOUND') {
+      return res.status(404).json({ 
+        error: 'Host not found',
+        details: `Could not resolve the hostname in the URL: ${url}`,
+        code: error.code
+      });
+    } else if (error.code === 'ECONNREFUSED') {
+      return res.status(502).json({ 
+        error: 'Connection refused',
+        details: `The server at ${url} actively refused the connection`,
+        code: error.code
+      });
+    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      return res.status(400).json({ 
+        error: 'Malformed URL or protocol not supported',
+        details: error.message,
+        url: url
+      });
+    } else if (error.message.includes('timeout')) {
+      return res.status(504).json({ 
+        error: 'Request timeout',
+        details: 'The server took too long to respond'
+      });
+    }
+    
+    // Generic error for other cases
+    return res.status(500).json({ 
+      error: 'Proxy request failed',
+      details: error.message
+    });
   }
 };
 

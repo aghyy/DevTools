@@ -1,3 +1,5 @@
+"use client";
+
 import { TopSpacing } from "@/components/top-spacing";
 import {
   Breadcrumb,
@@ -5,9 +7,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { MagicCard } from "@/components/ui/magic-card";
+import { useRouter } from "next/navigation";
+import { tools, Tool } from "@/utils/tools";
 
 export default function Tools() {
-
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
@@ -23,8 +28,42 @@ export default function Tools() {
       <TopSpacing />
 
       <div className="mx-12 mb-24">
-
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Developer Tools</h1>
+          <p className="text-muted-foreground mt-2">A collection of useful tools for developers</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {tools.map((tool) => (
+            <ToolCard key={tool.title} tool={tool} />
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+type ToolCardProps = {
+  tool: Tool;
+};
+
+function ToolCard({ tool }: ToolCardProps) {
+  const router = useRouter();
+
+  return (
+    <MagicCard className="overflow-hidden cursor-pointer h-[180px]" onClick={() => router.push(tool.url)}>
+      <Card className="h-full border-0 bg-transparent">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            {tool.icon && <tool.icon className="size-5" />}
+            <CardTitle className="text-xl">{tool.title}</CardTitle>
+          </div>
+          <CardDescription className="mt-2">{tool.description}</CardDescription>
+        </CardHeader>
+        <CardFooter className="absolute bottom-0 w-full">
+          <div className="text-sm text-muted-foreground hover:underline">Use tool →</div>
+        </CardFooter>
+      </Card>
+    </MagicCard>
   );
 }
