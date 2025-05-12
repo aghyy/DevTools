@@ -1,4 +1,78 @@
 const { checkMD5AgainstWordlist, checkSHA1AgainstWordlist, addToWordlistHelper } = require('../utils/toolHelper');
+const db = require('../models');
+const crypto = require('crypto');
+
+// Function to generate a random short code
+const generateShortCode = () => {
+  return crypto.randomBytes(4).toString('hex');
+};
+
+// Create a shortened URL
+const shortenUrl = async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: "URL is required" });
+  }
+
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch (err) {
+    return res.status(400).json({ error: "Invalid URL format" });
+  }
+
+  try {
+    // Generate a unique short code
+    let shortCode;
+    let existingUrl;
+    
+    do {
+      shortCode = generateShortCode();
+      existingUrl = await db.shortenedUrls.findOne({ where: { shortCode } });
+    } while (existingUrl);
+
+    // Create a new shortened URL entry
+    const shortenedUrl = await db.shortenedUrls.create({
+      originalUrl: url,
+      shortCode
+    });
+
+    return res.status(201).json({ 
+      shortCode,
+      shortUrl: `${req.protocol}://${req.get('host')}/s/${shortCode}`
+    });
+  } catch (error) {
+    console.error('Error shortening URL:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Redirect to the original URL
+const redirectToOriginalUrl = async (req, res) => {
+  const { shortCode } = req.params;
+
+  try {
+    const shortenedUrl = await db.shortenedUrls.findOne({ 
+      where: { shortCode } 
+    });
+
+    if (!shortenedUrl) {
+      return res.status(404).json({ error: 'URL not found' });
+    }
+
+    // Check if URL has expired
+    if (shortenedUrl.expiresAt && new Date() > new Date(shortenedUrl.expiresAt)) {
+      await shortenedUrl.destroy(); // Remove expired URL
+      return res.status(404).json({ error: 'URL has expired' });
+    }
+
+    return res.json({ originalUrl: shortenedUrl.originalUrl });
+  } catch (error) {
+    console.error('Error redirecting to original URL:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 const useProxy = async (req, res) => {
   // Extract the URL from the query parameters
@@ -180,4 +254,4 @@ const addToWordlist = async (req, res) => {
   }
 }
 
-module.exports = { decryptMD5, decryptSHA1, addToWordlist, useProxy };
+module.exports = { decryptMD5, decryptSHA1, addToWordlist, useProxy, shortenUrl, redirectToOriginalUrl };

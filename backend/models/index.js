@@ -20,6 +20,7 @@ db.sequelize = sequelize;
 db.users = require("./userModel")(sequelize, DataTypes);
 db.activities = require("./activityModel")(sequelize, DataTypes);
 db.bookmarks = require("./bookmarkModel")(sequelize, DataTypes);
+db.shortenedUrls = require("./shortenedUrl")(sequelize, DataTypes);
 
 // Define relationships
 db.users.hasMany(db.activities, { foreignKey: "userId" });
