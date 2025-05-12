@@ -1,10 +1,10 @@
-import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Library, GraduationCap, Code, Home } from "lucide-react";
+import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home } from "lucide-react";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { LucideIcon } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
 
 // Type definitions for the tools
-export type ToolType = 'tool' | 'bookmark' | 'knowledge' | 'library';
+export type ToolType = 'tool' | 'bookmark';
 
 export interface Tool {
   title: string;
@@ -78,8 +78,6 @@ export const tools: Tool[] = [
 export const sidebarItems = {
   general: [
     { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Libraries", url: "/libraries", icon: Library },
-    { title: "Knowledge Base", url: "/knowledge-base", icon: GraduationCap },
     { title: "Bookmarks", url: "/bookmarks", icon: Book },
     { title: "Code Snippets", url: "/code-snippets", icon: Code },
   ],
@@ -108,9 +106,4 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/vigenere": { name: "Vigenère Cipher", type: "tool", icon: "Lock" },
   // Bookmarks
   "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
-  // Libraries
-  "/libraries": { name: "Libraries", type: "library", icon: "Library" },
-  "/libraries/javascript": { name: "JavaScript Libraries", type: "library", icon: "Library" },
-  // Knowledge base
-  "/knowledge-base": { name: "Knowledge Base", type: "knowledge", icon: "GraduationCap" },
 }; 

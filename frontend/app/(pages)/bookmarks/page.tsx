@@ -24,7 +24,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, ExternalLink, Filter, TagIcon, FolderIcon } from "lucide-react";
+import { Plus, Search, ExternalLink, Filter, TagIcon, FolderIcon, Globe, User } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bookmark, BookmarkFormData } from "@/types/bookmarks";
 import {
   getUserBookmarks,
@@ -48,8 +48,27 @@ import {
   updateBookmark,
   deleteBookmark,
   getUserCategories,
-  getUserTags
+  getUserTags,
+  getAllPublicBookmarks
 } from "@/services/bookmarkService";
+import { getUser } from "@/services/auth";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+// Interface for user data
+interface UserData {
+  id?: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+// Interface for public bookmarks by user
+interface UserPublicBookmarks {
+  user: string;
+  username: string;
+  bookmarks: Bookmark[];
+}
 
 export default function Bookmarks() {
   const { toast } = useToast();
@@ -63,6 +82,9 @@ export default function Bookmarks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("personal");
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [publicBookmarks, setPublicBookmarks] = useState<UserPublicBookmarks[]>([]);
 
   // Form and dialog state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -74,42 +96,85 @@ export default function Bookmarks() {
 
   // Fetch data on component mount
   useEffect(() => {
-    fetchBookmarks();
-    fetchCategories();
-    fetchTags();
+    fetchUserData();
+    fetchPersonalBookmarks();
+    if (activeTab === "public") {
+      fetchPublicBookmarks();
+    }
   }, []);
 
-  // Apply filters and search
   useEffect(() => {
-    let results = [...bookmarks];
-
-    // Apply category filter
-    if (selectedCategory) {
-      results = results.filter(bookmark => bookmark.category === selectedCategory);
+    if (activeTab === "personal") {
+      fetchPersonalBookmarks();
+      fetchCategories();
+      fetchTags();
+    } else {
+      fetchPublicBookmarks();
     }
+  }, [activeTab]);
 
-    // Apply tag filter
-    if (selectedTag) {
-      results = results.filter(bookmark => bookmark.tags.includes(selectedTag));
+  // Apply filters and search for personal bookmarks
+  useEffect(() => {
+    if (activeTab === "personal") {
+      let results = [...bookmarks];
+
+      // Apply category filter
+      if (selectedCategory) {
+        results = results.filter(bookmark => bookmark.category === selectedCategory);
+      }
+
+      // Apply tag filter
+      if (selectedTag) {
+        results = results.filter(bookmark => bookmark.tags.includes(selectedTag));
+      }
+
+      // Apply search term
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        results = results.filter(bookmark =>
+          bookmark.title.toLowerCase().includes(term) ||
+          (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
+          bookmark.url.toLowerCase().includes(term) ||
+          (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
+          bookmark.tags.some(tag => tag.toLowerCase().includes(term))
+        );
+      }
+
+      setFilteredBookmarks(results);
+    } else {
+      // Filter public bookmarks
+      let results: Bookmark[] = [];
+      publicBookmarks.forEach(userBookmarks => {
+        results = results.concat(userBookmarks.bookmarks);
+      });
+
+      // Apply search term for public bookmarks
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        results = results.filter(bookmark =>
+          bookmark.title.toLowerCase().includes(term) ||
+          (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
+          bookmark.url.toLowerCase().includes(term) ||
+          (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
+          bookmark.tags.some(tag => tag.toLowerCase().includes(term))
+        );
+      }
+
+      setFilteredBookmarks(results);
     }
-
-    // Apply search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      results = results.filter(bookmark =>
-        bookmark.title.toLowerCase().includes(term) ||
-        (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
-        bookmark.url.toLowerCase().includes(term) ||
-        (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
-        bookmark.tags.some(tag => tag.toLowerCase().includes(term))
-      );
-    }
-
-    setFilteredBookmarks(results);
-  }, [bookmarks, searchTerm, selectedCategory, selectedTag]);
+  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, activeTab]);
 
   // Fetch functions
-  const fetchBookmarks = async () => {
+  const fetchUserData = async () => {
+    try {
+      const user = await getUser();
+      setUserData(user);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  const fetchPersonalBookmarks = async () => {
     setIsLoading(true);
     try {
       const bookmarks = await getUserBookmarks();
@@ -119,6 +184,31 @@ export default function Bookmarks() {
       toast({
         title: "Error",
         description: "Failed to load bookmarks",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchPublicBookmarks = async () => {
+    setIsLoading(true);
+    try {
+      const allPublicBookmarks = await getAllPublicBookmarks();
+      setPublicBookmarks(allPublicBookmarks);
+      
+      // Flatten all public bookmarks for display
+      let allBookmarks: Bookmark[] = [];
+      allPublicBookmarks.forEach(userBookmarks => {
+        allBookmarks = allBookmarks.concat(userBookmarks.bookmarks);
+      });
+      
+      setFilteredBookmarks(allBookmarks);
+    } catch (error) {
+      console.error("Error fetching public bookmarks:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load public bookmarks",
         variant: "destructive",
       });
     } finally {
@@ -231,6 +321,14 @@ export default function Bookmarks() {
     setFilterDialogOpen(false);
   };
 
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSelectedCategory(null);
+    setSelectedTag(null);
+    setSearchTerm("");
+  };
+
   // Rendering
   const renderNoResults = () => (
     <div className="text-center py-16">
@@ -239,14 +337,20 @@ export default function Bookmarks() {
       </div>
       <h3 className="text-xl font-medium mb-2">No bookmarks found</h3>
       <p className="text-muted-foreground mb-6">
-        {bookmarks.length > 0
-          ? "Try adjusting your filters or search term"
-          : "Add your first bookmark to get started"}
+        {activeTab === "personal" ? (
+          bookmarks.length > 0 
+            ? "Try adjusting your filters or search term" 
+            : "Add your first bookmark to get started"
+        ) : (
+          "No public bookmarks available"
+        )}
       </p>
-      <Button onClick={() => handleOpenForm()}>
-        <Plus className="h-4 w-4 mr-2" />
-        Add Bookmark
-      </Button>
+      {activeTab === "personal" && (
+        <Button onClick={() => handleOpenForm()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Bookmark
+        </Button>
+      )}
     </div>
   );
 
@@ -269,14 +373,34 @@ export default function Bookmarks() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
             <p className="text-muted-foreground">
-              Save and organize links to your favorite resources
+              {activeTab === "personal" && userData ? (
+                `${userData.firstName}'s bookmarks and favorite resources`
+              ) : (
+                "Public bookmarks shared by the community"
+              )}
             </p>
           </div>
-          <Button onClick={() => handleOpenForm()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Bookmark
-          </Button>
+          {activeTab === "personal" && (
+            <Button onClick={() => handleOpenForm()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Bookmark
+            </Button>
+          )}
         </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="personal" className="mb-8" onValueChange={handleTabChange}>
+          <TabsList>
+            <TabsTrigger value="personal" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Personal
+            </TabsTrigger>
+            <TabsTrigger value="public" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Public
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
@@ -293,75 +417,111 @@ export default function Bookmarks() {
               />
             </div>
 
-            {/* Categories */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <FolderIcon className="h-4 w-4 mr-2" />
-                    Categories
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                <div
-                  className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  <span>All Categories</span>
-                  <Badge variant="outline" className="ml-auto">
-                    {bookmarks.length}
-                  </Badge>
-                </div>
-                {categories.map((category) => (
+            {/* Categories - Only show for personal bookmarks */}
+            {activeTab === "personal" && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <FolderIcon className="h-4 w-4 mr-2" />
+                      Categories
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
                   <div
-                    key={category}
-                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
-                    onClick={() => setSelectedCategory(category)}
+                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
+                    onClick={() => setSelectedCategory(null)}
                   >
-                    <span>{category}</span>
+                    <span>All Categories</span>
                     <Badge variant="outline" className="ml-auto">
-                      {bookmarks.filter(bookmark => bookmark.category === category).length}
+                      {bookmarks.length}
                     </Badge>
                   </div>
-                ))}
-                {categories.length === 0 && (
-                  <div className="text-sm text-muted-foreground p-2">
-                    No categories yet
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Popular Tags */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <TagIcon className="h-4 w-4 mr-2" />
-                  Popular Tags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {tags.slice(0, 15).map((tag) => (
-                    <Badge
-                      key={tag.tag}
-                      variant={selectedTag === tag.tag ? "default" : "secondary"}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+                  {categories.map((category) => (
+                    <div
+                      key={category}
+                      className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
+                      onClick={() => setSelectedCategory(category)}
                     >
-                      {tag.tag}
-                      <span className="ml-1 text-xs opacity-70">{tag.count}</span>
-                    </Badge>
+                      <span>{category}</span>
+                      <Badge variant="outline" className="ml-auto">
+                        {bookmarks.filter(bookmark => bookmark.category === category).length}
+                      </Badge>
+                    </div>
                   ))}
-                  {tags.length === 0 && (
-                    <div className="text-sm text-muted-foreground py-2">
-                      No tags yet
+                  {categories.length === 0 && (
+                    <div className="text-sm text-muted-foreground p-2">
+                      No categories yet
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Popular Tags - Only show for personal bookmarks */}
+            {activeTab === "personal" && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <TagIcon className="h-4 w-4 mr-2" />
+                    Popular Tags
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.slice(0, 15).map((tag) => (
+                      <Badge
+                        key={tag.tag}
+                        variant={selectedTag === tag.tag ? "default" : "secondary"}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+                      >
+                        {tag.tag}
+                        <span className="ml-1 text-xs opacity-70">{tag.count}</span>
+                      </Badge>
+                    ))}
+                    {tags.length === 0 && (
+                      <div className="text-sm text-muted-foreground py-2">
+                        No tags yet
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Users list - Only show for public bookmarks */}
+            {activeTab === "public" && publicBookmarks.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
+                  {publicBookmarks.map((userBookmarks) => (
+                    <div
+                      key={userBookmarks.username}
+                      className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
+                    >
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback className="text-xs">
+                          {userBookmarks.username.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-sm font-medium">{userBookmarks.user}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {userBookmarks.bookmarks.length} bookmarks
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Mobile filters dialog */}
             <div className="md:hidden">
@@ -401,8 +561,9 @@ export default function Bookmarks() {
                   <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
-                    onEdit={handleOpenForm}
-                    onDelete={handleDeleteClick}
+                    onEdit={activeTab === "personal" ? handleOpenForm : undefined}
+                    onDelete={activeTab === "personal" ? handleDeleteClick : undefined}
+                    showControls={activeTab === "personal"}
                   />
                 ))}
               </div>
@@ -439,15 +600,17 @@ export default function Bookmarks() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Bookmark</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              bookmark &quot;{bookmarkToDelete?.title}&quot;.
+              Are you sure you want to delete this bookmark? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -497,16 +660,19 @@ export default function Bookmarks() {
                 </Badge>
               ))}
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={clearFilters}>
-              Clear Filters
-            </Button>
-            <Button onClick={() => setFilterDialogOpen(false)}>
-              Apply Filters
-            </Button>
-          </DialogFooter>
+            <div className="flex justify-between mt-6">
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </Button>
+              <Button onClick={() => setFilterDialogOpen(false)}>
+                Apply
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

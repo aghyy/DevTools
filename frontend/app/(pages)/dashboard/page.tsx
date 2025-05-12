@@ -23,8 +23,6 @@ import {
   Clock, 
   Hammer, 
   Book, 
-  Library, 
-  GraduationCap,
   Code,
   Binary,
   Hash,
@@ -56,8 +54,6 @@ interface UserData {
 const iconMap: Record<string, React.ElementType> = {
   'Hammer': Hammer,
   'Book': Book,
-  'Library': Library,
-  'GraduationCap': GraduationCap,
   'Code': Code,
   'Binary': Binary,
   'Hash': Hash,
@@ -87,18 +83,6 @@ export default function Dashboard() {
       icon: Book,
       description: "Browse through your bookmarks"
     },
-    {
-      name: "Knowledge Base",
-      href: "/knowledge-base",
-      icon: GraduationCap,
-      description: "Access shared knowledge resources"
-    },
-    {
-      name: "Libraries",
-      href: "/libraries",
-      icon: Library,
-      description: "Explore our code libraries"
-    }
   ];
 
   const router = useRouter();

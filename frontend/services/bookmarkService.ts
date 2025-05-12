@@ -29,10 +29,21 @@ export const getUserBookmarks = async (
   }
 };
 
-// Create a new bookmark
-export const createBookmark = async (bookmark: BookmarkFormData): Promise<Bookmark> => {
+// Get a specific bookmark by ID
+export const getBookmarkById = async (id: number): Promise<Bookmark> => {
   try {
-    const response = await api.post("/api/bookmarks", bookmark);
+    const response = await api.get(`/api/bookmarks/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching bookmark ${id}:`, error);
+    throw error;
+  }
+};
+
+// Create a new bookmark
+export const createBookmark = async (data: BookmarkFormData): Promise<Bookmark> => {
+  try {
+    const response = await api.post("/api/bookmarks", data);
     return response.data.bookmark;
   } catch (error) {
     console.error("Error creating bookmark:", error);
@@ -40,24 +51,13 @@ export const createBookmark = async (bookmark: BookmarkFormData): Promise<Bookma
   }
 };
 
-// Get a single bookmark by ID
-export const getBookmarkById = async (id: number): Promise<Bookmark> => {
+// Update an existing bookmark
+export const updateBookmark = async (id: number, data: BookmarkFormData): Promise<Bookmark> => {
   try {
-    const response = await api.get(`/api/bookmarks/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching bookmark with ID ${id}:`, error);
-    throw error;
-  }
-};
-
-// Update a bookmark
-export const updateBookmark = async (id: number, bookmark: Partial<BookmarkFormData>): Promise<Bookmark> => {
-  try {
-    const response = await api.put(`/api/bookmarks/${id}`, bookmark);
+    const response = await api.put(`/api/bookmarks/${id}`, data);
     return response.data.bookmark;
   } catch (error) {
-    console.error(`Error updating bookmark with ID ${id}:`, error);
+    console.error(`Error updating bookmark ${id}:`, error);
     throw error;
   }
 };
@@ -67,12 +67,12 @@ export const deleteBookmark = async (id: number): Promise<void> => {
   try {
     await api.delete(`/api/bookmarks/${id}`);
   } catch (error) {
-    console.error(`Error deleting bookmark with ID ${id}:`, error);
+    console.error(`Error deleting bookmark ${id}:`, error);
     throw error;
   }
 };
 
-// Get all categories used by the current user
+// Get user categories
 export const getUserCategories = async (): Promise<string[]> => {
   try {
     const response = await api.get("/api/bookmarks/categories");
@@ -83,7 +83,7 @@ export const getUserCategories = async (): Promise<string[]> => {
   }
 };
 
-// Get all tags used by the current user with counts
+// Get user tags with counts
 export const getUserTags = async (): Promise<BookmarkTag[]> => {
   try {
     const response = await api.get("/api/bookmarks/tags");
@@ -101,6 +101,17 @@ export const getPublicBookmarks = async (username: string): Promise<PublicBookma
     return response.data;
   } catch (error) {
     console.error(`Error fetching public bookmarks for user ${username}:`, error);
+    throw error;
+  }
+};
+
+// Get all public bookmarks from all users
+export const getAllPublicBookmarks = async (): Promise<{ user: string; username: string; bookmarks: Bookmark[] }[]> => {
+  try {
+    const response = await api.get('/api/bookmarks/public');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all public bookmarks:', error);
     throw error;
   }
 }; 

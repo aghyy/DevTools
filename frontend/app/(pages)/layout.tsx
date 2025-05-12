@@ -28,11 +28,9 @@ export default function PagesLayout({
       const mainPath = '/' + pathname.split('/')[1];
       
       // Default activity metadata based on section
-      const defaultActivityMap: Record<string, {name: string; type: 'tool' | 'bookmark' | 'knowledge' | 'library'; icon: string}> = {
+      const defaultActivityMap: Record<string, {name: string; type: 'tool' | 'bookmark'; icon: string}> = {
         "/tools": { name: "Tools", type: "tool", icon: "Hammer" },
         "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Bookmark" },
-        "/libraries": { name: "Libraries", type: "library", icon: "Library" },
-        "/knowledge-base": { name: "Knowledge Base", type: "knowledge", icon: "GraduationCap" },
       };
       
       activity = defaultActivityMap[mainPath];

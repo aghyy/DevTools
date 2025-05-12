@@ -62,34 +62,36 @@ const createBookmark = async (req, res) => {
   }
 };
 
-// Get all bookmarks for the current user
+// Get bookmarks for current user
 const getUserBookmarks = async (req, res) => {
   try {
     const userId = req.user.id;
-    const category = req.query.category;
-    const tag = req.query.tag;
-    const search = req.query.search;
+    const { category, tag, search } = req.query;
 
-    let whereClause = { userId };
+    const whereClause = { userId };
 
-    // Add optional filters
+    // Apply category filter
     if (category) {
       whereClause.category = category;
     }
 
+    // Apply tag filter (tags are stored as an array)
+    // This uses PostgreSQL array contains operator
     if (tag) {
       whereClause.tags = { [Op.contains]: [tag] };
     }
 
+    // Apply search filter
     if (search) {
-      whereClause = {
-        ...whereClause,
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${search}%` } },
-          { description: { [Op.iLike]: `%${search}%` } },
-          { url: { [Op.iLike]: `%${search}%` } },
-        ],
-      };
+      const searchTerm = `%${search}%`;
+      whereClause[Op.or] = [
+        { title: { [Op.iLike]: searchTerm } },
+        { description: { [Op.iLike]: searchTerm } },
+        { url: { [Op.iLike]: searchTerm } },
+        { category: { [Op.iLike]: searchTerm } },
+      ];
+      // Note: Searching within tags is more complex and might
+      // require a different approach depending on your database
     }
 
     const bookmarks = await Bookmark.findAll({
@@ -99,7 +101,7 @@ const getUserBookmarks = async (req, res) => {
 
     return res.status(200).json(bookmarks);
   } catch (error) {
-    console.error("Error fetching user bookmarks:", error);
+    console.error("Error fetching bookmarks:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -200,7 +202,7 @@ const deleteBookmark = async (req, res) => {
     const bookmarkId = req.params.id;
     const userId = req.user.id;
 
-    // Find the bookmark first
+    // Find the bookmark first to ensure it exists and belongs to the user
     const bookmark = await Bookmark.findOne({
       where: {
         id: bookmarkId,
@@ -226,69 +228,61 @@ const deleteBookmark = async (req, res) => {
   }
 };
 
-// Get all bookmark categories for the current user
+// Get all unique categories for the current user
 const getUserCategories = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Use distinct to get unique categories
-    const categories = await Bookmark.findAll({
-      attributes: [
-        [db.Sequelize.fn("DISTINCT", db.Sequelize.col("category")), "category"],
-      ],
-      where: {
-        userId,
-        category: { [Op.not]: null },
-      },
+    // Find all bookmarks for the user
+    const bookmarks = await Bookmark.findAll({
+      where: { userId },
+      attributes: ["category"],
     });
 
-    // Extract category values from the result
-    const categoryList = categories
-      .map((item) => item.category)
-      .filter(Boolean);
+    // Extract and filter out null categories
+    const categories = bookmarks
+      .map((bookmark) => bookmark.category)
+      .filter((category) => category !== null);
 
-    return res.status(200).json(categoryList);
+    // Remove duplicates
+    const uniqueCategories = [...new Set(categories)];
+
+    return res.status(200).json(uniqueCategories);
   } catch (error) {
-    console.error("Error fetching categories:", error);
+    console.error("Error fetching user categories:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// Get all tags used in bookmarks by the current user
+// Get all unique tags with counts for the current user
 const getUserTags = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get all bookmarks with tags for this user
+    // Find all bookmarks for the user
     const bookmarks = await Bookmark.findAll({
+      where: { userId },
       attributes: ["tags"],
-      where: {
-        userId,
-        // Use array length check instead of comparing with empty array
-        tags: { [Op.not]: null },
-      },
     });
 
-    // Extract all tags and count their frequency
+    // Count occurrences of each tag
     const tagCounts = {};
-
     bookmarks.forEach((bookmark) => {
-      if (bookmark.tags && bookmark.tags.length > 0) {
+      if (bookmark.tags && bookmark.tags.length) {
         bookmark.tags.forEach((tag) => {
-          if (tag) {
-            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-          }
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
         });
       }
     });
 
-    // Format the results
-    const tags = Object.entries(tagCounts)
-      .map(([tag, count]) => ({
-        tag,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count);
+    // Convert to array of objects with tag and count
+    const tags = Object.entries(tagCounts).map(([tag, count]) => ({
+      tag,
+      count,
+    }));
+
+    // Sort by count in descending order
+    tags.sort((a, b) => b.count - a.count);
 
     return res.status(200).json(tags);
   } catch (error) {
@@ -332,6 +326,43 @@ const getPublicBookmarks = async (req, res) => {
   }
 };
 
+// Get all public bookmarks from all users
+const getAllPublicBookmarks = async (req, res) => {
+  try {
+    // Get all users
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'firstName', 'lastName']
+    });
+
+    // For each user, get their public bookmarks
+    const result = await Promise.all(
+      users.map(async (user) => {
+        const bookmarks = await Bookmark.findAll({
+          where: {
+            userId: user.id,
+            isPublic: true,
+          },
+          order: [["createdAt", "DESC"]],
+        });
+
+        return {
+          user: `${user.firstName} ${user.lastName}`,
+          username: user.username,
+          bookmarks,
+        };
+      })
+    );
+
+    // Filter out users with no public bookmarks
+    const usersWithPublicBookmarks = result.filter(item => item.bookmarks.length > 0);
+    
+    return res.status(200).json(usersWithPublicBookmarks);
+  } catch (error) {
+    console.error("Error fetching all public bookmarks:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   createBookmark,
   getUserBookmarks,
@@ -341,4 +372,5 @@ module.exports = {
   getUserCategories,
   getUserTags,
   getPublicBookmarks,
+  getAllPublicBookmarks,
 };

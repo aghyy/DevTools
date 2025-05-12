@@ -12,8 +12,6 @@ const sampleActivities = [
   { name: 'Base64 Converter', path: '/tools/base64', type: 'tool', icon: 'Binary' },
   { name: 'Regex Tester', path: '/tools/regex', type: 'tool', icon: 'Regex' },
   { name: 'Bookmarks', path: '/bookmarks', type: 'bookmark', icon: 'Bookmark' },
-  { name: 'Libraries', path: '/libraries', type: 'library', icon: 'Library' },
-  { name: 'Knowledge Base', path: '/knowledge-base', type: 'knowledge', icon: 'GraduationCap' }
 ];
 
 // Function to create random activities
