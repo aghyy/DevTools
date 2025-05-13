@@ -268,12 +268,19 @@ export default function RegexTester() {
 
       {/* Title */}
       <div className="flex items-center justify-center gap-2 my-3">
-        <h1 className="text-3xl font-bold my-3 text-center">Regular Expression Tester</h1>
+        <h1 className="text-3xl font-bold my-3 text-center">Regular Expressions</h1>
         <FavoriteButton
           toolUrl="/tools/regex"
           toolName="Regex"
           iconName="Regex"
         />
+      </div>
+
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Regular expressions are a powerful way to match patterns in text. They are used in many programming languages, including JavaScript, Python, PHP, and Go.
+        </p>
       </div>
 
       {/* Main Content */}

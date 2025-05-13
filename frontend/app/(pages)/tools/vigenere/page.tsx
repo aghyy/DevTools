@@ -108,6 +108,13 @@ export default function Vigenere() {
         />
       </div>
 
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Vigenère Cipher is a method of encrypting alphabetic text by using a keyword to shift the letters of the plaintext.
+        </p>
+      </div>
+
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
         <Card className="flex flex-col p-6 gap-6">

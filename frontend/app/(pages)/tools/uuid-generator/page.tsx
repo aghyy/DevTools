@@ -42,7 +42,7 @@ export default function UuidGenerator() {
   const [version, setVersion] = useState("v4");
   const [namespace, setNamespace] = useState(NAMESPACE_DNS);
   const [name, setName] = useState("example.com");
-  
+
   const router = useRouter();
 
   const routeTo = (path: string) => {
@@ -51,7 +51,7 @@ export default function UuidGenerator() {
 
   const generateUuids = () => {
     const newUuids: string[] = [];
-    
+
     for (let i = 0; i < quantity; i++) {
       switch (version) {
         case "nil":
@@ -73,7 +73,7 @@ export default function UuidGenerator() {
           newUuids.push(uuidv4());
       }
     }
-    
+
     setUuids(newUuids);
   };
 
@@ -92,7 +92,7 @@ export default function UuidGenerator() {
   const handleQuantityChange = (value: number) => {
     const newQuantity = Math.max(1, Math.min(100, value));
     setQuantity(newQuantity);
-    
+
     if (newQuantity > uuids.length) {
       // Generate more UUIDs
       const newUuids = [...uuids];
@@ -146,27 +146,27 @@ export default function UuidGenerator() {
       {/* Title with Favorite Button */}
       <div className="flex items-center justify-center gap-2 my-3">
         <h1 className="text-3xl font-bold text-center">UUID Generator</h1>
-        <FavoriteButton 
-          toolUrl="/tools/uuid-generator" 
-          toolName="UUID Generator" 
-          iconName="Fingerprint" 
+        <FavoriteButton
+          toolUrl="/tools/uuid-generator"
+          toolName="UUID Generator"
+          iconName="Fingerprint"
         />
       </div>
 
-      <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
-        {/* Description */}
-        <div className="text-center max-w-2xl mx-auto">
-          <p className="text-muted-foreground">
-            A Universally Unique Identifier (UUID) is a 128-bit number used to identify information in
-            computer systems. The number of possible UUIDs is 16<sup>32</sup>, which is 2<sup>128</sup> or about
-            3.4×10<sup>38</sup> (which is a lot!).
-          </p>
-        </div>
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          A Universally Unique Identifier (UUID) is a 128-bit number used to identify information in
+          computer systems. The number of possible UUIDs is 16<sup>32</sup>, which is 2<sup>128</sup> or about
+          3.4×10<sup>38</sup> (which is a lot!).
+        </p>
+      </div>
 
+      <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
         {/* Options Card */}
         <Card className="flex flex-col p-6 gap-6">
           <h2 className="text-xl font-semibold">UUID Options</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Version Selection */}
             <div className="flex flex-col gap-2">
@@ -237,7 +237,7 @@ export default function UuidGenerator() {
 
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <Button 
+            <Button
               variant="destructive"
               onClick={() => {
                 setUuids([version === "nil" ? NIL_UUID : uuidv4()]);
@@ -258,9 +258,9 @@ export default function UuidGenerator() {
         <Card className="flex flex-col p-6 gap-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Generated UUIDs</h2>
-            <Button 
-              variant="secondary" 
-              size="sm" 
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => handleCopy(uuids.join('\n'))}
               className="gap-2"
             >
@@ -268,18 +268,18 @@ export default function UuidGenerator() {
               Copy All
             </Button>
           </div>
-          
+
           <div className="flex flex-col gap-2">
             {uuids.map((uuid, index) => (
               <div key={index} className="flex gap-2 items-center">
-                <Input 
-                  value={uuid} 
-                  readOnly 
+                <Input
+                  value={uuid}
+                  readOnly
                   className="font-mono"
                 />
-                <Button 
-                  variant="outline" 
-                  size="icon" 
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => handleCopy(uuid)}
                   className="h-10 w-10 flex-shrink-0"
                 >

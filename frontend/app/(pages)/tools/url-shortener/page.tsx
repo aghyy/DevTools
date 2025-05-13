@@ -166,6 +166,13 @@ export default function URLShortener() {
         />
       </div>
 
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Shortening URLs is a common practice in web development. It is a way to make URLs more manageable and easier to share.
+        </p>
+      </div>
+
       {/* Content */}
       <div className="mt-8 mb-24 flex flex-col gap-5 max-w-2xl mx-auto">
         <Card className="p-6">

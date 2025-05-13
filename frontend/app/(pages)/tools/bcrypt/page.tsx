@@ -78,7 +78,7 @@ export default function BcryptPage() {
   // Copy to clipboard
   const copyToClipboard = () => {
     if (!hashResult) return;
-    
+
     navigator.clipboard.writeText(hashResult)
       .then(() => toast.success("Hash copied to clipboard"))
       .catch(() => toast.error("Failed to copy hash"));
@@ -106,19 +106,22 @@ export default function BcryptPage() {
       {/* Title with Favorite Button */}
       <div className="flex items-center justify-center gap-2 my-3">
         <h1 className="text-3xl font-bold text-center">Bcrypt Tool</h1>
-        <FavoriteButton 
-          toolUrl="/tools/bcrypt" 
-          toolName="Bcrypt" 
-          iconName="KeyRound" 
+        <FavoriteButton
+          toolUrl="/tools/bcrypt"
+          toolName="Bcrypt"
+          iconName="KeyRound"
         />
+      </div>
+
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Bcrypt is a password-hashing function based on the Blowfish cipher.
+        </p>
       </div>
 
       {/* Main content */}
       <div className="container mx-auto py-6">
-        <p className="text-muted-foreground text-center mb-8">
-          Hash and compare text strings using bcrypt. Bcrypt is a password-hashing function based on the Blowfish cipher.
-        </p>
-
         <Tabs defaultValue="hash" className="max-w-3xl mx-auto">
           <TabsList className="grid grid-cols-2 mb-8">
             <TabsTrigger value="hash">Hash</TabsTrigger>

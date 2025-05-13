@@ -63,7 +63,7 @@ export default function Base64() {
     setDecodedText("");
     setEncodedText("");
   };
-  
+
   return (
     <div className="h-full w-full">
       {/* Breadcrumb */}
@@ -86,11 +86,18 @@ export default function Base64() {
       {/* Title with Favorite Button */}
       <div className="flex items-center justify-center gap-2 my-3">
         <h1 className="text-3xl font-bold text-center">Base64 Encoder/Decoder</h1>
-        <FavoriteButton 
-          toolUrl="/tools/base64" 
-          toolName="Base64" 
-          iconName="Binary" 
+        <FavoriteButton
+          toolUrl="/tools/base64"
+          toolName="Base64"
+          iconName="Binary"
         />
+      </div>
+
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It is commonly used for transmitting binary data over text-based channels, such as email or HTTP headers.
+        </p>
       </div>
 
       {/* Content */}

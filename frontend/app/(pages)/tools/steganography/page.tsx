@@ -359,10 +359,17 @@ const Steganography: React.FC = () => {
           iconName="IoLockClosedOutline"
         />
       </div>
+
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Steganography is the practice of hiding information within other non-secret data, such as images or audio files.
+        </p>
+      </div>
+
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
         <div className="flex flex-col gap-5 md:flex-row">
           <Card className='p-6 flex-1'>
-
             {/* Encode Section */}
             <div>
               <h2 className="text-lg font-semibold mb-2">Encode</h2>

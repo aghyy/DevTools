@@ -51,7 +51,7 @@ export default function Hash() {
 
     try {
       let response;
-      
+
       // Use the generic endpoint for non-hex encodings or newer algorithms
       if (!['md5', 'sha1'].includes(algorithm)) {
         response = await apiWithoutCredentials.get(`/api/tools/decrypt-hash?hash=${hash}&algorithm=${algorithm}&encoding=${encoding}`);
@@ -83,9 +83,9 @@ export default function Hash() {
       setError("Please enter text to encrypt.");
       return;
     }
-    
+
     let hash;
-    
+
     // Get hash based on selected algorithm
     switch (algorithm) {
       case 'md5':
@@ -116,7 +116,7 @@ export default function Hash() {
         hash = CryptoJS.MD5(text);
         break;
     }
-    
+
     // Format the hash according to the selected encoding
     switch (encoding) {
       case 'binary':
@@ -162,7 +162,7 @@ export default function Hash() {
     if (encoding !== 'hex') {
       return true; // Simple accept for non-hex encodings since they're harder to validate by pattern
     }
-    
+
     const hashPatterns: Record<string, RegExp> = {
       md5: /^[a-f0-9]{32}$/,
       sha1: /^[a-f0-9]{40}$/,
@@ -215,10 +215,16 @@ export default function Hash() {
           iconName="Hash"
         />
       </div>
+      
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          Hash functions are cryptographic algorithms that transform data into a fixed-length value, known as a hash. They are widely used in various applications, including password storage, data integrity verification, and digital signatures.
+        </p>
+      </div>
 
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
-
         <div className="flex items-center justify-between gap-4">
           <div className="w-1/2">
             <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>

@@ -80,15 +80,21 @@ export default function JSONFormatter() {
       {/* Title */}
       <div className="flex items-center justify-center gap-2 my-3">
         <h1 className="text-3xl font-bold my-3 text-center">JSON Formatter & Validator</h1>
-        <FavoriteButton 
-          toolUrl="/tools/json-formatter" 
-          toolName="JSON Formatter" 
-          iconName="Braces" 
+        <FavoriteButton
+          toolUrl="/tools/json-formatter"
+          toolName="JSON Formatter"
+          iconName="Braces"
         />
       </div>
 
-      <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          JSON is a lightweight data-interchange format that is easy for humans to read and write. It is a popular format for web applications because it is easy to read and write, and it is a standard format for many programming languages.
+        </p>
+      </div>
 
+      <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
         {/* Input Section */}
         <Card>
           <CardHeader>

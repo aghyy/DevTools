@@ -38,22 +38,22 @@ export default function TokenGenerator() {
   // Generate a random token based on the selected options
   const generateToken = () => {
     let characters = "";
-    
+
     if (includeLowercase) characters += "abcdefghijklmnopqrstuvwxyz";
     if (includeUppercase) characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     if (includeNumbers) characters += "0123456789";
     if (includeSymbols) characters += "!@#$%^&*()_+{}|:<>?-=[];,./";
-    
+
     // Default to lowercase if nothing is selected
     if (characters === "") characters = "abcdefghijklmnopqrstuvwxyz";
-    
+
     let result = "";
     const charactersLength = characters.length;
-    
+
     for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
-    
+
     setToken(result);
   };
 
@@ -88,11 +88,18 @@ export default function TokenGenerator() {
       {/* Title with Favorite Button */}
       <div className="flex items-center justify-center gap-2 my-3">
         <h1 className="text-3xl font-bold text-center">Token Generator</h1>
-        <FavoriteButton 
-          toolUrl="/tools/token-generator" 
-          toolName="Token Generator" 
-          iconName="Code" 
+        <FavoriteButton
+          toolUrl="/tools/token-generator"
+          toolName="Token Generator"
+          iconName="Code"
         />
+      </div>
+
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          A token is a string of characters that is used to identify a user or a device. It is often used in authentication and authorization processes.
+        </p>
       </div>
 
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
@@ -102,18 +109,18 @@ export default function TokenGenerator() {
             <div className="flex justify-between items-center">
               <Label htmlFor="token" className="text-lg font-semibold">Generated Token</Label>
               <div className="flex gap-2">
-                <Button 
-                  variant="secondary" 
-                  size="icon" 
+                <Button
+                  variant="secondary"
+                  size="icon"
                   onClick={() => handleCopy(token)}
                   disabled={!token}
                   className="h-8 w-8"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="secondary" 
-                  size="icon" 
+                <Button
+                  variant="secondary"
+                  size="icon"
                   onClick={generateToken}
                   className="h-8 w-8"
                 >
@@ -121,9 +128,9 @@ export default function TokenGenerator() {
                 </Button>
               </div>
             </div>
-            <Input 
+            <Input
               id="token"
-              value={token} 
+              value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Your generated token will appear here"
               className="font-mono"
@@ -134,7 +141,7 @@ export default function TokenGenerator() {
         {/* Options Card */}
         <Card className="flex flex-col p-6 gap-6">
           <h2 className="text-xl font-semibold">Token Options</h2>
-          
+
           {/* Length Option */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
@@ -169,7 +176,7 @@ export default function TokenGenerator() {
                 onCheckedChange={setIncludeUppercase}
               />
             </div>
-            
+
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="lowercase" className="cursor-pointer">Lowercase Letters (a-z)</Label>
               <Switch
@@ -178,7 +185,7 @@ export default function TokenGenerator() {
                 onCheckedChange={setIncludeLowercase}
               />
             </div>
-            
+
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="numbers" className="cursor-pointer">Numbers (0-9)</Label>
               <Switch
@@ -187,7 +194,7 @@ export default function TokenGenerator() {
                 onCheckedChange={setIncludeNumbers}
               />
             </div>
-            
+
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="symbols" className="cursor-pointer">Symbols (!@#$%^&*)</Label>
               <Switch

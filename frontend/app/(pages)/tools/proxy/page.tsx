@@ -171,9 +171,15 @@ export default function Proxy() {
         />
       </div>
 
+      {/* Description */}
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="text-muted-foreground">
+          A proxy server is a server that acts as an intermediary between a client and a server. It can be used to handle CORS issues, but it can also be used for other purposes.
+        </p>
+      </div>
+
       {/* Info Section */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
-
         {/* Proxy Information */}
         <Card>
           <CardHeader>
