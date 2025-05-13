@@ -9,6 +9,7 @@ const toolRoutes = require('./routes/toolRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
 const favoriteToolRoutes = require('./routes/favoriteToolRoutes');
+const codeSnippetRoutes = require('./routes/codeSnippetRoutes');
 
 const PORT = process.env.PORT || 5039;
 const app = express();
@@ -68,5 +69,6 @@ app.use('/api/tools', toolRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/favorite-tools', favoriteToolRoutes);
+app.use('/api/code-snippets', codeSnippetRoutes);
 
 app.listen(PORT, () => console.log(`Server is connected on ${PORT}`));
