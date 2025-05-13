@@ -1,0 +1,215 @@
+"use client";
+
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { RefreshCw, Copy, Trash } from "lucide-react";
+
+import { TopSpacing } from "@/components/top-spacing";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import FavoriteButton from "@/components/favorite-button";
+import { handleCopy } from '@/utils/clipboard';
+
+export default function TokenGenerator() {
+  const [token, setToken] = useState("");
+  const [length, setLength] = useState(16);
+  const [includeUppercase, setIncludeUppercase] = useState(true);
+  const [includeLowercase, setIncludeLowercase] = useState(true);
+  const [includeNumbers, setIncludeNumbers] = useState(true);
+  const [includeSymbols, setIncludeSymbols] = useState(false);
+
+  const router = useRouter();
+
+  const routeTo = (path: string) => {
+    router.push(path);
+  }
+
+  // Generate a random token based on the selected options
+  const generateToken = () => {
+    let characters = "";
+    
+    if (includeLowercase) characters += "abcdefghijklmnopqrstuvwxyz";
+    if (includeUppercase) characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (includeNumbers) characters += "0123456789";
+    if (includeSymbols) characters += "!@#$%^&*()_+{}|:<>?-=[];,./";
+    
+    // Default to lowercase if nothing is selected
+    if (characters === "") characters = "abcdefghijklmnopqrstuvwxyz";
+    
+    let result = "";
+    const charactersLength = characters.length;
+    
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    
+    setToken(result);
+  };
+
+  // Generate a token when component mounts or options change
+  useMemo(() => {
+    generateToken();
+  }, [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols]);
+
+  const handleClear = () => {
+    setToken("");
+  };
+
+  return (
+    <div className="h-full w-full">
+      {/* Breadcrumb */}
+      <div className="relative size-0">
+        <Breadcrumb className="absolute left-20 top-[22px] w-max">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink className="cursor-pointer" onClick={() => routeTo('/tools')}>Tools</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Token Generator</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      <TopSpacing />
+
+      {/* Title with Favorite Button */}
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold text-center">Token Generator</h1>
+        <FavoriteButton 
+          toolUrl="/tools/token-generator" 
+          toolName="Token Generator" 
+          iconName="Code" 
+        />
+      </div>
+
+      <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
+        {/* Token Result Card */}
+        <Card className="flex flex-col p-6 gap-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="token" className="text-lg font-semibold">Generated Token</Label>
+              <div className="flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="icon" 
+                  onClick={() => handleCopy(token)}
+                  disabled={!token}
+                  className="h-8 w-8"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  size="icon" 
+                  onClick={generateToken}
+                  className="h-8 w-8"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <Input 
+              id="token"
+              value={token} 
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Your generated token will appear here"
+              className="font-mono"
+            />
+          </div>
+        </Card>
+
+        {/* Options Card */}
+        <Card className="flex flex-col p-6 gap-6">
+          <h2 className="text-xl font-semibold">Token Options</h2>
+          
+          {/* Length Option */}
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="token-length">Length: {length}</Label>
+              <Input
+                id="token-length"
+                type="number"
+                min={4}
+                max={128}
+                value={length}
+                onChange={(e) => setLength(parseInt(e.target.value) || 16)}
+                className="w-20"
+              />
+            </div>
+            <input
+              type="range"
+              min={4}
+              max={128}
+              value={length}
+              onChange={(e) => setLength(parseInt(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          {/* Character Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between space-x-2">
+              <Label htmlFor="uppercase" className="cursor-pointer">Uppercase Letters (A-Z)</Label>
+              <Switch
+                id="uppercase"
+                checked={includeUppercase}
+                onCheckedChange={setIncludeUppercase}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2">
+              <Label htmlFor="lowercase" className="cursor-pointer">Lowercase Letters (a-z)</Label>
+              <Switch
+                id="lowercase"
+                checked={includeLowercase}
+                onCheckedChange={setIncludeLowercase}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2">
+              <Label htmlFor="numbers" className="cursor-pointer">Numbers (0-9)</Label>
+              <Switch
+                id="numbers"
+                checked={includeNumbers}
+                onCheckedChange={setIncludeNumbers}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2">
+              <Label htmlFor="symbols" className="cursor-pointer">Symbols (!@#$%^&*)</Label>
+              <Switch
+                id="symbols"
+                checked={includeSymbols}
+                onCheckedChange={setIncludeSymbols}
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Clear Button */}
+        <div className="flex gap-5 justify-start">
+          <Button
+            onClick={handleClear}
+            variant="destructive"
+          >
+            <Trash className="h-5 w-5 mr-2" />
+            Clear Token
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+} 

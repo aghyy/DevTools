@@ -1,4 +1,15 @@
-const { checkMD5AgainstWordlist, checkSHA1AgainstWordlist, addToWordlistHelper } = require('../utils/toolHelper');
+const { 
+  checkMD5AgainstWordlist, 
+  checkSHA1AgainstWordlist, 
+  checkSHA256AgainstWordlist,
+  checkSHA224AgainstWordlist,
+  checkSHA512AgainstWordlist,
+  checkSHA384AgainstWordlist,
+  checkSHA3AgainstWordlist,
+  checkRIPEMD160AgainstWordlist,
+  checkHashAgainstWordlist,
+  addToWordlistHelper 
+} = require('../utils/toolHelper');
 const db = require('../models');
 const crypto = require('crypto');
 
@@ -213,9 +224,48 @@ const useProxy = async (req, res) => {
   }
 };
 
+// Create a generic decrypt function that handles all hash types
+const decryptHash = async (req, res) => {
+  // Extract hash and algorithm from the query parameters
+  const { hash, algorithm, encoding = 'hex' } = req.query;
+
+  // Validate encoding
+  const validEncodings = ['hex', 'base64', 'base64url', 'binary'];
+  if (!validEncodings.includes(encoding)) {
+    return res.status(400).json({ error: "Invalid encoding format. Must be one of: hex, base64, base64url, binary" });
+  }
+  
+  // Check if the hash is provided
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+
+  // Check if algorithm is provided
+  if (!algorithm) {
+    return res.status(400).json({ error: "Algorithm parameter is required" });
+  }
+
+  // Validate algorithm
+  const validAlgorithms = ['md5', 'sha1', 'sha256', 'sha224', 'sha512', 'sha384', 'sha3', 'ripemd160'];
+  if (!validAlgorithms.includes(algorithm)) {
+    return res.status(400).json({ error: "Invalid algorithm. Must be one of: md5, sha1, sha256, sha224, sha512, sha384, sha3, ripemd160" });
+  }
+
+  try {
+    // Call the appropriate check function based on the algorithm
+    const decryptedText = await checkHashAgainstWordlist(hash, algorithm, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    // Log the error and return a 500 status code if there's an issue
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Maintain original functions for backward compatibility
 const decryptMD5 = async (req, res) => {
   // Extract hash from the query parameters
-  const { hash } = req.query;
+  const { hash, encoding = 'hex' } = req.query;
 
   // Check if the hash is provided
   if (!hash) {
@@ -223,8 +273,8 @@ const decryptMD5 = async (req, res) => {
   }
 
   try {
-    // Call the checkMD5AgainstWordlist function to check the hash
-    const decryptedText = await checkMD5AgainstWordlist(hash);
+    // Call the checkMD5AgainstWordlist function to check the hash with proper encoding
+    const decryptedText = await checkHashAgainstWordlist(hash, 'md5', encoding);
 
     return res.json({ decryptedText: decryptedText });
 
@@ -237,7 +287,7 @@ const decryptMD5 = async (req, res) => {
 
 const decryptSHA1 = async (req, res) => {
   // Extract hash from the query parameters
-  const { hash } = req.query;
+  const { hash, encoding = 'hex' } = req.query;
 
   // Check if the hash is provided
   if (!hash) {
@@ -245,13 +295,98 @@ const decryptSHA1 = async (req, res) => {
   }
 
   try {
-    // Call the checkSHA1AgainstWordlist function to check the hash
-    const decryptedText = await checkSHA1AgainstWordlist(hash);
+    // Call the checkSHA1AgainstWordlist function to check the hash with proper encoding
+    const decryptedText = await checkHashAgainstWordlist(hash, 'sha1', encoding);
 
     return res.json({ decryptedText: decryptedText });
 
   } catch (error) {
     // Log the error and return a 500 status code if there's an issue
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Add specific functions for each new hash type
+const decryptSHA256 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkSHA256AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const decryptSHA224 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkSHA224AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const decryptSHA512 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkSHA512AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const decryptSHA384 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkSHA384AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const decryptSHA3 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkSHA3AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
+    console.error('Error while processing hash:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const decryptRIPEMD160 = async (req, res) => {
+  const { hash, encoding = 'hex' } = req.query;
+  if (!hash) {
+    return res.status(400).json({ error: "Hash parameter is required" });
+  }
+  try {
+    const decryptedText = await checkRIPEMD160AgainstWordlist(hash, encoding);
+    return res.json({ decryptedText: decryptedText });
+  } catch (error) {
     console.error('Error while processing hash:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -279,4 +414,18 @@ const addToWordlist = async (req, res) => {
   }
 }
 
-module.exports = { decryptMD5, decryptSHA1, addToWordlist, useProxy, shortenUrl, redirectToOriginalUrl };
+module.exports = { 
+  decryptMD5, 
+  decryptSHA1,
+  decryptSHA256,
+  decryptSHA224,
+  decryptSHA512,
+  decryptSHA384,
+  decryptSHA3,
+  decryptRIPEMD160,
+  decryptHash,
+  addToWordlist, 
+  useProxy, 
+  shortenUrl, 
+  redirectToOriginalUrl 
+};

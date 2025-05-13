@@ -29,6 +29,7 @@ export default function Hash() {
   const [encodedText, setEncodedText] = useState("");
   const [error, setError] = useState("");
   const [algorithm, setAlgorithm] = useState("md5");
+  const [encoding, setEncoding] = useState("hex");
 
   const router = useRouter();
 
@@ -49,7 +50,15 @@ export default function Hash() {
     }
 
     try {
-      const response = await apiWithoutCredentials.get(`/api/tools/decrypt-${algorithm}?hash=${hash}`);
+      let response;
+      
+      // Use the generic endpoint for non-hex encodings or newer algorithms
+      if (!['md5', 'sha1'].includes(algorithm)) {
+        response = await apiWithoutCredentials.get(`/api/tools/decrypt-hash?hash=${hash}&algorithm=${algorithm}&encoding=${encoding}`);
+      } else {
+        // Use the dedicated endpoints for backward compatibility but pass encoding
+        response = await apiWithoutCredentials.get(`/api/tools/decrypt-${algorithm}?hash=${hash}&encoding=${encoding}`);
+      }
 
       if (response.data.decryptedText) {
         setDecodedText(response.data.decryptedText);
@@ -70,10 +79,66 @@ export default function Hash() {
   }
 
   const encryptText = (text: string) => {
-    if (algorithm === 'sha1') {
-      setEncodedText(CryptoJS.SHA1(text).toString(CryptoJS.enc.Hex));
-    } else if (algorithm === 'md5') {
-      setEncodedText(CryptoJS.MD5(text).toString(CryptoJS.enc.Hex));
+    if (!text) {
+      setError("Please enter text to encrypt.");
+      return;
+    }
+    
+    let hash;
+    
+    // Get hash based on selected algorithm
+    switch (algorithm) {
+      case 'md5':
+        hash = CryptoJS.MD5(text);
+        break;
+      case 'sha1':
+        hash = CryptoJS.SHA1(text);
+        break;
+      case 'sha256':
+        hash = CryptoJS.SHA256(text);
+        break;
+      case 'sha224':
+        hash = CryptoJS.SHA224(text);
+        break;
+      case 'sha512':
+        hash = CryptoJS.SHA512(text);
+        break;
+      case 'sha384':
+        hash = CryptoJS.SHA384(text);
+        break;
+      case 'sha3':
+        hash = CryptoJS.SHA3(text);
+        break;
+      case 'ripemd160':
+        hash = CryptoJS.RIPEMD160(text);
+        break;
+      default:
+        hash = CryptoJS.MD5(text);
+        break;
+    }
+    
+    // Format the hash according to the selected encoding
+    switch (encoding) {
+      case 'binary':
+        // Convert hex to binary manually since CryptoJS doesn't have Base2 encoder
+        const hexString = hash.toString(CryptoJS.enc.Hex);
+        const binaryString = hexString.split('')
+          .map(hex => parseInt(hex, 16).toString(2).padStart(4, '0'))
+          .join('');
+        setEncodedText(binaryString);
+        break;
+      case 'hex':
+        setEncodedText(hash.toString(CryptoJS.enc.Hex));
+        break;
+      case 'base64':
+        setEncodedText(hash.toString(CryptoJS.enc.Base64));
+        break;
+      case 'base64url':
+        setEncodedText(hash.toString(CryptoJS.enc.Base64url));
+        break;
+      default:
+        setEncodedText(hash.toString(CryptoJS.enc.Hex));
+        break;
     }
 
     if (!text.includes('\n') && text !== '') {
@@ -93,11 +158,20 @@ export default function Hash() {
   }
 
   const checkIfHash = (value: string, algorithm: string): boolean => {
+    // For non-hex encodings, we need a different way to validate
+    if (encoding !== 'hex') {
+      return true; // Simple accept for non-hex encodings since they're harder to validate by pattern
+    }
+    
     const hashPatterns: Record<string, RegExp> = {
       md5: /^[a-f0-9]{32}$/,
       sha1: /^[a-f0-9]{40}$/,
       sha256: /^[a-f0-9]{64}$/,
-      sha512: /^[a-f0-9]{128}$/
+      sha224: /^[a-f0-9]{56}$/,
+      sha512: /^[a-f0-9]{128}$/,
+      sha384: /^[a-f0-9]{96}$/,
+      sha3: /^[a-f0-9]{128}$/,
+      ripemd160: /^[a-f0-9]{40}$/
     };
 
     const pattern = hashPatterns[algorithm.toLowerCase()];
@@ -110,7 +184,9 @@ export default function Hash() {
 
   useEffect(() => {
     setError("");
-  }, [algorithm]);
+    setEncodedText("");
+    setDecodedText("");
+  }, [algorithm, encoding]);
 
   return (
     <div className="h-full w-full">
@@ -143,16 +219,37 @@ export default function Hash() {
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
 
-        <div className="flex flex-col gap-4">
-          <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>
-            <SelectTrigger className="w-1/4">
-              <span>{algorithm.toUpperCase()}</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="md5">MD5</SelectItem>
-              <SelectItem value="sha1">SHA1</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center justify-between gap-4">
+          <div className="w-1/2">
+            <Select onValueChange={(value) => setAlgorithm(value)} value={algorithm}>
+              <SelectTrigger>
+                <span>Algorithm: {algorithm.toUpperCase()}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="md5">MD5</SelectItem>
+                <SelectItem value="sha1">SHA1</SelectItem>
+                <SelectItem value="sha256">SHA256</SelectItem>
+                <SelectItem value="sha224">SHA224</SelectItem>
+                <SelectItem value="sha512">SHA512</SelectItem>
+                <SelectItem value="sha384">SHA384</SelectItem>
+                <SelectItem value="sha3">SHA3</SelectItem>
+                <SelectItem value="ripemd160">RIPEMD160</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-1/2">
+            <Select onValueChange={(value) => setEncoding(value)} value={encoding}>
+              <SelectTrigger>
+                <span>Encoding: {encoding.charAt(0).toUpperCase() + encoding.slice(1)}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="binary">Binary (base 2)</SelectItem>
+                <SelectItem value="hex">Hexadecimal (base 16)</SelectItem>
+                <SelectItem value="base64">Base64</SelectItem>
+                <SelectItem value="base64url">Base64url</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">
@@ -178,7 +275,7 @@ export default function Hash() {
           <Card className="flex flex-col flex-1 p-6 gap-6">
             <TextAreaWithActions
               id="encoded-text"
-              label={`${algorithm.toUpperCase()} Hash (Encoded)`}
+              label={`${algorithm.toUpperCase()} Hash (${encoding.toUpperCase()})`}
               placeholder={`Type or paste your ${algorithm.toUpperCase()} hash here...`}
               value={encodedText}
               onChange={handleChangeEncodedText}

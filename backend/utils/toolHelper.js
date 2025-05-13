@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const customWordlistPath = path.join(__dirname, '../assets/custom-wordlist.txt');
 const defaultWordlistPath = path.join(__dirname, '../assets/default-wordlist.txt');
 
-const checkMD5AgainstWordlist = (hash) => {
+// Generic hash checking function that works with all hash algorithms
+const checkHashAgainstWordlist = (hash, algorithm, encoding = 'hex') => {
   const checkFile = (filePath) => {
     return new Promise((resolve, reject) => {
       // Create a readable stream for the wordlist file
@@ -26,8 +27,25 @@ const checkMD5AgainstWordlist = (hash) => {
         const word = line.trim();  // Trim any surrounding whitespace
         if (word === '') return;   // Skip empty lines
 
-        // Hash the word using MD5
-        const wordHash = crypto.createHash('md5').update(word).digest('hex');
+        // Hash the word using the specified algorithm and encoding
+        let wordHash;
+        try {
+          // Map SHA3 to the proper crypto algorithm name (sha3-512)
+          const cryptoAlgorithm = algorithm.toLowerCase() === 'sha3' ? 'sha3-512' : algorithm.toLowerCase();
+          
+          if (encoding === 'binary') {
+            // Convert hex to binary to match the frontend's format exactly
+            const hexHash = crypto.createHash(cryptoAlgorithm).update(word).digest('hex');
+            wordHash = hexHash.split('')
+              .map(hex => parseInt(hex, 16).toString(2).padStart(4, '0'))
+              .join('');
+          } else {
+            wordHash = crypto.createHash(cryptoAlgorithm).update(word).digest(encoding);
+          }
+        } catch (err) {
+          console.error(`Error hashing with algorithm ${algorithm}:`, err);
+          return;
+        }
 
         if (wordHash === hash) {
           if (!resolved) {
@@ -74,72 +92,38 @@ const checkMD5AgainstWordlist = (hash) => {
     });
 };
 
+// Maintain the original functions for backward compatibility
+const checkMD5AgainstWordlist = (hash) => {
+  return checkHashAgainstWordlist(hash, 'md5', 'hex');
+};
+
 const checkSHA1AgainstWordlist = (hash) => {
-  const checkFile = (filePath) => {
-    return new Promise((resolve, reject) => {
-      // Create a readable stream for the wordlist file
-      const fileStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
+  return checkHashAgainstWordlist(hash, 'sha1', 'hex');
+};
 
-      // Create the readline interface to process the file line by line
-      const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity,  // Handle all line endings correctly
-      });
+// Create specialized functions for each new hash type
+const checkSHA256AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'sha256', encoding);
+};
 
-      // Flag to prevent multiple resolutions of the promise
-      let resolved = false;
+const checkSHA224AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'sha224', encoding);
+};
 
-      // Hash the line and check against the hash in each line
-      rl.on('line', (line) => {
-        const word = line.trim();  // Trim any surrounding whitespace
-        if (word === '') return;   // Skip empty lines
+const checkSHA512AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'sha512', encoding);
+};
 
-        // Hash the word using SHA1
-        const wordHash = crypto.createHash('sha1').update(word).digest('hex');
+const checkSHA384AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'sha384', encoding);
+};
 
-        if (wordHash === hash) {
-          if (!resolved) {
-            resolved = true;  // Ensure only one resolution happens
-            rl.close();  // Stop reading once a match is found
-            resolve(word);  // Resolve with the matched word
-          }
-        }
-      });
+const checkSHA3AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'sha3-512', encoding); // sha3 uses sha3-512 by default
+};
 
-      // When the file is fully processed, resolve with null if no match is found
-      rl.on('close', () => {
-        if (!resolved) {
-          resolve(null);  // No match found, resolve with null
-        }
-      });
-
-      // Handle errors, such as file read errors
-      rl.on('error', (error) => {
-        if (!resolved) {
-          resolved = true;
-          reject(error);  // Reject on error
-        }
-      });
-
-      // Handle the stream error for any issues in the file reading process
-      fileStream.on('error', (error) => {
-        if (!resolved) {
-          resolved = true;
-          reject(error);  // Reject if fileStream has an error
-        }
-      });
-    });
-  };
-
-  // First check default-wordlist.txt, if no match found check custom-wordlist.txt
-  return checkFile(defaultWordlistPath)
-    .then((result) => {
-      if (result) {
-        return result;  // Return the result from default-wordlist.txt
-      } else {
-        return checkFile(customWordlistPath);  // If no match in default, check custom
-      }
-    });
+const checkRIPEMD160AgainstWordlist = (hash, encoding = 'hex') => {
+  return checkHashAgainstWordlist(hash, 'ripemd160', encoding);
 };
 
 const addToWordlistHelper = (word) => {
@@ -190,4 +174,15 @@ const addToWordlistHelper = (word) => {
   });
 };
 
-module.exports = { checkMD5AgainstWordlist, checkSHA1AgainstWordlist, addToWordlistHelper };
+module.exports = { 
+  checkMD5AgainstWordlist, 
+  checkSHA1AgainstWordlist, 
+  checkSHA256AgainstWordlist,
+  checkSHA224AgainstWordlist,
+  checkSHA512AgainstWordlist,
+  checkSHA384AgainstWordlist,
+  checkSHA3AgainstWordlist,
+  checkRIPEMD160AgainstWordlist,
+  checkHashAgainstWordlist,
+  addToWordlistHelper 
+};

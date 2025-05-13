@@ -71,6 +71,13 @@ export const tools: Tool[] = [
     icon: Regex,
     url: "/tools/regex",
     type: "tool"
+  },
+  {
+    title: "Token Generator",
+    description: "Generate random strings with customizable characters",
+    icon: Code,
+    url: "/tools/token-generator",
+    type: "tool"
   }
 ];
 
@@ -105,6 +112,7 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/json-formatter": { name: "JSON Formatter", type: "tool", icon: "Code" },
   "/tools/steganography": { name: "Steganography", type: "tool", icon: "Lock" },
   "/tools/vigenere": { name: "Vigenère Cipher", type: "tool", icon: "Lock" },
+  "/tools/token-generator": { name: "Token Generator", type: "tool", icon: "Code" },
   // Bookmarks
   "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
   // Favorites 
