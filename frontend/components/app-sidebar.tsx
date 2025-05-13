@@ -100,7 +100,7 @@ export function AppSidebar() {
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton asChild>
                         <div className="cursor-default">
-                          <Heart className={`h-4 w-4 mr-2 ${favorites.length > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+                          <Heart className={`h-4 w-4 mr-2`} />
                           <span>Favorites</span>
                           {openStates.favorites ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
                         </div>

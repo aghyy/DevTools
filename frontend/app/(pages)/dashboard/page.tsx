@@ -243,7 +243,7 @@ export default function Dashboard() {
         {/* Favorites section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Heart className="h-5 w-5 fill-red-400 text-red-400" />
+            <Heart className="h-5 w-5" />
             Favorite Tools
           </h2>
           <DashboardFavorites />

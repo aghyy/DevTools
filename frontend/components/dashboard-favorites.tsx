@@ -47,7 +47,7 @@ export default function DashboardFavorites() {
       <div className="p-4 text-center border rounded-lg bg-slate-50 dark:bg-slate-900/20">
         <Heart className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
         <p className="text-slate-500 mb-3">No favorite tools yet.</p>
-        <Button 
+        <Button
           onClick={() => routeTo('/tools/base64')}
           variant="outline"
           size="sm"
@@ -61,18 +61,16 @@ export default function DashboardFavorites() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {displayFavorites.map((tool) => (
-        <MagicCard 
-          key={tool.id} 
+        <MagicCard
+          key={tool.id}
           className="overflow-hidden cursor-pointer"
           onClick={() => routeTo(tool.toolUrl)}
         >
           <Card className="h-full border-0 bg-transparent">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="bg-primary/5 p-3 rounded-full">
-                {tool.icon ? (
+                {tool.icon && (
                   <Icon icon={getIconComponent(tool.icon)} />
-                ) : (
-                  <Heart className="h-5 w-5 fill-red-500 text-red-500" />
                 )}
               </div>
               <div className="flex-1">
@@ -86,7 +84,7 @@ export default function DashboardFavorites() {
           </Card>
         </MagicCard>
       ))}
-      
+
       {favorites.length > 0 && (
         <Link href="/favorites" className="flex items-center justify-center p-4 text-sm text-primary hover:underline">
           View all favorites
