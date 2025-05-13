@@ -21,6 +21,7 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import FavoriteButton from "@/components/favorite-button";
 
 interface ApiError {
   response?: {
@@ -58,13 +59,13 @@ export default function URLShortener() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Reset states
     setError(null);
     setShortenedUrl(null);
     setCodeConflict(false);
     setIsLoading(true);
-    
+
     try {
       // Validate URL
       try {
@@ -87,13 +88,13 @@ export default function URLShortener() {
       }
 
       // Call the API to shorten the URL
-      const payload = { 
+      const payload = {
         url,
         ...(useCustomCode && customCode ? { customCode } : {})
       };
-      
+
       const response = await apiWithoutCredentials.post('/api/tools/shorten-url', payload);
-      
+
       if (response.data.shortUrl) {
         setShortenedUrl(response.data.shortUrl);
       } else {
@@ -101,7 +102,7 @@ export default function URLShortener() {
       }
     } catch (error: unknown) {
       const apiError = error as ApiError;
-      
+
       // Handle code conflict error
       if (apiError.response && apiError.response.status === 409) {
         setCodeConflict(true);
@@ -156,18 +157,24 @@ export default function URLShortener() {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">URL Shortener</h1>
-      <p className="text-muted-foreground text-center">Convert long URLs into short, manageable links</p>
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold my-3 text-center">URL Shortener</h1>
+        <FavoriteButton
+          toolUrl="/tools/url-shortener"
+          toolName="URL Shortener"
+          iconName="Link"
+        />
+      </div>
 
       {/* Content */}
-      <div className="mx-8 mt-8 mb-24 flex flex-col gap-5 max-w-2xl mx-auto">
+      <div className="mt-8 mb-24 flex flex-col gap-5 max-w-2xl mx-auto">
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Link2 className="h-5 w-5 text-muted-foreground" />
               <div className="font-medium">Enter URL to shorten</div>
             </div>
-            
+
             <div className="flex gap-2">
               <Input
                 type="url"
@@ -180,8 +187,8 @@ export default function URLShortener() {
             </div>
 
             <div className="flex items-center space-x-2 mt-2">
-              <Switch 
-                id="custom-url" 
+              <Switch
+                id="custom-url"
                 checked={useCustomCode}
                 onCheckedChange={setUseCustomCode}
               />
@@ -197,9 +204,9 @@ export default function URLShortener() {
                   onChange={(e) => setCustomCode(e.target.value)}
                   className={`flex-1 ${codeConflict ? 'border-red-500' : ''}`}
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={generateRandomCode}
                   title="Generate random code"
                 >
@@ -207,9 +214,9 @@ export default function URLShortener() {
                 </Button>
               </div>
             )}
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               disabled={isLoading || !url.trim() || (useCustomCode && !customCode.trim())}
               className="mt-2"
             >
@@ -225,11 +232,11 @@ export default function URLShortener() {
               <Link2 className="h-5 w-5 text-green-500" />
               <div className="font-medium">Shortened URL</div>
             </div>
-            
+
             <div className="bg-muted p-3 rounded-md mb-4 text-sm break-all">
               {shortenedUrl}
             </div>
-            
+
             <div className="flex gap-2 mt-2">
               <Button variant="outline" onClick={copyToClipboard} className="flex-1">
                 <Copy className="h-4 w-4 mr-2" />

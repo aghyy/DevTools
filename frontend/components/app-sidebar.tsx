@@ -8,26 +8,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut } from "lucide-react"
+import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, Plus } from "lucide-react"
 import { logout as authLogout, getUser } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
-
-const renderIcon = (icon: string | React.ComponentType<{ className?: string }>) => {
-  if (typeof icon === 'string') {
-    return <Icon src={icon} />
-  }
-
-  return React.createElement(icon)
-}
+import { useFavoriteTools } from "@/hooks/useFavoriteTools"
+import { getIconComponent } from "@/utils/icons"
 
 export function AppSidebar() {
   const [openStates, setOpenStates] = useState({
     codeSnippets: false,
     tools: true,
+    favorites: true,
   })
 
   const router = useRouter()
   const [userData, setUserData] = useState({ username: "", firstName: "", lastName: "", email: "", avatar: "" })
+  const { favorites, loading } = useFavoriteTools()
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -68,6 +64,9 @@ export function AppSidebar() {
     router.push(path);
   }
 
+  // Filter out the favorites item from general items
+  const generalItems = sidebarItems.general.filter(item => item.title !== "Favorites");
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -83,17 +82,79 @@ export function AppSidebar() {
           <SidebarGroupLabel>General</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sidebarItems.general.map(({ title, url, icon }) => (
+              {generalItems.map(({ title, url, icon }) => (
                 <SidebarMenuItem key={title}>
                   <SidebarMenuButton asChild>
                     <div className="cursor-default" onClick={() => routeTo(url)}>
-                      {renderIcon(icon)}
+                      <Icon icon={icon} />
                       <span>{title}</span>
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
 
+              {/* Favorites Dropdown */}
+              <SidebarMenu>
+                <Collapsible open={openStates.favorites} onOpenChange={() => toggleCollapse('favorites')} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton asChild>
+                        <div className="cursor-default">
+                          <Heart className={`h-4 w-4 mr-2 ${favorites.length > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+                          <span>Favorites</span>
+                          {openStates.favorites ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
+                        </div>
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {loading ? (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuButton asChild>
+                              <div className="cursor-default opacity-50">
+                                <span>Loading...</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </SidebarMenuSubItem>
+                        ) : favorites.length === 0 ? (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuButton asChild>
+                              <div className="cursor-default opacity-50">
+                                <span>No favorites yet</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </SidebarMenuSubItem>
+                        ) : (
+                          favorites.map((favorite) => (
+                            <SidebarMenuSubItem key={favorite.id}>
+                              <SidebarMenuButton asChild>
+                                <div className="cursor-default" onClick={() => routeTo(favorite.toolUrl)}>
+                                  {favorite.icon ? (
+                                    <Icon icon={getIconComponent(favorite.icon)} />
+                                  ) : (
+                                    <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
+                                  )}
+                                  <span>{favorite.toolName}</span>
+                                </div>
+                              </SidebarMenuButton>
+                            </SidebarMenuSubItem>
+                          ))
+                        )}
+                        <SidebarMenuSubItem>
+                          <SidebarMenuButton asChild>
+                            <div className="cursor-default" onClick={() => routeTo('/favorites')}>
+                              <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span>Manage Favorites</span>
+                            </div>
+                          </SidebarMenuButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              </SidebarMenu>
+
+              {/* Tools Dropdown */}
               {Object.entries({ tools: sidebarItems.tools }).map(([key, { title, icon, items }]) => (
                 <SidebarMenu key={key}>
                   <Collapsible open={openStates[key as keyof typeof openStates]} onOpenChange={() => toggleCollapse(key as keyof typeof openStates)} className="group/collapsible">
@@ -101,7 +162,7 @@ export function AppSidebar() {
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton asChild>
                           <div className="cursor-default">
-                            {renderIcon(icon)}
+                            <Icon icon={icon} />
                             <span>{title}</span>
                             {openStates[key as keyof typeof openStates] ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
                           </div>
@@ -113,7 +174,7 @@ export function AppSidebar() {
                             <SidebarMenuSubItem key={title}>
                               <SidebarMenuButton asChild>
                                 <div className="cursor-default" onClick={() => routeTo(url)}>
-                                  {renderIcon(icon)}
+                                  <Icon icon={icon} />
                                   <span>{title}</span>
                                 </div>
                               </SidebarMenuButton>

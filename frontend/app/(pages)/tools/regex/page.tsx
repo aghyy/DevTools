@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import FavoriteButton from "@/components/favorite-button";
 
 // Regex cheat sheets by language
 const cheatSheets = {
@@ -150,9 +151,9 @@ export default function RegexTester() {
   const [regexPattern, setRegexPattern] = useState<string>('');
   const [testText, setTestText] = useState<string>('');
   const [matches, setMatches] = useState<Match[] | null>(null);
-  const [matchPositions, setMatchPositions] = useState<{start: number, end: number}[]>([]);
+  const [matchPositions, setMatchPositions] = useState<{ start: number, end: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   const routeTo = (path: string) => {
     router.push(path);
   };
@@ -182,18 +183,18 @@ export default function RegexTester() {
 
       // Get all matches
       const allMatches = Array.from(testText.matchAll(regex));
-      
+
       // Convert to our Match type
       const formattedMatches: Match[] = allMatches.map(match => ({
         text: match[0],
         index: match.index !== undefined ? match.index : 0,
         groups: Array.from(match).slice(1)
       }));
-      
+
       setMatches(formattedMatches.length > 0 ? formattedMatches : null);
 
       // Calculate match positions for highlighting
-      const positions: {start: number, end: number}[] = [];
+      const positions: { start: number, end: number }[] = [];
       formattedMatches.forEach(match => {
         positions.push({
           start: match.index,
@@ -266,7 +267,14 @@ export default function RegexTester() {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">Regular Expression Tester</h1>
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold my-3 text-center">Regular Expression Tester</h1>
+        <FavoriteButton
+          toolUrl="/tools/regex"
+          toolName="Regex"
+          iconName="Regex"
+        />
+      </div>
 
       {/* Main Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
@@ -327,7 +335,7 @@ export default function RegexTester() {
             <CardHeader>
               <CardTitle>📋 Results</CardTitle>
               <CardDescription>
-                {matches 
+                {matches
                   ? `Found ${matches.length} ${matches.length === 1 ? 'match' : 'matches'}`
                   : 'No matches found'}
               </CardDescription>
@@ -336,13 +344,13 @@ export default function RegexTester() {
               {testText && (
                 <div className="p-3 border rounded-md bg-muted/30">
                   <div className="font-medium mb-2 text-sm">Matches Highlighted:</div>
-                  <div 
+                  <div
                     className="whitespace-pre-wrap font-mono text-sm"
-                    dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }} 
+                    dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }}
                   />
                 </div>
               )}
-              
+
               {matches && matches.length > 0 && (
                 <div className="space-y-3">
                   <div className="font-medium text-sm">Match Details:</div>
@@ -351,9 +359,9 @@ export default function RegexTester() {
                       <div key={index} className="border rounded-md p-2 bg-secondary/5">
                         <div className="flex justify-between items-center mb-1">
                           <Badge variant="outline">Match {index + 1}</Badge>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-6 px-2"
                             onClick={() => handleCopy(match.text)}
                           >
@@ -409,22 +417,22 @@ export default function RegexTester() {
                 <TabsTrigger value="java">Java</TabsTrigger>
                 <TabsTrigger value="csharp">C#</TabsTrigger>
               </TabsList>
-              
+
               {Object.keys(cheatSheets).map(language => (
                 <TabsContent key={language} value={language} className="space-y-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {cheatSheets[language as keyof typeof cheatSheets].map((item, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-center justify-between border rounded-md p-2 hover:bg-secondary/5"
                       >
                         <div className="flex items-center gap-2">
                           <code className="font-mono text-sm bg-primary/5 px-2 py-1 rounded">{item.pattern}</code>
                           <span className="text-sm">{item.description}</span>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-6 px-2"
                           onClick={() => handleCopy(item.pattern)}
                         >

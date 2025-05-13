@@ -23,13 +23,14 @@ import {
 import { allExamples, ExampleOption } from ".";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { handleCopy } from "@/utils/clipboard";
+import FavoriteButton from "@/components/favorite-button";
 
 export default function Proxy() {
   const router = useRouter();
   const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/tools/proxy?url=`;
   const [targetUrl, setTargetUrl] = useState("https://jsonplaceholder.typicode.com/todos/1");
   const [selectedExampleId, setSelectedExampleId] = useState("javascript-fetch");
-  
+
   // For the Live Test card
   const [testUrl, setTestUrl] = useState("https://jsonplaceholder.typicode.com/todos/1");
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +65,7 @@ export default function Proxy() {
   const getCodeExample = (): string => {
     const example = getCurrentExample();
     if (!example) return "// No example available";
-    
+
     // Replace both placeholder variables
     return example.code
       .replace(/\$PROXY_URL\$/g, proxyUrl)
@@ -74,20 +75,20 @@ export default function Proxy() {
   // Make a test request through the proxy
   const makeProxyRequest = async () => {
     if (!testUrl.trim()) return;
-    
+
     setIsLoading(true);
     setResponse(null);
-    
+
     try {
       const fullUrl = `${proxyUrl}${testUrl}`;
       const res = await fetch(fullUrl);
-      
+
       // Get headers
       const headers: Record<string, string> = {};
       res.headers.forEach((value, key) => {
         headers[key] = value;
       });
-      
+
       // Check if the response is an error
       if (!res.ok) {
         // Try to parse the error response
@@ -112,7 +113,7 @@ export default function Proxy() {
           return;
         }
       }
-      
+
       // Get response data for successful responses
       let data;
       const contentType = res.headers.get('content-type');
@@ -121,7 +122,7 @@ export default function Proxy() {
       } else {
         data = await res.text();
       }
-      
+
       setResponse({
         data,
         status: res.status,
@@ -161,7 +162,14 @@ export default function Proxy() {
       <div className="pt-16"></div>
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">Proxy</h1>
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold my-3 text-center">Proxy</h1>
+        <FavoriteButton
+          toolUrl="/tools/proxy"
+          toolName="Proxy"
+          iconName="Waypoints"
+        />
+      </div>
 
       {/* Info Section */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-10">
@@ -183,11 +191,11 @@ export default function Proxy() {
             </div>
             <div className="flex items-center gap-4">
               <span className="font-semibold min-w-fit">Target URL:</span>
-              <Input 
-                value={targetUrl} 
-                onChange={(e) => setTargetUrl(e.target.value)} 
+              <Input
+                value={targetUrl}
+                onChange={(e) => setTargetUrl(e.target.value)}
                 placeholder="Enter target API URL"
-                className="w-full" 
+                className="w-full"
               />
             </div>
             <div className="flex flex-col space-y-2">
@@ -223,16 +231,16 @@ export default function Proxy() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                      <span>
-                        <div
-                          onClick={() => handleCopy(getCodeExample())}
-                          className="p-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-[hsl(var(--secondary-hover))] border font-sans"
-                        >
-                          <ClipboardCopy className="h-3 w-3" />
-                        </div>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy</TooltipContent>
+                        <span>
+                          <div
+                            onClick={() => handleCopy(getCodeExample())}
+                            className="p-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-[hsl(var(--secondary-hover))] border font-sans"
+                          >
+                            <ClipboardCopy className="h-3 w-3" />
+                          </div>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
@@ -253,21 +261,21 @@ export default function Proxy() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
-              <Input 
-                value={testUrl} 
-                onChange={(e) => setTestUrl(e.target.value)} 
+              <Input
+                value={testUrl}
+                onChange={(e) => setTestUrl(e.target.value)}
                 placeholder="Enter URL to test"
                 className="flex-1"
               />
-              <Button 
-                onClick={makeProxyRequest} 
+              <Button
+                onClick={makeProxyRequest}
                 disabled={isLoading}
                 className="min-w-[120px]"
               >
                 {isLoading ? "Loading..." : "Send Request"}
               </Button>
             </div>
-            
+
             <div className="mt-4">
               {response ? (
                 <div className="space-y-4">
@@ -275,13 +283,13 @@ export default function Proxy() {
                     <Badge className={response.error ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
                       Status: {response.error ? "Error" : response.status}
                     </Badge>
-                    {!response.error && 
+                    {!response.error &&
                       <Badge variant="outline" className="text-xs">
                         Content-Type: {response.headers['content-type'] || 'Unknown'}
                       </Badge>
                     }
                   </div>
-                  
+
                   <div className="bg-black/5 dark:bg-white/5 rounded-md p-4 max-h-[400px] overflow-auto">
                     <div className="font-semibold mb-2">Response:</div>
                     {response.error ? (
@@ -296,7 +304,7 @@ export default function Proxy() {
                     ) : (
                       <pre className="text-xs whitespace-pre-wrap break-words font-mono">
                         {typeof response.data === 'object' && response.data !== null
-                          ? JSON.stringify(response.data, null, 2) 
+                          ? JSON.stringify(response.data, null, 2)
                           : String(response.data)}
                       </pre>
                     )}

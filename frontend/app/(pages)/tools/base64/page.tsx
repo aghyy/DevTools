@@ -17,6 +17,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import FavoriteButton from "@/components/favorite-button";
 
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 
@@ -82,8 +83,15 @@ export default function Base64() {
 
       <TopSpacing />
 
-      {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">Base64 Encoder/Decoder</h1>
+      {/* Title with Favorite Button */}
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold text-center">Base64 Encoder/Decoder</h1>
+        <FavoriteButton 
+          toolUrl="/tools/base64" 
+          toolName="Base64" 
+          iconName="Binary" 
+        />
+      </div>
 
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">

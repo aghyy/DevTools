@@ -1,4 +1,4 @@
-import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home } from "lucide-react";
+import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart } from "lucide-react";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { LucideIcon } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
@@ -78,6 +78,7 @@ export const tools: Tool[] = [
 export const sidebarItems = {
   general: [
     { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: "Favorites", url: "/favorites", icon: Heart },
     { title: "Bookmarks", url: "/bookmarks", icon: Book },
     { title: "Code Snippets", url: "/code-snippets", icon: Code },
   ],
@@ -106,4 +107,6 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/vigenere": { name: "Vigenère Cipher", type: "tool", icon: "Lock" },
   // Bookmarks
   "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
+  // Favorites 
+  "/favorites": { name: "Favorites", type: "bookmark", icon: "Heart" },
 }; 

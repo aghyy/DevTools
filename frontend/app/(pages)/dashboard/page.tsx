@@ -23,12 +23,8 @@ import {
   Clock, 
   Hammer, 
   Book, 
-  Code,
-  Binary,
-  Hash,
-  Link as LinkIcon,
-  Regex,
-  Activity
+  Activity,
+  Heart
 } from "lucide-react";
 
 import { getUser } from "@/services/auth";
@@ -41,6 +37,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MagicCard } from "@/components/ui/magic-card";
+import DashboardFavorites from "@/components/dashboard-favorites";
+import { getIconComponent } from "@/utils/icons";
 
 // Interface for user data
 interface UserData {
@@ -50,18 +48,6 @@ interface UserData {
   lastName: string;
   email: string;
 }
-
-// Icon mapping
-const iconMap: Record<string, React.ElementType> = {
-  'Hammer': Hammer,
-  'Book': Book,
-  'Code': Code,
-  'Binary': Binary,
-  'Hash': Hash,
-  'Link': LinkIcon,
-  'Regex': Regex,
-  'Activity': Activity
-};
 
 export default function Dashboard() {
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -135,11 +121,6 @@ export default function Dashboard() {
     if (diffHour > 0) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
     if (diffMin > 0) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
     return 'just now';
-  };
-
-  // Get the appropriate icon component
-  const getIconComponent = (iconName: string): React.ElementType => {
-    return iconMap[iconName] || Activity;
   };
 
   return (
@@ -250,6 +231,15 @@ export default function Dashboard() {
               <p className="text-slate-500">No activity recorded yet. Start using tools and resources!</p>
             </div>
           )}
+        </div>
+        
+        {/* Favorites section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Heart className="h-5 w-5 fill-red-400 text-red-400" /> 
+            Favorite Tools
+          </h2>
+          <DashboardFavorites />
         </div>
         
         {/* Most used items section */}

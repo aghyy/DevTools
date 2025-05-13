@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from '@/components/ui/textarea';
+import FavoriteButton from '@/components/favorite-button';
 
 // F5 Algorithm Implementation
 class F5Steganography {
@@ -135,8 +136,8 @@ class F5Steganography {
 
       const encodedData = this.matrixEncode(coverImage.data, completeMessage);
       return new ImageData(
-        new Uint8ClampedArray(encodedData), 
-        coverImage.width, 
+        new Uint8ClampedArray(encodedData),
+        coverImage.width,
         coverImage.height
       );
     } catch (error) {
@@ -350,8 +351,14 @@ const Steganography: React.FC = () => {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">F5 Steganography</h1>
-
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold my-3 text-center">F5 Steganography</h1>
+        <FavoriteButton
+          toolUrl="/tools/steganography"
+          toolName="Steganography"
+          iconName="IoLockClosedOutline"
+        />
+      </div>
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
         <div className="flex flex-col gap-5 md:flex-row">
           <Card className='p-6 flex-1'>

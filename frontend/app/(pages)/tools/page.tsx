@@ -11,6 +11,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { MagicCard } from "@/components/ui/magic-card";
 import { useRouter } from "next/navigation";
 import { tools, Tool } from "@/utils/tools";
+import { ArrowUpRight } from "lucide-react";
 
 export default function Tools() {
   return (
@@ -60,8 +61,9 @@ function ToolCard({ tool }: ToolCardProps) {
           </div>
           <CardDescription className="mt-2">{tool.description}</CardDescription>
         </CardHeader>
-        <CardFooter className="absolute bottom-0 w-full">
-          <div className="text-sm text-muted-foreground hover:underline">Use tool →</div>
+        <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
+          <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
+          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
         </CardFooter>
       </Card>
     </MagicCard>

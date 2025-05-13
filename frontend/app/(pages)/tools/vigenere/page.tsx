@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from "next/navigation";
-import { 
+import {
   Trash,
   CircleAlertIcon,
   RefreshCw
@@ -29,6 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 import { encrypt, decrypt } from '@/utils/vigenere';
 import { VigenereVariant, VigenereOperation } from '@/types/vigenere';
+import FavoriteButton from '@/components/favorite-button';
 
 export default function Vigenere() {
   const [message, setMessage] = useState('');
@@ -39,7 +40,7 @@ export default function Vigenere() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const router = useRouter();
 
   const routeTo = (path: string) => {
@@ -51,10 +52,10 @@ export default function Vigenere() {
       setError('Message and key are required');
       return;
     }
-    
+
     setError(null);
     setIsProcessing(true);
-    
+
     try {
       if (operation === 'encrypt') {
         const encryptedResult = encrypt(message, key, variant, alphabet);
@@ -70,14 +71,14 @@ export default function Vigenere() {
       setIsProcessing(false);
     }
   };
-  
+
   const handleClear = () => {
     setMessage('');
     setKey('');
     setResult(null);
     setError(null);
   };
-  
+
   return (
     <div className="h-full w-full">
       {/* Breadcrumb */}
@@ -98,7 +99,14 @@ export default function Vigenere() {
       <TopSpacing />
 
       {/* Title */}
-      <h1 className="text-3xl font-bold my-3 text-center">Vigenère Cipher</h1>
+      <div className="flex items-center justify-center gap-2 my-3">
+        <h1 className="text-3xl font-bold my-3 text-center">Vigenère Cipher</h1>
+        <FavoriteButton
+          toolUrl="/tools/vigenere"
+          toolName="Vigenère Cipher"
+          iconName="IoLockClosedOutline"
+        />
+      </div>
 
       {/* Content */}
       <div className="mx-8 mt-8 mb-24 flex flex-col gap-5">
@@ -112,7 +120,7 @@ export default function Vigenere() {
             onCopy={() => handleCopy(message)}
             onPaste={() => handlePaste(setMessage)}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="key-input" className="text-lg font-semibold">Key</Label>
@@ -124,7 +132,7 @@ export default function Vigenere() {
                 onChange={(e) => setKey(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="alphabet-input" className="text-lg font-semibold">Alphabet</Label>
               <Input
@@ -136,7 +144,7 @@ export default function Vigenere() {
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-3">
               <Label className="text-lg font-semibold">Variant</Label>
@@ -153,11 +161,11 @@ export default function Vigenere() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex flex-col gap-3">
               <Label className="text-lg font-semibold">Operation</Label>
-              <RadioGroup 
-                value={operation} 
+              <RadioGroup
+                value={operation}
                 onValueChange={(value: string) => setOperation(value as VigenereOperation)}
                 className="flex gap-6"
               >
@@ -172,9 +180,9 @@ export default function Vigenere() {
               </RadioGroup>
             </div>
           </div>
-          
+
           <div className="flex gap-4">
-            <Button 
+            <Button
               onClick={handleProcess}
               className="w-full"
               disabled={isProcessing || !message || !key}
@@ -182,7 +190,7 @@ export default function Vigenere() {
               {isProcessing ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : null}
               Process
             </Button>
-            
+
             <Button
               onClick={handleClear}
               variant="destructive"
@@ -193,7 +201,7 @@ export default function Vigenere() {
             </Button>
           </div>
         </Card>
-        
+
         {error && (
           <Alert variant="destructive">
             <CircleAlertIcon className="h-4 w-4" />
@@ -201,7 +209,7 @@ export default function Vigenere() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {result !== null && !error && (
           <Card className="p-6">
             <div className="mb-3">
@@ -212,7 +220,7 @@ export default function Vigenere() {
               label=""
               placeholder="Result will appear here..."
               value={result}
-              onChange={() => {}}
+              onChange={() => { }}
               onCopy={() => handleCopy(result)}
               onPaste={() => handlePaste(setMessage)}
             />

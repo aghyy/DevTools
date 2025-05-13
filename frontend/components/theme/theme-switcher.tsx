@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import ThemeIcon from './theme-icon';
 import { useTheme } from 'next-themes';
 
-const ThemeSwitcher = () => {
+const ThemeSwitcher = ({ fixed = false }: { fixed?: boolean }) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -31,7 +31,7 @@ const ThemeSwitcher = () => {
 
   return (
     <>
-      <Button onClick={toggleTheme} className="z-50 fixed top-3 right-3 size-10" aria-label="Toggle theme" variant="outline">
+      <Button onClick={toggleTheme} className={`z-50 top-3 right-3 size-10 ${fixed ? 'fixed' : 'absolute'}`} aria-label="Toggle theme" variant="outline">
         <ThemeIcon />
       </Button>
     </>
