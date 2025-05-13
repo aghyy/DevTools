@@ -28,7 +28,7 @@ export default function Tools() {
 
       <TopSpacing />
 
-      <div className="mx-12 mb-24">
+      <div className="mx-8 mt-8 mb-24">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Developer Tools</h1>
           <p className="text-muted-foreground mt-2">A collection of useful tools for developers</p>
