@@ -11,25 +11,26 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 
-import { 
-  Clock, 
-  Hammer, 
-  Book, 
+import {
+  Clock,
+  Hammer,
+  Book,
   Activity,
-  Heart
+  Heart,
+  Code
 } from "lucide-react";
 
 import { getUser } from "@/services/auth";
-import { 
-  getRecentActivities, 
+import {
+  getRecentActivities,
   getMostUsedItems,
   Activity as ActivityType,
   MostUsedItem
@@ -55,7 +56,7 @@ export default function Dashboard() {
   const [recentItems, setRecentItems] = useState<ActivityType[]>([]);
   const [mostUsedItems, setMostUsedItems] = useState<MostUsedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Featured links with better icons
   const featuredLinks = [
     {
@@ -70,6 +71,12 @@ export default function Dashboard() {
       icon: Book,
       description: "Browse through your bookmarks"
     },
+    {
+      name: "Code Snippets",
+      href: "/code-snippets",
+      icon: Code,
+      description: "Browse through your code snippets"
+    }
   ];
 
   const router = useRouter();
@@ -79,19 +86,19 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Get user data
         const user = await getUser();
         setUserData(user);
-        
+
         // Get recent activities
         const activities = await getRecentActivities(4);
         setRecentItems(activities);
-        
+
         // Get most used items
         const mostUsed = await getMostUsedItems(4);
         setMostUsedItems(mostUsed);
-        
+
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         setError("Failed to load dashboard data. Please try again later.");
@@ -136,7 +143,7 @@ export default function Dashboard() {
       </div>
 
       <TopSpacing />
-      
+
       <div className="w-full px-8 pt-8 pb-24 mx-auto">
         {/* User welcome section */}
         <div className="mb-8">
@@ -185,11 +192,11 @@ export default function Dashboard() {
             {error}
           </div>
         )}
-        
+
         {/* Recent activity section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5" /> 
+            <Clock className="h-5 w-5" />
             Recent Activity
           </h2>
           {loading ? (
@@ -203,8 +210,8 @@ export default function Dashboard() {
               {recentItems.map((item) => {
                 const IconComponent = getIconComponent(item.icon);
                 return (
-                  <MagicCard 
-                    key={item.id} 
+                  <MagicCard
+                    key={item.id}
                     className="overflow-hidden cursor-pointer"
                     onClick={() => routeTo(item.path)}
                   >
@@ -232,21 +239,21 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        
+
         {/* Favorites section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Heart className="h-5 w-5 fill-red-400 text-red-400" /> 
+            <Heart className="h-5 w-5 fill-red-400 text-red-400" />
             Favorite Tools
           </h2>
           <DashboardFavorites />
         </div>
-        
+
         {/* Most used items section */}
         {!loading && mostUsedItems.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Activity className="h-5 w-5" /> 
+              <Activity className="h-5 w-5" />
               Most Used
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -255,8 +262,8 @@ export default function Dashboard() {
                 // Ensure count is a number
                 const count = typeof item.count === 'number' ? item.count : parseInt(String(item.count), 10) || 0;
                 return (
-                  <MagicCard 
-                    key={idx} 
+                  <MagicCard
+                    key={idx}
                     className="overflow-hidden cursor-pointer"
                     onClick={() => routeTo(item.path)}
                   >
@@ -281,13 +288,13 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        
+
         {/* Featured links - now as improved cards */}
         <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {featuredLinks.map((link, index) => (
-            <MagicCard 
-              key={index} 
+            <MagicCard
+              key={index}
               className="overflow-hidden cursor-pointer h-[180px]"
               onClick={() => routeTo(link.href)}
             >
