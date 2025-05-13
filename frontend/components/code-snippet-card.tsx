@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Copy, Edit, Trash, Eye, EyeOff, Code } from "lucide-react";
+import { Copy, Edit, Trash, ChevronUp, ChevronDown, Code } from "lucide-react";
 import { CodeSnippet } from "@/types/codeSnippets";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,24 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
 }) => {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
+  const [needsCollapse, setNeedsCollapse] = useState(false);
+  const codeContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Check if the code needs to be collapsed
+  useEffect(() => {
+    const checkHeight = () => {
+      if (codeContainerRef.current) {
+        // If the scrollHeight is greater than the clientHeight, we need to collapse
+        const needsCollapse = codeContainerRef.current.scrollHeight > 200;
+        setNeedsCollapse(needsCollapse);
+      }
+    };
+    
+    checkHeight();
+    // Recheck on window resize
+    window.addEventListener('resize', checkHeight);
+    return () => window.removeEventListener('resize', checkHeight);
+  }, [snippet.code]);
   
   const toggleExpand = () => {
     setExpanded(!expanded);
@@ -57,7 +75,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   });
   
   return (
-    <Card className="w-full overflow-hidden">
+    <Card className="w-full overflow-hidden flex flex-col justify-between">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -73,11 +91,14 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
         </div>
       </CardHeader>
       
-      <CardContent className="pb-2">
-        <div className={`overflow-hidden transition-all ${expanded ? 'max-h-[800px]' : 'max-h-[200px]'}`}>
+      <CardContent className="pb-2 h-full">
+        <div 
+          ref={codeContainerRef}
+          className={`overflow-hidden transition-all ${expanded ? 'max-h-[800px]' : 'max-h-[200px]'}`}
+        >
           <CodeHighlighter 
             code={snippet.code} 
-            language={snippet.language} 
+            language={snippet.language}
             className="w-full"
           />
         </div>
@@ -107,18 +128,20 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0" 
-            onClick={toggleExpand}
-          >
-            {expanded ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
+          {needsCollapse && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0" 
+              onClick={toggleExpand}
+            >
+              {expanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           
           <Button 
             variant="ghost" 

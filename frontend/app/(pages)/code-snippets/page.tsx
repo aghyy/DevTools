@@ -564,7 +564,7 @@ export default function CodeSnippets() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === "my-snippets" ? "lg:grid-cols-3" : ""} gap-4`}>
                 {activeTab === "public-snippets" && (
                   // Group snippets by user
                   publicSnippets.map((userSnippets) => {

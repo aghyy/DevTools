@@ -44,9 +44,9 @@ export default function DashboardFavorites() {
 
   if (displayFavorites.length === 0) {
     return (
-      <div className="p-4 text-center border rounded-lg bg-slate-50 dark:bg-slate-900/20">
+      <div className="px-4 py-10 text-center border rounded-lg bg-primary/5">
         <Heart className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-        <p className="text-slate-500 mb-3">No favorite tools yet.</p>
+        <p className="mb-3">No favorite tools yet.</p>
         <Button
           onClick={() => routeTo('/tools/base64')}
           variant="outline"
