@@ -1,4 +1,4 @@
-import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound } from "lucide-react";
+import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound, Fingerprint } from "lucide-react";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { LucideIcon } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
@@ -85,6 +85,13 @@ export const tools: Tool[] = [
     icon: Code,
     url: "/tools/token-generator",
     type: "tool"
+  },
+  {
+    title: "UUID Generator",
+    description: "Generate UUIDs of different versions",
+    icon: Fingerprint,
+    url: "/tools/uuid-generator",
+    type: "tool"
   }
 ];
 
@@ -121,6 +128,7 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/steganography": { name: "Steganography", type: "tool", icon: "Lock" },
   "/tools/vigenere": { name: "Vigenère Cipher", type: "tool", icon: "Lock" },
   "/tools/token-generator": { name: "Token Generator", type: "tool", icon: "Code" },
+  "/tools/uuid-generator": { name: "UUID Generator", type: "tool", icon: "Fingerprint" },
   // Bookmarks
   "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
   // Favorites 
