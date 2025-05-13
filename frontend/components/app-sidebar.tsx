@@ -8,11 +8,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, Plus } from "lucide-react"
+import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart } from "lucide-react"
 import { logout as authLogout, getUser } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
 import { getIconComponent } from "@/utils/icons"
+import { IoPencil } from "react-icons/io5"
 
 export function AppSidebar() {
   const [openStates, setOpenStates] = useState({
@@ -143,8 +144,8 @@ export function AppSidebar() {
                         <SidebarMenuSubItem>
                           <SidebarMenuButton asChild>
                             <div className="cursor-default" onClick={() => routeTo('/favorites')}>
-                              <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Manage Favorites</span>
+                              <IoPencil className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span className="text-muted-foreground">Manage Favorites</span>
                             </div>
                           </SidebarMenuButton>
                         </SidebarMenuSubItem>
