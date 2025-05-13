@@ -1,4 +1,4 @@
-import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart } from "lucide-react";
+import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound } from "lucide-react";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { LucideIcon } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
@@ -28,6 +28,13 @@ export const tools: Tool[] = [
     description: "Generate hash values for strings",
     icon: Hash,
     url: "/tools/hash",
+    type: "tool"
+  },
+  {
+    title: "Bcrypt",
+    description: "Hash and compare strings using bcrypt",
+    icon: KeyRound,
+    url: "/tools/bcrypt",
     type: "tool"
   },
   {
@@ -106,6 +113,7 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   // Tools
   "/tools/hash": { name: "Hash Generator", type: "tool", icon: "Hash" },
   "/tools/base64": { name: "Base64 Converter", type: "tool", icon: "Binary" },
+  "/tools/bcrypt": { name: "Bcrypt Tool", type: "tool", icon: "KeyRound" },
   "/tools/regex": { name: "Regex Tester", type: "tool", icon: "Regex" },
   "/tools/proxy": { name: "Proxy Settings", type: "tool", icon: "Hammer" },
   "/tools/url-shortener": { name: "URL Shortener", type: "tool", icon: "Link" },
