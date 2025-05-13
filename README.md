@@ -41,7 +41,7 @@ A comprehensive fullstack development toolkit application built with Next.js fro
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/devtools.git
+git clone https://github.com/aghyy/devtools.git
 cd devtools
 ```
 
