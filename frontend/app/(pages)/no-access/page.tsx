@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Lock, Activity, Star, Share2, Bookmark, LayoutDashboard, History, Settings } from "lucide-react";
+import { Lock, Activity, Share2, Bookmark, LayoutDashboard, History, Settings, Heart } from "lucide-react";
 import Link from "next/link";
 
 export default function NoAccess() {
@@ -36,7 +36,7 @@ export default function NoAccess() {
         <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
+              <Heart className="h-5 w-5" />
               Favorite Tools
             </CardTitle>
             <CardDescription>

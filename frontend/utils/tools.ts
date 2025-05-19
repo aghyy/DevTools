@@ -1,4 +1,4 @@
-import { LucideIcon, Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound, Fingerprint, Barcode, Lock } from "lucide-react";
+import { LucideIcon, Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Bookmark, Code, Home, Heart, KeyRound, Fingerprint, Barcode, Lock } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
 
 // Type definitions for the tools
@@ -105,7 +105,7 @@ export const sidebarItems = {
   general: [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Favorites", url: "/favorites", icon: Heart },
-    { title: "Bookmarks", url: "/bookmarks", icon: Book },
+    { title: "Bookmarks", url: "/bookmarks", icon: Bookmark },
     { title: "Code Snippets", url: "/code-snippets", icon: Code },
   ],
   tools: {
