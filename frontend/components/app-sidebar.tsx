@@ -132,7 +132,7 @@ export function AppSidebar() {
                           <SidebarMenuSubItem>
                             <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
                               <div className="cursor-default opacity-50">
-                                <span>No favorites yet</span>
+                                <span>{isGuest ? "Log in to add favorites" : "No favorites yet"}</span>
                               </div>
                             </SidebarMenuButton>
                           </SidebarMenuSubItem>
@@ -152,14 +152,16 @@ export function AppSidebar() {
                             </SidebarMenuSubItem>
                           ))
                         )}
-                        <SidebarMenuSubItem>
-                          <SidebarMenuButton asChild>
-                            <div className="cursor-default" onClick={() => routeTo('/favorites')}>
-                              <IoPencil className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span className="text-muted-foreground">Manage Favorites</span>
-                            </div>
-                          </SidebarMenuButton>
-                        </SidebarMenuSubItem>
+                        {!isGuest && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuButton asChild>
+                              <div className="cursor-default" onClick={() => routeTo('/favorites')}>
+                                <IoPencil className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span className="text-muted-foreground">Manage Favorites</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </SidebarMenuSubItem>
+                        )}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </SidebarMenuItem>
