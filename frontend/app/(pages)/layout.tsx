@@ -4,6 +4,8 @@ import React, { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { trackActivity } from "@/services/activity";
 import { routeToActivityMap } from "@/utils/tools";
+import { useAtom } from "jotai";
+import { isGuestAtom, initializeGuestStateAtom } from "@/atoms/auth";
 
 export default function PagesLayout({
   children,
@@ -11,8 +13,19 @@ export default function PagesLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isGuest] = useAtom(isGuestAtom);
+  const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
   
   useEffect(() => {
+    initializeGuestState();
+  }, [initializeGuestState]);
+  
+  useEffect(() => {
+    // Skip tracking for guest users
+    if (isGuest) {
+      return;
+    }
+    
     // Only track main sections and specific tools (not the dashboard itself)
     if (pathname === "/dashboard") {
       return;

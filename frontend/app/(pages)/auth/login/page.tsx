@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login as loginService } from '@/services/auth';
 import { Eye, EyeOff } from 'lucide-react';
-
+import Image from 'next/image';
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -20,18 +20,18 @@ export default function Login() {
     try {
       await loginService(identifier, password);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error logging in. Please try again.');
+    } catch {
+      setError('Error logging in. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-login-background">
+    <div className="flex justify-center items-center min-h-screen bg-login-background flex-col">
       <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg">
         <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
-          <img className='size-16' src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
+          <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
           <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
         
@@ -87,11 +87,26 @@ export default function Login() {
         {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">
-            Don't have an account?{' '}
-            <a href="/auth/register" className="text-blue-accent hover:underline">
-              Register here
+            Don&apos;t have an account?{' '}
+            <a href="/auth/signup" className="text-blue-accent hover:underline">
+              Sign up here
             </a>
           </p>
+        </div>
+      </div>
+
+      <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg mt-4">
+        <div className="w-full flex flex-col gap-3 items-center justify-center">
+          <h2 className="text-xl font-semibold text-center text-login-title-foreground">Continue as Guest</h2>
+          <p className="text-sm text-login-foreground text-center mb-4">
+            Access basic features without creating an account
+          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-full py-3 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-login-focus"
+          >
+            Continue as Guest
+          </button>
         </div>
       </div>
     </div>

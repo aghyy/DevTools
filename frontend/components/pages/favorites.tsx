@@ -1,0 +1,146 @@
+"use client";
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Heart, ArrowUpRight, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { removeFromFavorites } from '@/services/favoriteToolService';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { TopSpacing } from '@/components/top-spacing';
+import { getIconComponent } from '@/utils/icons';
+import Icon from '@/components/icon';
+import { MagicCard } from '@/components/ui/magic-card';
+import { useRouter } from 'next/navigation';
+import { tools } from '@/utils/tools';
+import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+
+export default function FavoritesPage() {
+  const [error] = useState<string | null>(null);
+  const router = useRouter();
+  const { favorites, loading, refreshFavorites } = useFavoriteTools();
+
+  const handleRemove = async (id: number, name: string) => {
+    try {
+      await removeFromFavorites(id);
+      await refreshFavorites(); // Refresh global favorites state
+      toast.success('Removed from favorites', {
+        description: `${name} has been removed from your favorites.`,
+      });
+    } catch (err) {
+      toast.error('Error removing favorite', {
+        description: 'Failed to remove from favorites. Please try again.',
+      });
+      console.error(err);
+    }
+  };
+
+  const getToolDescription = (toolPath: string) => {
+    const tool = tools.find(tool => tool.url === toolPath);
+    return tool?.description || '';
+  };
+
+  return (
+    <div className="h-full w-full">
+      <div className="relative size-0">
+        <Breadcrumb className="absolute z-50 left-20 top-[22px] w-max">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Favorites</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      <TopSpacing />
+
+      <div className="w-full px-8 pt-8 pb-24 mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Favorite Tools</h1>
+            <p className="text-muted-foreground mt-1">
+              Access your favorite tools quickly
+            </p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-5 w-1/3 mb-2" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full" />
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-9 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : favorites.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mb-4">
+              <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">No Favorite Tools Yet</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Add tools to your favorites for quick access by clicking the heart icon on any tool page.
+            </p>
+            <Link href="/tools/base64" passHref>
+              <Button>Explore Tools</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {favorites.map((tool) => (
+              <MagicCard key={tool.id} className="overflow-hidden cursor-pointer h-[180px]" onClick={() => router.push(tool.toolUrl)}>
+                <Card className="h-full border-0 bg-transparent">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {tool.icon && <Icon icon={getIconComponent(tool.icon)} />}
+                        <CardTitle className="text-xl">{tool.toolName}</CardTitle>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemove(tool.id, tool.toolName);
+                        }}
+                        className="h-8 w-8 -mt-1 -mr-1 text-muted-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <CardDescription className="mt-2">{getToolDescription(tool.toolUrl)}</CardDescription>
+                  </CardHeader>
+                  <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                  </CardFooter>
+                </Card>
+              </MagicCard>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+} 

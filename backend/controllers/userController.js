@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../models");
 const User = db.users;
 const validator = require('validator');
+const userAuth = require("../middlewares/userAuth");
 
 const signup = async (req, res) => {
   try {
@@ -21,7 +22,19 @@ const signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = jwt.sign({ id: user.id }, process.env.secretKey, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { 
+        id: user.id,
+        user_id: user.id,
+        token_type: "access"
+      }, 
+      userAuth.privateKey, 
+      { 
+        algorithm: "RS256",
+        expiresIn: "1d",
+        jwtid: require("crypto").randomBytes(16).toString("hex")
+      }
+    );
 
     res.cookie("jwt", token, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
@@ -48,10 +61,8 @@ const login = async (req, res) => {
     // Check if the identifier is an email or username
     let user;
     if (validator.isEmail(identifier)) {
-      // If it's an email, find user by email
       user = await User.findOne({ where: { email: identifier } });
     } else {
-      // If it's not an email, assume it's a username
       user = await User.findOne({ where: { username: identifier } });
     }
 
@@ -65,7 +76,19 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid username/email or password" });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.secretKey, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { 
+        id: user.id,
+        user_id: user.id,
+        token_type: "access"
+      }, 
+      userAuth.privateKey, 
+      { 
+        algorithm: "RS256",
+        expiresIn: "1d",
+        jwtid: require("crypto").randomBytes(16).toString("hex")
+      }
+    );
 
     res.cookie("jwt", token, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day

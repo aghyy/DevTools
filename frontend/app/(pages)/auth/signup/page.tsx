@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import api from '@/utils/axios';
-
+import { signup as signupService } from '@/services/auth';
+import Image from 'next/image';
 type FieldName = 'firstName' | 'lastName' | 'username' | 'email' | 'password' | 'confirmPassword';
 
-export default function Register() {
+export default function Signup() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -48,21 +48,10 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const response = await api.post('/api/users/signup', {
-        firstName,
-        lastName,
-        username,
-        email,
-        password
-      });
-
-      if (response.status === 201) {
-        router.push('/auth/login');
-      } else {
-        setError(response.data.message || 'Error registering user. Please try again.');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error registering user. Please try again.');
+      await signupService(firstName, lastName, username, email, password);
+      router.push('/dashboard');
+    } catch {
+      setError('Error signing up. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +61,8 @@ export default function Register() {
     <div className="flex justify-center items-center min-h-screen bg-login-background">
       <div className="w-full max-w-lg bg-login-card-background p-8 rounded-lg shadow-lg">
         <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
-          <img className='size-16' src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
+          <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
+
           <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
 
@@ -80,7 +70,7 @@ export default function Register() {
           <div className="flex gap-3">
             <input
               type="text"
-              id="register-first-name"
+              id="signup-first-name"
               value={firstName}
               placeholder='First Name'
               onChange={(e) => setFirstName(e.target.value)}
@@ -92,7 +82,7 @@ export default function Register() {
 
             <input
               type="text"
-              id="register-last-name"
+              id="signup-last-name"
               value={lastName}
               placeholder='Last Name'
               onChange={(e) => setLastName(e.target.value)}
@@ -105,7 +95,7 @@ export default function Register() {
 
           <input
             type="text"
-            id="register-username"
+            id="signup-username"
             value={username}
             placeholder='Username'
             onChange={(e) => setUsername(e.target.value)}
@@ -117,7 +107,7 @@ export default function Register() {
 
           <input
             type="email"
-            id="register-email"
+            id="signup-email"
             value={email}
             placeholder='Email'
             onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +120,7 @@ export default function Register() {
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
-              id="register-password"
+              id="signup-password"
               value={password}
               placeholder='Password'
               onChange={(e) => setPassword(e.target.value)}
@@ -151,7 +141,7 @@ export default function Register() {
           <div className="relative">
             <input
               type={showConfirmPassword ? 'text' : 'password'}
-              id="register-confirm-password"
+              id="signup-confirm-password"
               value={confirmPassword}
               placeholder='Confirm Password'
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -178,7 +168,7 @@ export default function Register() {
             disabled={loading || !isFormValid()}
             className="w-full py-3 bg-blue-accent text-white rounded-md font-medium hover:bg-blue-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
-            {loading ? 'Registering...' : 'Register'}
+            {loading ? 'Signing up...' : 'Sign up'}
           </button>
         </form>
 

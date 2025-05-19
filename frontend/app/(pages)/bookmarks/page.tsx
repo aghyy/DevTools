@@ -51,7 +51,7 @@ import {
   getUserTags,
   getAllPublicBookmarks
 } from "@/services/bookmarkService";
-import { getUser } from "@/services/auth";
+import { getUserDetails } from "@/services/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // Interface for user data
@@ -167,7 +167,7 @@ export default function Bookmarks() {
   // Fetch functions
   const fetchUserData = async () => {
     try {
-      const user = await getUser();
+      const user = await getUserDetails();
       setUserData(user);
     } catch (error) {
       console.error("Error fetching user data:", error);

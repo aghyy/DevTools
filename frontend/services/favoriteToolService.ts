@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError } from "axios";
 
 // Define the FavoriteTool interface
 export interface FavoriteTool {
@@ -12,13 +12,13 @@ export interface FavoriteTool {
 }
 
 // API endpoint
-const API_URL = 'http://localhost:5039/api/favorite-tools';
+const API_URL = "http://localhost:5039/api/favorite-tools";
 
 // Configure axios to include credentials
 const api = axios.create({
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -36,7 +36,7 @@ export const addToFavorites = async (
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>;
     throw new Error(
-      axiosError.response?.data?.message || 'Failed to add tool to favorites'
+      axiosError.response?.data?.message || "Failed to add tool to favorites"
     );
   }
 };
@@ -51,7 +51,7 @@ export const getFavoriteTools = async (): Promise<FavoriteTool[]> => {
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>;
     throw new Error(
-      axiosError.response?.data?.message || 'Failed to fetch favorite tools'
+      axiosError.response?.data?.message || "Failed to fetch favorite tools"
     );
   }
 };
@@ -65,7 +65,8 @@ export const removeFromFavorites = async (id: number): Promise<void> => {
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>;
     throw new Error(
-      axiosError.response?.data?.message || 'Failed to remove tool from favorites'
+      axiosError.response?.data?.message ||
+        "Failed to remove tool from favorites"
     );
   }
 };
@@ -76,9 +77,9 @@ export const removeFromFavorites = async (id: number): Promise<void> => {
 export const isToolInFavorites = async (toolUrl: string): Promise<boolean> => {
   try {
     const favorites = await getFavoriteTools();
-    return favorites.some(tool => tool.toolUrl === toolUrl);
+    return favorites.some((tool) => tool.toolUrl === toolUrl);
   } catch (error) {
-    console.error('Error checking if tool is in favorites:', error);
+    console.error("Error checking if tool is in favorites:", error);
     return false;
   }
-}; 
+};

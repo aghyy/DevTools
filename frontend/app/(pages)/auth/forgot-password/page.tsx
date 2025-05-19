@@ -1,16 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { sendResetLink } from '@/services/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,8 +17,8 @@ export default function ForgotPassword() {
     try {
       await sendResetLink(email);
       setSuccessMessage('A password reset link has been sent to your email.');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error sending reset link. Please try again.');
+    } catch {
+      setError('Error sending reset link. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -30,7 +28,7 @@ export default function ForgotPassword() {
     <div className="flex justify-center items-center min-h-screen bg-login-background">
       <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg">
         <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
-          <img className='size-16' src="/images/icons/devtools-dark.png" alt="DevTools Logo" />
+          <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
           <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
 

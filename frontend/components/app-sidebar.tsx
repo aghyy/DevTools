@@ -9,11 +9,13 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupC
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
 import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart } from "lucide-react"
-import { logout as authLogout, getUser } from "@/services/auth"
+import { logout as authLogout, getUserDetails } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
 import { getIconComponent } from "@/utils/icons"
-import { IoPencil } from "react-icons/io5"
+import { IoEye, IoPencil } from "react-icons/io5"
+import { useAtom } from "jotai"
+import { isGuestAtom, initializeGuestStateAtom } from "@/atoms/auth"
 
 export function AppSidebar() {
   const [openStates, setOpenStates] = useState({
@@ -22,6 +24,9 @@ export function AppSidebar() {
     favorites: true,
   })
 
+  const [isGuest] = useAtom(isGuestAtom);
+  const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
+  const [, setIsGuest] = useAtom(isGuestAtom);
   const router = useRouter()
   const [userData, setUserData] = useState({ username: "", firstName: "", lastName: "", email: "", avatar: "" })
   const { favorites, loading } = useFavoriteTools()
@@ -29,7 +34,7 @@ export function AppSidebar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const user = await getUser()
+        const user = await getUserDetails()
         if (user) {
           setUserData({
             username: user.username,
@@ -44,14 +49,15 @@ export function AppSidebar() {
       }
     }
 
+    initializeGuestState();
     fetchUserData()
-  }, [])
+  }, [initializeGuestState])
 
   const signout = async () => {
     try {
       await authLogout()
-
-      router.push("/auth/login")
+      setIsGuest(true);
+      router.push("/")
     } catch (error) {
       console.log("Error signing out:", error)
     }
@@ -181,6 +187,14 @@ export function AppSidebar() {
                               </SidebarMenuButton>
                             </SidebarMenuSubItem>
                           ))}
+                          <SidebarMenuSubItem>
+                            <SidebarMenuButton asChild>
+                              <div className="cursor-default" onClick={() => routeTo('/tools')}>
+                                <IoEye className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span className="text-muted-foreground">View All Tools</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </SidebarMenuSubItem>
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
@@ -195,15 +209,15 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger asChild disabled={isGuest}>
                 <SidebarMenuButton className="h-fit">
                   <Avatar className="mr-1">
                     <AvatarImage src={userData.avatar} />
-                    <AvatarFallback>{userData.firstName[0]}{userData.lastName[0]}</AvatarFallback>
+                    <AvatarFallback>{isGuest ? "G" : `${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="truncate font-semibold">{userData.firstName} {userData.lastName}</div>
-                    <div className="truncate text-xs">{userData.email}</div>
+                    <div className="truncate font-semibold">{isGuest ? "Guest" : `${userData.firstName} ${userData.lastName}`}</div>
+                    <div className="truncate text-xs">{!isGuest && userData.email}</div>
                   </div>
                   <ChevronsUpDown className="ml-auto" />
                 </SidebarMenuButton>

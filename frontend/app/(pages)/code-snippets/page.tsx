@@ -78,7 +78,7 @@ import {
   getAllPublicCodeSnippets
 } from "@/services/codeSnippetService";
 
-import { getUser } from "@/services/auth";
+import { getUserDetails } from "@/services/auth";
 
 export default function CodeSnippets() {
   const { toast } = useToast();
@@ -151,7 +151,7 @@ export default function CodeSnippets() {
   // Fetch functions
   const fetchUserData = useCallback(async () => {
     try {
-      await getUser();
+      await getUserDetails();
     } catch (error) {
       console.error("Error fetching user data:", error);
     }

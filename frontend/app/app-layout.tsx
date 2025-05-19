@@ -8,7 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === "/auth/login" || pathname === "/auth/register" || pathname === "/auth/forgot-password";
+  const isAuthPage = pathname === "/auth/login" || pathname === "/auth/signup" || pathname === "/auth/forgot-password";
 
   return (
     <>

@@ -8,6 +8,7 @@ const router = express.Router();
 router.post("/signup", userAuth.saveUser, signup);
 router.post("/login", login);
 router.post("/logout", logout);
-router.get("/", userAuth.verifyToken, getUser);
+router.get("/user", userAuth.verifyToken, getUser);
+router.get("/jwt-public-key", userAuth.getPublicKey);
 
 module.exports = router;

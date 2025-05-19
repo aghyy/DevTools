@@ -25,10 +25,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-db.sequelize.sync({ force: false }).then(() => {
-  console.log("db has been re sync");
-});
-
 // URL Shortener redirect handler - handle both /s/:shortCode and /:shortCode paths
 app.get('/s/:shortCode', handleRedirect);
 app.get('/:shortCode', handleRedirect);
@@ -64,11 +60,22 @@ async function handleRedirect(req, res) {
   }
 }
 
-app.use('/api/users', userRoutes);
+app.use('/api/auth', userRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/favorite-tools', favoriteToolRoutes);
 app.use('/api/code-snippets', codeSnippetRoutes);
 
-app.listen(PORT, () => console.log(`Server is connected on ${PORT}`));
+// Sync database with models
+db.sequelize.sync({ alter: true })
+  .then(() => {
+    console.log("Database synchronized successfully");
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Error synchronizing database:", err);
+    process.exit(1);
+  });

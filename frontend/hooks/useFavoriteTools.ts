@@ -2,15 +2,21 @@ import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { getFavoriteTools } from '@/services/favoriteToolService';
 import { favoriteToolsAtom, isLoadingFavoritesAtom } from '@/atoms/favoriteTools';
+import { isGuestAtom } from '@/atoms/auth';
 
 export function useFavoriteTools() {
   const [favorites, setFavorites] = useAtom(favoriteToolsAtom);
   const [loading, setLoading] = useAtom(isLoadingFavoritesAtom);
   const [error, setError] = useState<Error | null>(null);
+  const [isGuest] = useAtom(isGuestAtom);
 
   const refreshFavorites = async () => {
     try {
       setLoading(true);
+      if (isGuest) {
+        setFavorites([]);
+        return;
+      }
       const data = await getFavoriteTools();
       setFavorites(data);
       setError(null);
@@ -24,7 +30,7 @@ export function useFavoriteTools() {
 
   useEffect(() => {
     refreshFavorites();
-  }, []);
+  }, [isGuest]);
 
-  return { favorites, loading, error, refreshFavorites };
+  return { favorites, loading, error, refreshFavorites, isGuest };
 } 

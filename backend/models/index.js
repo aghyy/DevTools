@@ -36,9 +36,4 @@ db.favoriteTools.belongsTo(db.users, { foreignKey: "userId" });
 
 db.users.hasMany(db.codeSnippets, { foreignKey: "userId" });
 
-// Synchronize models with the database
-db.sequelize.sync({ alter: true }) // Use `alter: true` to avoid data loss during development
-  .then(() => console.log("Tables synchronized with the database"))
-  .catch((err) => console.error("Error synchronizing tables:", err));
-
 module.exports = db;
