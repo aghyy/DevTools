@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useToast } from "@/hooks/use-toast";
+import { useAtom } from "jotai";
+import { isGuestAtom } from "@/atoms/auth";
 
 import {
   Breadcrumb,
@@ -83,6 +85,7 @@ import { getUserDetails } from "@/services/auth";
 
 export default function CodeSnippets() {
   const { toast } = useToast();
+  const [isGuest] = useAtom(isGuestAtom);
 
   // State for managing code snippets
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
@@ -97,7 +100,7 @@ export default function CodeSnippets() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState(isGuest ? "public" : "personal");
 
   // State for editing
   const [editingSnippet, setEditingSnippet] = useState<CodeSnippet | undefined>(undefined);
@@ -250,14 +253,14 @@ export default function CodeSnippets() {
   useEffect(() => {
     fetchUserData();
 
-    if (activeTab === "personal") {
+    if (activeTab === "personal" && !isGuest) {
       fetchPersonalSnippets();
       fetchLanguages();
       fetchTags();
     } else {
       fetchPublicSnippets();
     }
-  }, [activeTab, fetchUserData, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags]);
+  }, [activeTab, fetchUserData, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags, isGuest]);
 
   // Apply filters when they change
   useEffect(() => {
@@ -400,28 +403,30 @@ export default function CodeSnippets() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex justify-between items-center pb-4">
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList>
-              <TabsTrigger value="personal" className="flex gap-2">
-                <Code2 size={16} />
-                Personal
-              </TabsTrigger>
-              <TabsTrigger value="public" className="flex gap-2">
-                <Globe size={16} />
-                Public
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        {/* Tabs - Only show for logged in users */}
+        {!isGuest && (
+          <div className="flex justify-between items-center pb-4">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList>
+                <TabsTrigger value="personal" className="flex gap-2">
+                  <Code2 size={16} />
+                  Personal
+                </TabsTrigger>
+                <TabsTrigger value="public" className="flex gap-2">
+                  <Globe size={16} />
+                  Public
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-          {activeTab === "personal" && (
-            <Button onClick={() => handleOpenForm()} className="gap-1">
-              <Plus size={16} />
-              Add Snippet
-            </Button>
-          )}
-        </div>
+            {activeTab === "personal" && (
+              <Button onClick={() => handleOpenForm()} className="gap-1">
+                <Plus size={16} />
+                Add Snippet
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Search and Filter Bar */}
         <div className="flex gap-2 mb-6">
@@ -641,48 +646,52 @@ export default function CodeSnippets() {
         )}
       </div>
 
-      {/* Code Snippet Form Sheet */}
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <SheetContent className="sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editingSnippet ? 'Edit' : 'Add'} Code Snippet</SheetTitle>
-            <SheetDescription>
-              {editingSnippet
-                ? 'Update the details of your code snippet'
-                : 'Add a new code snippet to your collection'}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6">
-            <CodeSnippetForm
-              initialData={editingSnippet}
-              onSubmit={handleFormSubmit}
-              onCancel={handleCloseForm}
-              isProcessing={isProcessing}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Code Snippet Form Sheet - Only show for logged in users */}
+      {!isGuest && (
+        <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <SheetContent className="sm:max-w-xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>{editingSnippet ? 'Edit' : 'Add'} Code Snippet</SheetTitle>
+              <SheetDescription>
+                {editingSnippet
+                  ? 'Update the details of your code snippet'
+                  : 'Add a new code snippet to your collection'}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <CodeSnippetForm
+                initialData={editingSnippet}
+                onSubmit={handleFormSubmit}
+                onCancel={handleCloseForm}
+                isProcessing={isProcessing}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Code Snippet</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this code snippet? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation Dialog - Only show for logged in users */}
+      {!isGuest && (
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Code Snippet</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this code snippet? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
