@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart } from "lucide-react"
+import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn } from "lucide-react"
 import { logout as authLogout, getUserDetails } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
@@ -56,8 +56,10 @@ export function AppSidebar() {
   const signout = async () => {
     try {
       await authLogout()
-      setIsGuest(true);
-      router.push("/")
+      router.push(window.location.href);
+      setTimeout(() => {
+        setIsGuest(true);
+      }, 500);
     } catch (error) {
       console.log("Error signing out:", error)
     }
@@ -117,7 +119,7 @@ export function AppSidebar() {
                       <SidebarMenuSub>
                         {loading ? (
                           <SidebarMenuSubItem>
-                            <SidebarMenuButton asChild>
+                            <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
                               <div className="cursor-default opacity-50">
                                 <span>Loading...</span>
                               </div>
@@ -125,7 +127,7 @@ export function AppSidebar() {
                           </SidebarMenuSubItem>
                         ) : favorites.length === 0 ? (
                           <SidebarMenuSubItem>
-                            <SidebarMenuButton asChild>
+                            <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
                               <div className="cursor-default opacity-50">
                                 <span>No favorites yet</span>
                               </div>
@@ -207,36 +209,47 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild disabled={isGuest}>
-                <SidebarMenuButton className="h-fit">
-                  <Avatar className="mr-1">
-                    <AvatarImage src={userData.avatar} />
-                    <AvatarFallback>{isGuest ? "G" : `${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="truncate font-semibold">{isGuest ? "Guest" : `${userData.firstName} ${userData.lastName}`}</div>
-                    <div className="truncate text-xs">{!isGuest && userData.email}</div>
-                  </div>
-                  <ChevronsUpDown className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" className="w-[--radix-popper-anchor-width] mb-2">
-                <DropdownMenuItem onClick={() => routeTo('/settings')}>
-                  <Settings />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
-                  <CircleUserRound />
-                  <span>Account</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={signout}>
-                  <LogOut />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <SidebarMenuItem suppressHydrationWarning>
+            {isGuest ? (
+              <SidebarMenuButton
+                className="h-fit flex items-center justify-center"
+                variant="primary"
+                onClick={() => routeTo('/auth/login')}
+              >
+                <LogIn className="h-4 w-4" />
+                <span>Log in</span>
+              </SidebarMenuButton>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild disabled={isGuest}>
+                  <SidebarMenuButton className="h-fit">
+                    <Avatar className="mr-1">
+                      <AvatarImage src={userData.avatar} />
+                      <AvatarFallback>{`${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="truncate font-semibold">{`${userData.firstName} ${userData.lastName}`}</div>
+                      <div className="truncate text-xs">{userData.email}</div>
+                    </div>
+                    <ChevronsUpDown className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" className="w-[--radix-popper-anchor-width] mb-2">
+                  <DropdownMenuItem onClick={() => routeTo('/settings')}>
+                    <Settings />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
+                    <CircleUserRound />
+                    <span>Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signout}>
+                    <LogOut />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

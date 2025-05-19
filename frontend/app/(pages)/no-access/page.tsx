@@ -15,8 +15,8 @@ export default function NoAccess() {
         </AlertDescription>
       </Alert>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      <div className="flex flex-wrap gap-6">
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
@@ -33,7 +33,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
@@ -50,7 +50,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Share2 className="h-5 w-5" />
@@ -67,7 +67,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bookmark className="h-5 w-5" />
@@ -84,7 +84,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <LayoutDashboard className="h-5 w-5" />
@@ -101,7 +101,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
@@ -118,7 +118,7 @@ export default function NoAccess() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1 min-w-[300px] basis-[calc(50%-12px)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -139,7 +139,7 @@ export default function NoAccess() {
       <div className="mt-8 text-center">
         <Button asChild size="lg">
           <Link href="/auth/login">
-            Sign in to Access Features
+            Sign in to Access all Features
           </Link>
         </Button>
       </div>

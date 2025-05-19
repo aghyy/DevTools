@@ -46,23 +46,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeSnippetForm } from "@/components/code-snippet-form";
 import { CodeSnippetCard } from "@/components/code-snippet-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserData } from "@/types/user";
 
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  TagIcon, 
-  Code2, 
-  Languages, 
+import {
+  Plus,
+  Search,
+  Filter,
+  TagIcon,
+  Code2,
+  Languages,
   User,
   Globe,
   X,
   RefreshCw
 } from "lucide-react";
 
-import { 
-  CodeSnippet, 
-  CodeSnippetFormData, 
+import {
+  CodeSnippet,
+  CodeSnippetFormData,
   CodeSnippetLanguage,
   CodeSnippetTag,
   PublicCodeSnippets
@@ -89,30 +90,32 @@ export default function CodeSnippets() {
   const [publicSnippets, setPublicSnippets] = useState<PublicCodeSnippets[]>([]);
   const [languages, setLanguages] = useState<CodeSnippetLanguage[]>([]);
   const [tags, setTags] = useState<CodeSnippetTag[]>([]);
-  
+
   // State for UI components
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("my-snippets");
-  
+  const [activeTab, setActiveTab] = useState("personal");
+
   // State for editing
   const [editingSnippet, setEditingSnippet] = useState<CodeSnippet | undefined>(undefined);
   const [snippetToDelete, setSnippetToDelete] = useState<CodeSnippet | null>(null);
-  
+
   // State for filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
+  const [userData, setUserData] = useState<UserData | null>(null);
+
   // Filter code snippets based on search query and selected filters
   const applyFilters = useCallback(() => {
     let filtered;
-    
+
     // Use different source data depending on the active tab
-    if (activeTab === "my-snippets") {
+    if (activeTab === "personal") {
       filtered = [...codeSnippets];
     } else {
       // For public snippets, use the flattened list
@@ -151,7 +154,8 @@ export default function CodeSnippets() {
   // Fetch functions
   const fetchUserData = useCallback(async () => {
     try {
-      await getUserDetails();
+      const userData = await getUserDetails();
+      setUserData(userData);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -179,37 +183,37 @@ export default function CodeSnippets() {
     try {
       const allPublicSnippets = await getAllPublicCodeSnippets();
       setPublicSnippets(allPublicSnippets);
-      
+
       // Get all unique languages from public snippets
       const languageMap = new Map<string, number>();
       const tagMap = new Map<string, number>();
-      
+
       allPublicSnippets.forEach(userSnippets => {
         userSnippets.codeSnippets.forEach(snippet => {
           // Count languages
           const lang = snippet.language;
           languageMap.set(lang, (languageMap.get(lang) || 0) + 1);
-          
+
           // Count tags
           snippet.tags.forEach(tag => {
             tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
           });
         });
       });
-      
+
       // Convert to expected format
       const publicLanguages: CodeSnippetLanguage[] = Array.from(languageMap.entries())
         .map(([language, count]) => ({ language, count }))
         .sort((a, b) => b.count - a.count);
-        
+
       const publicTags: CodeSnippetTag[] = Array.from(tagMap.entries())
         .map(([tag, count]) => ({ tag, count }))
         .sort((a, b) => b.count - a.count);
-      
+
       // Update filters with public snippet data
       setLanguages(publicLanguages);
       setTags(publicTags);
-      
+
       // The filters will automatically be applied via the useEffect hook
       // that depends on publicSnippets
     } catch (error) {
@@ -245,8 +249,8 @@ export default function CodeSnippets() {
   // Initialize data
   useEffect(() => {
     fetchUserData();
-    
-    if (activeTab === "my-snippets") {
+
+    if (activeTab === "personal") {
       fetchPersonalSnippets();
       fetchLanguages();
       fetchTags();
@@ -289,12 +293,12 @@ export default function CodeSnippets() {
           description: "Code snippet created successfully",
         });
       }
-      
+
       // Refresh snippets
       fetchPersonalSnippets();
       fetchLanguages();
       fetchTags();
-      
+
       // Close form
       handleCloseForm();
     } catch (error) {
@@ -317,15 +321,15 @@ export default function CodeSnippets() {
 
   const handleConfirmDelete = async () => {
     if (!snippetToDelete) return;
-    
+
     try {
       await deleteCodeSnippet(snippetToDelete.id);
-      
+
       toast({
         title: "Success",
         description: "Code snippet deleted successfully",
       });
-      
+
       // Refresh snippets
       fetchPersonalSnippets();
       fetchLanguages();
@@ -384,23 +388,34 @@ export default function CodeSnippets() {
 
       <TopSpacing />
 
-      <div className="mx-10 mt-8 mb-24">
+      <div className="w-full px-8 pt-8 pb-24 mx-auto">
+        <div className="flex flex-col mb-8">
+          <h1 className="text-3xl font-bold mb-2">Code Snippets</h1>
+          <p className="text-muted-foreground">
+            {activeTab === "personal" && userData ? (
+              `${userData.firstName}'s code snippets`
+            ) : (
+              "Public code snippets shared by the community"
+            )}
+          </p>
+        </div>
+
         {/* Tabs */}
         <div className="flex justify-between items-center pb-4">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList>
-              <TabsTrigger value="my-snippets" className="flex gap-2">
+              <TabsTrigger value="personal" className="flex gap-2">
                 <Code2 size={16} />
-                My Snippets
+                Personal
               </TabsTrigger>
-              <TabsTrigger value="public-snippets" className="flex gap-2">
+              <TabsTrigger value="public" className="flex gap-2">
                 <Globe size={16} />
-                Public Snippets
+                Public
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          
-          {activeTab === "my-snippets" && (
+
+          {activeTab === "personal" && (
             <Button onClick={() => handleOpenForm()} className="gap-1">
               <Plus size={16} />
               Add Snippet
@@ -419,7 +434,7 @@ export default function CodeSnippets() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -428,11 +443,11 @@ export default function CodeSnippets() {
           >
             <Filter size={18} />
           </Button>
-          
+
           <Button
             variant="outline"
             size="icon"
-            onClick={activeTab === "my-snippets" ? fetchPersonalSnippets : fetchPublicSnippets}
+            onClick={activeTab === "personal" ? fetchPersonalSnippets : fetchPublicSnippets}
           >
             <RefreshCw size={16} />
           </Button>
@@ -443,8 +458,8 @@ export default function CodeSnippets() {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Active filters:</span>
             {selectedLanguage && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="flex gap-1 items-center"
                 onClick={() => setSelectedLanguage(null)}
               >
@@ -454,8 +469,8 @@ export default function CodeSnippets() {
               </Badge>
             )}
             {selectedTag && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="flex gap-1 items-center"
                 onClick={() => setSelectedTag(null)}
               >
@@ -464,10 +479,10 @@ export default function CodeSnippets() {
                 <X size={12} className="cursor-pointer" />
               </Badge>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFilters} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
               className="h-7 text-xs"
             >
               Clear all
@@ -552,11 +567,11 @@ export default function CodeSnippets() {
                 <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No code snippets found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {activeTab === "my-snippets"
+                  {activeTab === "personal"
                     ? "You haven't created any code snippets yet. Add one now!"
                     : "No public code snippets are available."}
                 </p>
-                {activeTab === "my-snippets" && (
+                {activeTab === "personal" && (
                   <Button onClick={() => handleOpenForm()}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Your First Snippet
@@ -564,18 +579,18 @@ export default function CodeSnippets() {
                 )}
               </div>
             ) : (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === "my-snippets" ? "lg:grid-cols-3" : ""} gap-4`}>
-                {activeTab === "public-snippets" && (
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === "personal" ? "lg:grid-cols-3" : ""} gap-4`}>
+                {activeTab === "public" && (
                   // Group snippets by user
                   publicSnippets.map((userSnippets) => {
                     // Filter to only show matching snippets
-                    const matchingSnippets = userSnippets.codeSnippets.filter(snippet => 
+                    const matchingSnippets = userSnippets.codeSnippets.filter(snippet =>
                       filteredSnippets.some(fs => fs.id === snippet.id)
                     );
-                    
+
                     // Skip users with no matching snippets
                     if (matchingSnippets.length === 0) return null;
-                    
+
                     return (
                       <Card key={userSnippets.username} className="mb-4">
                         <CardHeader className="pb-2">
@@ -610,8 +625,8 @@ export default function CodeSnippets() {
                     );
                   })
                 )}
-                
-                {activeTab === "my-snippets" &&
+
+                {activeTab === "personal" &&
                   filteredSnippets.map((snippet) => (
                     <CodeSnippetCard
                       key={snippet.id}

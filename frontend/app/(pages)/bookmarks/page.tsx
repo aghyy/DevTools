@@ -53,15 +53,9 @@ import {
 } from "@/services/bookmarkService";
 import { getUserDetails } from "@/services/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-// Interface for user data
-interface UserData {
-  id?: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import { UserData } from "@/types/user";
+import { useAtom } from "jotai";
+import { isGuestAtom } from "@/atoms/auth";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -72,6 +66,7 @@ interface UserPublicBookmarks {
 
 export default function Bookmarks() {
   const { toast } = useToast();
+  const [isGuest] = useAtom(isGuestAtom);
 
   // State
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -82,7 +77,7 @@ export default function Bookmarks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("personal");
+  const [activeTab, setActiveTab] = useState<string>(isGuest ? "public" : "personal");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [publicBookmarks, setPublicBookmarks] = useState<UserPublicBookmarks[]>([]);
 
@@ -97,25 +92,25 @@ export default function Bookmarks() {
   // Fetch data on component mount
   useEffect(() => {
     fetchUserData();
-    fetchPersonalBookmarks();
-    if (activeTab === "public") {
-      fetchPublicBookmarks();
+    if (!isGuest) {
+      fetchPersonalBookmarks();
     }
+    fetchPublicBookmarks();
   }, []);
 
   useEffect(() => {
-    if (activeTab === "personal") {
+    if (activeTab === "personal" && !isGuest) {
       fetchPersonalBookmarks();
       fetchCategories();
       fetchTags();
     } else {
       fetchPublicBookmarks();
     }
-  }, [activeTab]);
+  }, [activeTab, isGuest]);
 
   // Apply filters and search for personal bookmarks
   useEffect(() => {
-    if (activeTab === "personal") {
+    if (activeTab === "personal" && !isGuest) {
       let results = [...bookmarks];
 
       // Apply category filter
@@ -162,7 +157,7 @@ export default function Bookmarks() {
 
       setFilteredBookmarks(results);
     }
-  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, activeTab]);
+  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, activeTab, isGuest]);
 
   // Fetch functions
   const fetchUserData = async () => {
@@ -196,13 +191,13 @@ export default function Bookmarks() {
     try {
       const allPublicBookmarks = await getAllPublicBookmarks();
       setPublicBookmarks(allPublicBookmarks);
-      
+
       // Flatten all public bookmarks for display
       let allBookmarks: Bookmark[] = [];
       allPublicBookmarks.forEach(userBookmarks => {
         allBookmarks = allBookmarks.concat(userBookmarks.bookmarks);
       });
-      
+
       setFilteredBookmarks(allBookmarks);
     } catch (error) {
       console.error("Error fetching public bookmarks:", error);
@@ -338,14 +333,14 @@ export default function Bookmarks() {
       <h3 className="text-xl font-medium mb-2">No bookmarks found</h3>
       <p className="text-muted-foreground mb-6">
         {activeTab === "personal" ? (
-          bookmarks.length > 0 
-            ? "Try adjusting your filters or search term" 
+          bookmarks.length > 0
+            ? "Try adjusting your filters or search term"
             : "Add your first bookmark to get started"
         ) : (
           "No public bookmarks available"
         )}
       </p>
-      {activeTab === "personal" && (
+      {activeTab === "personal" && !isGuest && (
         <Button onClick={() => handleOpenForm()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Bookmark
@@ -369,38 +364,40 @@ export default function Bookmarks() {
       <TopSpacing />
 
       <div className="w-full px-8 pt-8 pb-24 mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
-            <p className="text-muted-foreground">
-              {activeTab === "personal" && userData ? (
-                `${userData.firstName}'s bookmarks and favorite resources`
-              ) : (
-                "Public bookmarks shared by the community"
-              )}
-            </p>
-          </div>
-          {activeTab === "personal" && (
-            <Button onClick={() => handleOpenForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Bookmark
-            </Button>
-          )}
+        <div className="flex flex-col mb-8">
+          <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
+          <p className="text-muted-foreground">
+            {activeTab === "personal" && userData ? (
+              `${userData.firstName}'s bookmarks and favorite resources`
+            ) : (
+              "Public bookmarks shared by the community"
+            )}
+          </p>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="personal" className="mb-8" onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="personal" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Personal
-            </TabsTrigger>
-            <TabsTrigger value="public" className="flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              Public
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Tabs - Only show for logged in users */}
+        {!isGuest && (
+          <div className="flex justify-between items-center pb-4">
+            <Tabs defaultValue="personal" className="mb-8" onValueChange={handleTabChange}>
+              <TabsList>
+                <TabsTrigger value="personal" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Personal
+                </TabsTrigger>
+                <TabsTrigger value="public" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  Public
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {activeTab === "personal" && (
+              <Button onClick={() => handleOpenForm()} className="gap-1">
+                <Plus size={16} />
+                Add Bookmark
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
@@ -418,7 +415,7 @@ export default function Bookmarks() {
             </div>
 
             {/* Categories - Only show for personal bookmarks */}
-            {activeTab === "personal" && (
+            {activeTab === "personal" && !isGuest && (
               <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -460,7 +457,7 @@ export default function Bookmarks() {
             )}
 
             {/* Popular Tags - Only show for personal bookmarks */}
-            {activeTab === "personal" && (
+            {activeTab === "personal" && !isGuest && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center">
@@ -492,7 +489,7 @@ export default function Bookmarks() {
             )}
 
             {/* Users list - Only show for public bookmarks */}
-            {activeTab === "public" && publicBookmarks.length > 0 && (
+            {(activeTab === "public" || isGuest) && publicBookmarks.length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center">
@@ -561,9 +558,9 @@ export default function Bookmarks() {
                   <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
-                    onEdit={activeTab === "personal" ? handleOpenForm : undefined}
-                    onDelete={activeTab === "personal" ? handleDeleteClick : undefined}
-                    showControls={activeTab === "personal"}
+                    onEdit={activeTab === "personal" && !isGuest ? handleOpenForm : undefined}
+                    onDelete={activeTab === "personal" && !isGuest ? handleDeleteClick : undefined}
+                    showControls={activeTab === "personal" && !isGuest}
                   />
                 ))}
               </div>
@@ -574,107 +571,113 @@ export default function Bookmarks() {
         </div>
       </div>
 
-      {/* Form Sheet */}
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <SheetContent className="sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editingBookmark ? 'Edit' : 'Add'} Bookmark</SheetTitle>
-            <SheetDescription>
-              {editingBookmark
-                ? 'Update the details of your bookmark'
-                : 'Add a new bookmark to your collection'}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6">
-            <BookmarkForm
-              initialData={editingBookmark}
-              onSubmit={handleFormSubmit}
-              onCancel={handleCloseForm}
-              isProcessing={isProcessing}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Form Sheet - Only show for logged in users */}
+      {!isGuest && (
+        <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <SheetContent className="sm:max-w-xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>{editingBookmark ? 'Edit' : 'Add'} Bookmark</SheetTitle>
+              <SheetDescription>
+                {editingBookmark
+                  ? 'Update the details of your bookmark'
+                  : 'Add a new bookmark to your collection'}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <BookmarkForm
+                initialData={editingBookmark}
+                onSubmit={handleFormSubmit}
+                onCancel={handleCloseForm}
+                isProcessing={isProcessing}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Bookmark</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this bookmark? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Mobile Filters Dialog */}
-      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filters</DialogTitle>
-            <DialogDescription>
-              Filter your bookmarks by category or tag
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-4">
-            <h4 className="text-sm font-medium mb-2">Categories</h4>
-            <div className="space-y-1 mb-4">
-              <div
-                className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
-                onClick={() => setSelectedCategory(null)}
+      {/* Delete Confirmation Dialog - Only show for logged in users */}
+      {!isGuest && (
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Bookmark</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this bookmark? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                All Categories
-              </div>
-              {categories.map((category) => (
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Mobile Filters Dialog - Only show for logged in users */}
+      {!isGuest && (
+        <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Filters</DialogTitle>
+              <DialogDescription>
+                Filter your bookmarks by category or tag
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Categories</h4>
+              <div className="space-y-1 mb-4">
                 <div
-                  key={category}
-                  className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
-                  onClick={() => setSelectedCategory(category)}
+                  className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
+                  onClick={() => setSelectedCategory(null)}
                 >
-                  {category}
+                  All Categories
                 </div>
-              ))}
-            </div>
+                {categories.map((category) => (
+                  <div
+                    key={category}
+                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </div>
+                ))}
+              </div>
 
-            <h4 className="text-sm font-medium mb-2">Tags</h4>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {tags.slice(0, 20).map((tag) => (
-                <Badge
-                  key={tag.tag}
-                  variant={selectedTag === tag.tag ? "default" : "secondary"}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+              <h4 className="text-sm font-medium mb-2">Tags</h4>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {tags.slice(0, 20).map((tag) => (
+                  <Badge
+                    key={tag.tag}
+                    variant={selectedTag === tag.tag ? "default" : "secondary"}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+                  >
+                    {tag.tag}
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
                 >
-                  {tag.tag}
-                </Badge>
-              ))}
+                  Clear Filters
+                </Button>
+                <Button onClick={() => setFilterDialogOpen(false)}>
+                  Apply
+                </Button>
+              </div>
             </div>
-
-            <div className="flex justify-between mt-6">
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
-              <Button onClick={() => setFilterDialogOpen(false)}>
-                Apply
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
