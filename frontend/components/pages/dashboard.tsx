@@ -240,15 +240,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Favorites section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Heart className="h-5 w-5" />
-            Favorite Tools
-          </h2>
-          <DashboardFavorites />
-        </div>
-
         {/* Most used items section */}
         {!loading && mostUsedItems.length > 0 && (
           <div className="mb-8">
@@ -288,6 +279,15 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Favorites section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Heart className="h-5 w-5" />
+            Favorite Tools
+          </h2>
+          <DashboardFavorites />
+        </div>
 
         {/* Featured links - now as improved cards */}
         <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
