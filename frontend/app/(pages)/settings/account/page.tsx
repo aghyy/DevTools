@@ -236,7 +236,7 @@ export default function Account() {
 
       <TopSpacing />
 
-      <div className="mx-12 mb-24 space-y-6 mt-8">
+      <div className="mx-12 mb-12 space-y-6 mt-8">
         {/* Profile Picture Card */}
         <Card>
           <CardHeader>
