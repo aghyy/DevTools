@@ -29,10 +29,12 @@ export const FileUpload = ({
   keyProp,
   files,
   onChange,
+  accept,
 }: {
   keyProp: string;
   files: File[];
   onChange?: (files: File[]) => void;
+  accept?: Record<string, string[]>;
 }) => {
   // const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,10 +46,27 @@ export const FileUpload = ({
   };
 
   const handleFileChange = (newFiles: File[]) => {
-    // setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    // Filter files based on accept prop
+    const validFiles = newFiles.filter(file => {
+      if (!accept) return true;
+
+      return Object.entries(accept).some(([type, extensions]) => {
+        const fileType = file.type.split('/')[0];
+        const fileExtension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+
+        return (type === fileType + '/*' || type === file.type) &&
+          extensions.some(ext => ext.toLowerCase() === fileExtension);
+      });
+    });
+
+    if (validFiles.length === 0) {
+      console.log('Invalid file type');
+      return;
+    }
+
     clearFiles();
     if (onChange) {
-      onChange(newFiles);
+      onChange(validFiles);
     }
   };
 
@@ -62,6 +81,7 @@ export const FileUpload = ({
     onDropRejected: (error) => {
       console.log(error);
     },
+    accept,
   });
 
   return (
@@ -76,6 +96,13 @@ export const FileUpload = ({
           id={`file-upload-handle-${keyProp}`}
           type="file"
           multiple={false}
+          accept={
+            accept
+              ? Object.entries(accept)
+                .flatMap(([type, exts]) => [type, ...exts])
+                .join(',')
+              : undefined
+          }
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
@@ -193,11 +220,10 @@ export function GridPattern() {
           return (
             <div
               key={`${col}-${row}`}
-              className={`w-10 h-10 flex flex-shrink-0 rounded-[2px] ${
-                index % 2 === 0
+              className={`w-10 h-10 flex flex-shrink-0 rounded-[2px] ${index % 2 === 0
                   ? "bg-gray-50 dark:bg-neutral-950"
                   : "bg-gray-50 dark:bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
-              }`}
+                }`}
             />
           );
         })

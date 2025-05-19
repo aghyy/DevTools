@@ -378,7 +378,14 @@ const Steganography: React.FC = () => {
               </p>
 
               {/* Base Image Selection */}
-              <FileUpload keyProp='encode' files={encodeFiles} onChange={handleEncodeChange} />
+              <FileUpload 
+                keyProp='encode' 
+                files={encodeFiles} 
+                onChange={handleEncodeChange}
+                accept={{
+                  'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+                }}
+              />
 
               {/* Preview of Base Image */}
               {baseImage && (
@@ -427,7 +434,14 @@ const Steganography: React.FC = () => {
                   Import an encoded image and enter the password
                 </p>
 
-                <FileUpload keyProp='decode' files={decodeFiles} onChange={handleDecodeChange} />
+                <FileUpload 
+                  keyProp='decode' 
+                  files={decodeFiles} 
+                  onChange={handleDecodeChange}
+                  accept={{
+                    'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+                  }}
+                />
 
                 <Input
                   type="password"
