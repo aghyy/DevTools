@@ -94,7 +94,7 @@ export default function Notifications() {
 
       <TopSpacing />
 
-      <div className="mx-12 mb-12 space-y-6 mt-8">
+      <div className="mx-8 mb-12 space-y-6 mt-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Notification Preferences</CardTitle>

@@ -19,7 +19,7 @@ export function MagicCard({
   children,
   className,
   gradientSize = 200,
-  gradientColor = "#ddd",
+  gradientColor = "#ededed",
   gradientColorDark = "#262626",
   gradientOpacity = 0.7,
   onClick,

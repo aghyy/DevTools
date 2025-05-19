@@ -53,7 +53,7 @@ export default function Settings() {
 
       <TopSpacing />
 
-      <div className="mx-12 mb-12 mt-8">
+      <div className="mx-8 mb-12 mt-8">
         <h1 className="text-3xl font-bold mb-8">Settings</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
