@@ -83,3 +83,18 @@ export const isToolInFavorites = async (toolUrl: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Update the positions of favorite tools
+ */
+export const updateFavoritePositions = async (positions: { id: number; position: number }[]): Promise<void> => {
+  try {
+    await api.put(`${API_URL}/positions`, { positions });
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<{ message: string }>;
+    throw new Error(
+      axiosError.response?.data?.message ||
+        "Failed to update favorite positions"
+    );
+  }
+};

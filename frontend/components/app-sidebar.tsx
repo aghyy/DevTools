@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn } from "lucide-react"
+import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn, GripVertical } from "lucide-react"
 import { logout as authLogout, getUserDetails } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
@@ -17,6 +17,60 @@ import { IoEye, IoPencil } from "react-icons/io5"
 import { useAtom } from "jotai"
 import { isGuestAtom, initializeGuestStateAtom } from "@/atoms/auth"
 import { UserData } from "@/types/user"
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { updateFavoritePositions } from '@/services/favoriteToolService';
+import type { FavoriteTool } from '@/services/favoriteToolService';
+
+function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: favorite.id });
+  return (
+    <SidebarMenuSubItem
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform) + (isDragging ? ' scale(1.04)' : ''),
+        transition: 'transform 200ms cubic-bezier(.4,2,.6,1), opacity 200ms cubic-bezier(.4,2,.6,1), box-shadow 200ms cubic-bezier(.4,2,.6,1)',
+        opacity: isDragging ? 0.7 : 1,
+        boxShadow: isDragging ? '0 4px 16px 0 rgba(0,0,0,0.10)' : undefined,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+      {...attributes}
+    >
+      <SidebarMenuButton asChild>
+        <div className="flex items-center cursor-default" onClick={onClick}>
+          {favorite.icon ? (
+            <Icon icon={getIconComponent(favorite.icon)} />
+          ) : (
+            <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
+          )}
+          <span>{favorite.toolName}</span>
+          <button
+            {...listeners}
+            tabIndex={-1}
+            className="ml-auto p-1 cursor-grab hover:bg-muted/50 rounded text-muted-foreground"
+            style={{ background: 'none', border: 'none' }}
+            aria-label="Drag to reorder"
+            onClick={e => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        </div>
+      </SidebarMenuButton>
+    </SidebarMenuSubItem>
+  );
+}
 
 export function AppSidebar() {
   const [isGuest, setIsGuest] = useAtom(isGuestAtom);
@@ -38,7 +92,8 @@ export function AppSidebar() {
   const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null);
-  const { favorites, loading } = useFavoriteTools()
+  const { favorites, loading, refreshFavorites } = useFavoriteTools()
+  const [sidebarFavorites, setSidebarFavorites] = useState<FavoriteTool[]>(favorites);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,6 +110,10 @@ export function AppSidebar() {
     initializeGuestState();
     fetchUserData();
   }, [initializeGuestState])
+
+  useEffect(() => {
+    setSidebarFavorites(favorites);
+  }, [favorites]);
 
   const signout = async () => {
     try {
@@ -78,6 +137,8 @@ export function AppSidebar() {
 
   // Filter out the favorites item from general items
   const generalItems = sidebarItems.general.filter(item => item.title !== "Favorites");
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   return (
     <Sidebar>
@@ -137,20 +198,37 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                           </SidebarMenuSubItem>
                         ) : (
-                          favorites.map((favorite) => (
-                            <SidebarMenuSubItem key={favorite.id}>
-                              <SidebarMenuButton asChild>
-                                <div className="cursor-default" onClick={() => routeTo(favorite.toolUrl)}>
-                                  {favorite.icon ? (
-                                    <Icon icon={getIconComponent(favorite.icon)} />
-                                  ) : (
-                                    <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  )}
-                                  <span>{favorite.toolName}</span>
-                                </div>
-                              </SidebarMenuButton>
-                            </SidebarMenuSubItem>
-                          ))
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={async (event) => {
+                              const { active, over } = event;
+                              if (!over || active.id === over.id) return;
+                              const oldIndex = sidebarFavorites.findIndex(f => f.id === active.id);
+                              const newIndex = sidebarFavorites.findIndex(f => f.id === over.id);
+                              if (oldIndex === -1 || newIndex === -1) return;
+                              const newOrder = arrayMove(sidebarFavorites, oldIndex, newIndex);
+                              setSidebarFavorites(newOrder);
+                              // Persist new order
+                              const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
+                              try {
+                                await updateFavoritePositions(positions);
+                                await refreshFavorites();
+                              } catch {
+                                // Optionally show error
+                              }
+                            }}
+                          >
+                            <SortableContext items={sidebarFavorites.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                              {sidebarFavorites.map((favorite) => (
+                                <SortableFavorite
+                                  key={favorite.id}
+                                  favorite={favorite}
+                                  onClick={() => routeTo(favorite.toolUrl)}
+                                />
+                              ))}
+                            </SortableContext>
+                          </DndContext>
                         )}
                         {!isGuest && (
                           <SidebarMenuSubItem>
