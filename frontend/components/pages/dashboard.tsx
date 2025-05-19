@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useRouter } from "next/navigation";
+import { useAtom } from "jotai";
+import { userDataAtom } from "@/atoms/auth";
 
 import {
   Breadcrumb,
@@ -28,7 +30,6 @@ import {
   Code
 } from "lucide-react";
 
-import { getUserDetails } from "@/services/auth";
 import {
   getRecentActivities,
   getMostUsedItems,
@@ -40,10 +41,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MagicCard } from "@/components/ui/magic-card";
 import DashboardFavorites from "@/components/dashboard-favorites";
 import { getIconComponent } from "@/utils/icons";
-import { UserData } from "@/types/user";
 
 export default function Dashboard() {
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData] = useAtom(userDataAtom);
   const [loading, setLoading] = useState(true);
   const [recentItems, setRecentItems] = useState<ActivityType[]>([]);
   const [mostUsedItems, setMostUsedItems] = useState<MostUsedItem[]>([]);
@@ -73,15 +73,11 @@ export default function Dashboard() {
 
   const router = useRouter();
 
-  // Fetch user data and activities
+  // Fetch activities
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Get user data
-        const user = await getUserDetails();
-        setUserData(user);
 
         // Get recent activities
         const activities = await getRecentActivities(4);

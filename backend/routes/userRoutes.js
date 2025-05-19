@@ -1,6 +1,17 @@
 const express = require("express");
 const userController = require("../controllers/userController");
-const { signup, login, logout, getUser, uploadAvatar, removeAvatar } = userController;
+const { 
+  signup, 
+  login, 
+  logout, 
+  getUser, 
+  uploadAvatar, 
+  removeAvatar,
+  updateProfile,
+  changePassword,
+  updateNotificationPreferences,
+  updatePrivacySettings
+} = userController;
 const userAuth = require("../middlewares/userAuth");
 const multer = require("multer");
 const path = require("path");
@@ -36,11 +47,20 @@ const upload = multer({
   }
 });
 
+// Auth routes
 router.post("/signup", userAuth.saveUser, signup);
 router.post("/login", login);
 router.post("/logout", logout);
-router.get("/user", userAuth.verifyToken, getUser);
 router.get("/jwt-public-key", userAuth.getPublicKey);
+
+// User profile routes
+router.get("/user", userAuth.verifyToken, getUser);
+router.put("/profile", userAuth.verifyToken, updateProfile);
+router.put("/password", userAuth.verifyToken, changePassword);
+router.put("/notifications", userAuth.verifyToken, updateNotificationPreferences);
+router.put("/privacy", userAuth.verifyToken, updatePrivacySettings);
+
+// Avatar routes
 router.post("/avatar", userAuth.verifyToken, upload.single('avatar'), uploadAvatar);
 router.delete("/avatar", userAuth.verifyToken, removeAvatar);
 

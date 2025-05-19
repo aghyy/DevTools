@@ -113,3 +113,55 @@ export const removeAvatar = async () => {
   const response = await api.delete('/api/auth/avatar');
   return response.data;
 };
+
+export const updateProfile = async (data: {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+}) => {
+  try {
+    const response = await api.put("/api/auth/profile", data);
+    return response.data;
+  } catch {
+    throw new Error('Failed to update profile');
+  }
+};
+
+export const changePassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  try {
+    const response = await api.put("/api/auth/password", data);
+    return response.data;
+  } catch {
+    throw new Error('Failed to change password');
+  }
+};
+
+export const updateNotificationPreferences = async (data: {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  marketingEmails: boolean;
+}) => {
+  try {
+    const response = await api.put("/api/auth/notifications", data);
+    return response.data;
+  } catch {
+    throw new Error('Failed to update notification preferences');
+  }
+};
+
+export const updatePrivacySettings = async (data: {
+  profileVisibility: 'public' | 'private' | 'connections';
+  showEmail: boolean;
+  showActivity: boolean;
+}) => {
+  try {
+    const response = await api.put("/api/auth/privacy", data);
+    return response.data;
+  } catch {
+    throw new Error('Failed to update privacy settings');
+  }
+};

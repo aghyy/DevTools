@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getUserDetails, uploadAvatar, removeAvatar } from "@/services/auth";
-import { UserData } from "@/types/user";
+import { uploadAvatar, removeAvatar, updateProfile, changePassword } from "@/services/auth";
+import { useAtom } from "jotai";
+import { userDataAtom, updateUserDataAtom } from "@/atoms/auth";
 
 import { TopSpacing } from "@/components/top-spacing";
 import {
@@ -19,7 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, X } from "lucide-react";
+import { Camera, Mail, User, Lock, Minus } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface ApiError {
   response?: {
@@ -33,43 +35,46 @@ interface ApiError {
 export default function Account() {
   const router = useRouter();
   const { toast } = useToast();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData] = useAtom(userDataAtom);
+  const [, updateUserData] = useAtom(updateUserDataAtom);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   const routeTo = (path: string) => {
     router.push(path);
   };
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const data = await getUserDetails();
-      setUserData(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load user data",
-        variant: "destructive",
+    if (userData) {
+      setFormData({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        email: userData.email,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
       });
     }
-  };
+  }, [userData]);
 
   const handleUploadClick = () => {
-    console.log('Upload button clicked'); // Debug log
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('File input changed'); // Debug log
     const file = event.target.files?.[0];
     if (!file) return;
-
-    console.log('Selected file:', file); // Debug log
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -94,10 +99,8 @@ export default function Account() {
 
     setIsUploading(true);
     try {
-      console.log('Uploading file...'); // Debug log
-      const response = await uploadAvatar(file);
-      console.log('Upload response:', response); // Debug log
-      await fetchUserData();
+      const updatedUser = await uploadAvatar(file);
+      updateUserData(updatedUser);
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
@@ -124,8 +127,8 @@ export default function Account() {
 
   const handleRemoveAvatar = async () => {
     try {
-      await removeAvatar();
-      await fetchUserData();
+      const updatedUser = await removeAvatar();
+      updateUserData(updatedUser);
       toast({
         title: "Success",
         description: "Profile picture removed successfully",
@@ -139,6 +142,81 @@ export default function Account() {
       });
     }
   };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    try {
+      const updatedUser = await updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: formData.username,
+        email: formData.email,
+      });
+      updateUserData(updatedUser);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+      toast({
+        title: "Success",
+        description: "Password changed successfully",
+      });
+      // Clear password fields
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!userData) {
+    return null; // or a loading state
+  }
 
   return (
     <div className="h-full w-full">
@@ -158,7 +236,8 @@ export default function Account() {
 
       <TopSpacing />
 
-      <div className="mx-12 mb-24">
+      <div className="mx-12 mb-24 space-y-6 mt-8">
+        {/* Profile Picture Card */}
         <Card>
           <CardHeader>
             <CardTitle>Profile Picture</CardTitle>
@@ -182,11 +261,11 @@ export default function Account() {
                   <Button
                     variant="destructive"
                     size="icon"
-                    className="absolute -top-2 -right-2 rounded-full"
+                    className="absolute -top-1 -right-1 rounded-full bg-red-500 hover:bg-red-500/80"
                     onClick={handleRemoveAvatar}
                     disabled={isUploading}
                   >
-                    <X className="h-4 w-4" />
+                    <Minus className="h-3 w-3" />
                   </Button>
                 )}
               </div>
@@ -213,6 +292,112 @@ export default function Account() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Personal Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Personal Information</CardTitle>
+            <CardDescription>
+              Update your personal details
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="flex items-center gap-1"><User className="h-4 w-4" /> First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="flex items-center gap-1"><User className="h-4 w-4" /> Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Enter your last name"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username" className="flex items-center gap-1"><User className="h-4 w-4" /> Username</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder="Choose a username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1"><Mail className="h-4 w-4" /> Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Enter your email"
+              />
+            </div>
+            <Button onClick={handleSaveProfile} disabled={isLoading}>
+              Save Changes
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Password Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Change Password</CardTitle>
+            <CardDescription>
+              Update your password to keep your account secure
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword" className="flex items-center gap-1"><Lock className="h-4 w-4" /> Current Password</Label>
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                value={formData.currentPassword}
+                onChange={handleInputChange}
+                placeholder="Enter current password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword" className="flex items-center gap-1"><Lock className="h-4 w-4" /> New Password</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type="password"
+                value={formData.newPassword}
+                onChange={handleInputChange}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="flex items-center gap-1"><Lock className="h-4 w-4" /> Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm new password"
+              />
+            </div>
+            <Button onClick={handleChangePassword} disabled={isLoading}>
+              Update Password
+            </Button>
           </CardContent>
         </Card>
       </div>

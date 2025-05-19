@@ -8,15 +8,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn, GripVertical, User } from "lucide-react"
-import { logout as authLogout, getUserDetails } from "@/services/auth"
+import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, GripVertical, User, LogIn } from "lucide-react"
+import { logout as authLogout } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
 import { getIconComponent } from "@/utils/icons"
 import { IoEye, IoPencil } from "react-icons/io5"
 import { useAtom } from "jotai"
-import { isGuestAtom, initializeGuestStateAtom } from "@/atoms/auth"
-import { UserData } from "@/types/user"
+import { isGuestAtom, initializeGuestStateAtom, userDataAtom } from "@/atoms/auth"
 import {
   DndContext,
   closestCenter,
@@ -74,13 +73,13 @@ function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onCli
 
 export function AppSidebar() {
   const [isGuest, setIsGuest] = useAtom(isGuestAtom);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userData] = useAtom(userDataAtom);
 
   const [openStates, setOpenStates] = useState({
     codeSnippets: false,
     tools: true,
     favorites: !isGuest,
-  })
+  });
 
   useEffect(() => {
     setOpenStates(prev => ({
@@ -90,27 +89,14 @@ export function AppSidebar() {
   }, [isGuest]);
 
   const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
-  const router = useRouter()
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const { favorites, loading, refreshFavorites } = useFavoriteTools()
+  const router = useRouter();
+  const { favorites, loading, refreshFavorites } = useFavoriteTools();
   const [sidebarFavorites, setSidebarFavorites] = useState<FavoriteTool[]>(favorites);
   const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = await getUserDetails();
-        setUserData(user);
-      } catch (error) {
-        console.log("Error fetching user data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     initializeGuestState();
-    fetchUserData();
-  }, [initializeGuestState])
+  }, [initializeGuestState]);
 
   useEffect(() => {
     if (!isReordering) {
@@ -128,7 +114,7 @@ export function AppSidebar() {
     } catch (error) {
       console.log("Error signing out:", error);
     }
-  }
+  };
 
   const toggleCollapse = (key: keyof typeof openStates) => {
     setOpenStates(prev => ({ ...prev, [key]: !prev[key] }));
@@ -303,14 +289,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem suppressHydrationWarning>
-            {isLoading ? (
-              <SidebarMenuButton className="h-fit">
-                <div className="animate-pulse flex items-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-muted"></div>
-                  <div className="h-4 w-24 bg-muted rounded"></div>
-                </div>
-              </SidebarMenuButton>
-            ) : isGuest ? (
+            {isGuest ? (
               <SidebarMenuButton
                 className="h-fit flex items-center justify-center"
                 variant="primary"

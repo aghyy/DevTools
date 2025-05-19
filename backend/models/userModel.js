@@ -28,6 +28,38 @@ module.exports = (sequelize, DataTypes) => {
     avatar: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    // Notification preferences
+    emailNotifications: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
+    },
+    pushNotifications: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
+    },
+    marketingEmails: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    // Privacy settings
+    profileVisibility: {
+      type: DataTypes.ENUM('public', 'private', 'connections'),
+      allowNull: false,
+      defaultValue: 'public'
+    },
+    showEmail: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    showActivity: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
     }
   }, { timestamps: true });
   return User;

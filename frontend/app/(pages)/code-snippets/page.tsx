@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useToast } from "@/hooks/use-toast";
 import { useAtom } from "jotai";
-import { isGuestAtom } from "@/atoms/auth";
+import { isGuestAtom, userDataAtom } from "@/atoms/auth";
 
 import {
   Breadcrumb,
@@ -40,7 +40,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeSnippetForm } from "@/components/code-snippet-form";
 import { CodeSnippetCard } from "@/components/code-snippet-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { UserData } from "@/types/user";
 
 import {
   Plus,
@@ -70,11 +69,10 @@ import {
   getAllPublicCodeSnippets
 } from "@/services/codeSnippetService";
 
-import { getUserDetails } from "@/services/auth";
-
 export default function CodeSnippets() {
   const { toast } = useToast();
   const [isGuest] = useAtom(isGuestAtom);
+  const [userData] = useAtom(userDataAtom);
 
   // State for managing code snippets
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
@@ -99,8 +97,6 @@ export default function CodeSnippets() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-
-  const [userData, setUserData] = useState<UserData | null>(null);
 
   // Filter code snippets based on search query and selected filters
   const applyFilters = useCallback(() => {
@@ -152,15 +148,6 @@ export default function CodeSnippets() {
   }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab]);
 
   // Fetch functions
-  const fetchUserData = useCallback(async () => {
-    try {
-      const userData = await getUserDetails();
-      setUserData(userData);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  }, []);
-
   const fetchPersonalSnippets = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -248,8 +235,6 @@ export default function CodeSnippets() {
 
   // Initialize data
   useEffect(() => {
-    fetchUserData();
-
     if (activeTab === "personal" && !isGuest) {
       fetchPersonalSnippets();
       fetchLanguages();
@@ -257,7 +242,7 @@ export default function CodeSnippets() {
     } else {
       fetchPublicSnippets();
     }
-  }, [activeTab, fetchUserData, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags, isGuest]);
+  }, [activeTab, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags, isGuest]);
 
   // Apply filters when they change
   useEffect(() => {
