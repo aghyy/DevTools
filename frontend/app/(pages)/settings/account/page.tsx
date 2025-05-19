@@ -248,7 +248,7 @@ export default function Account() {
           <CardContent>
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-white/20 hover:border-white/40 transition-all duration-200">
+                <Avatar className="h-32 w-32 border-4 border-primary/20 hover:border-primary/40 transition-all duration-200">
                   <AvatarImage 
                     src={userData?.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined} 
                     alt={`${userData?.firstName} ${userData?.lastName}'s profile picture`}
