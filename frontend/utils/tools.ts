@@ -1,6 +1,4 @@
-import { Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound, Fingerprint, Barcode } from "lucide-react";
-import { IoLockClosedOutline } from "react-icons/io5";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Binary, Hash, Link, Braces, Waypoints, Regex, Hammer, Book, Code, Home, Heart, KeyRound, Fingerprint, Barcode, Lock } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
 
 // Type definitions for the tools
@@ -40,14 +38,14 @@ export const tools: Tool[] = [
   {
     title: "Steganography",
     description: "Hide messages within images",
-    icon: IoLockClosedOutline,
+    icon: Lock,
     url: "/tools/steganography",
     type: "tool"
   },
   {
     title: "Vigenère Cipher",
     description: "Encrypt and decrypt text using Vigenère cipher",
-    icon: IoLockClosedOutline,
+    icon: Lock,
     url: "/tools/vigenere",
     type: "tool"
   },

@@ -356,7 +356,7 @@ const Steganography: React.FC = () => {
         <FavoriteButton
           toolUrl="/tools/steganography"
           toolName="Steganography"
-          iconName="IoLockClosedOutline"
+          iconName="Lock"
         />
       </div>
 

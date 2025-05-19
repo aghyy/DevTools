@@ -104,7 +104,7 @@ export default function Vigenere() {
         <FavoriteButton
           toolUrl="/tools/vigenere"
           toolName="Vigenère Cipher"
-          iconName="IoLockClosedOutline"
+          iconName="Lock"
         />
       </div>
 

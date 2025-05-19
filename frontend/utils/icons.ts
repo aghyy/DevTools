@@ -1,5 +1,4 @@
-import { Hammer, Book, Code, Binary, Hash, Link, Regex, Activity, Heart, Waypoints, Braces, Barcode, Fingerprint, KeyRound } from "lucide-react";
-import { IoLockClosedOutline } from "react-icons/io5";
+import { Hammer, Book, Code, Binary, Hash, Link, Regex, Activity, Heart, Waypoints, Braces, Barcode, Fingerprint, KeyRound, Lock } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
   'Hammer': Hammer,
@@ -13,7 +12,7 @@ const iconMap: Record<string, React.ElementType> = {
   'Heart': Heart,
   'Braces': Braces,
   'Waypoints': Waypoints,
-  'IoLockClosedOutline': IoLockClosedOutline,
+  'Lock': Lock,
   'Barcode': Barcode,
   'Fingerprint': Fingerprint,
   'KeyRound': KeyRound,
