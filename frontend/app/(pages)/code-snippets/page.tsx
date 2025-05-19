@@ -406,7 +406,7 @@ export default function CodeSnippets() {
 
         {/* Tabs - Only show for logged in users */}
         {!isGuest && (
-          <div className="flex justify-between items-center pb-4">
+          <div className="flex justify-between items-center mb-4">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList>
                 <TabsTrigger value="personal" className="flex gap-2">

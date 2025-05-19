@@ -399,8 +399,8 @@ export default function Bookmarks() {
 
         {/* Tabs - Only show for logged in users */}
         {!isGuest && (
-          <div className="flex justify-between items-center pb-4">
-            <Tabs defaultValue="personal" className="mb-8" onValueChange={handleTabChange}>
+          <div className="flex justify-between items-center mb-4">
+            <Tabs defaultValue="personal" onValueChange={handleTabChange}>
               <TabsList>
                 <TabsTrigger value="personal" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
@@ -412,6 +412,7 @@ export default function Bookmarks() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+
             {activeTab === "personal" && (
               <Button onClick={() => handleOpenForm()} className="gap-1">
                 <Plus size={16} />
