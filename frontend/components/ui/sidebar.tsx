@@ -705,6 +705,7 @@ const SidebarMenuSub = React.forwardRef<
       "group-data-[collapsible=icon]:hidden",
       className
     )}
+    suppressHydrationWarning
     {...props}
   />
 ))

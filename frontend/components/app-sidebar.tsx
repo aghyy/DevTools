@@ -16,57 +16,60 @@ import { getIconComponent } from "@/utils/icons"
 import { IoEye, IoPencil } from "react-icons/io5"
 import { useAtom } from "jotai"
 import { isGuestAtom, initializeGuestStateAtom } from "@/atoms/auth"
+import { UserData } from "@/types/user"
 
 export function AppSidebar() {
+  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [openStates, setOpenStates] = useState({
     codeSnippets: false,
     tools: true,
-    favorites: true,
+    favorites: !isGuest,
   })
 
-  const [isGuest] = useAtom(isGuestAtom);
+  useEffect(() => {
+    setOpenStates(prev => ({
+      ...prev,
+      favorites: !isGuest
+    }));
+  }, [isGuest]);
+
   const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
-  const [, setIsGuest] = useAtom(isGuestAtom);
   const router = useRouter()
-  const [userData, setUserData] = useState({ username: "", firstName: "", lastName: "", email: "", avatar: "" })
+  const [userData, setUserData] = useState<UserData | null>(null);
   const { favorites, loading } = useFavoriteTools()
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const user = await getUserDetails()
-        if (user) {
-          setUserData({
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            avatar: `/images/avatar/${user.id}.png`,
-          })
-        }
+        const user = await getUserDetails();
+        setUserData(user);
       } catch (error) {
-        console.log("Error fetching user data:", error)
+        console.log("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
 
     initializeGuestState();
-    fetchUserData()
+    fetchUserData();
   }, [initializeGuestState])
 
   const signout = async () => {
     try {
-      await authLogout()
+      await authLogout();
       router.push(window.location.href);
       setTimeout(() => {
         setIsGuest(true);
       }, 500);
     } catch (error) {
-      console.log("Error signing out:", error)
+      console.log("Error signing out:", error);
     }
   }
 
   const toggleCollapse = (key: keyof typeof openStates) => {
-    setOpenStates(prev => ({ ...prev, [key]: !prev[key] }))
+    setOpenStates(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
   const routeTo = (path: string) => {
@@ -210,7 +213,14 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem suppressHydrationWarning>
-            {isGuest ? (
+            {isLoading ? (
+              <SidebarMenuButton className="h-fit">
+                <div className="animate-pulse flex items-center space-x-2">
+                  <div className="h-8 w-8 rounded-full bg-muted"></div>
+                  <div className="h-4 w-24 bg-muted rounded"></div>
+                </div>
+              </SidebarMenuButton>
+            ) : isGuest ? (
               <SidebarMenuButton
                 className="h-fit flex items-center justify-center"
                 variant="primary"
@@ -220,36 +230,37 @@ export function AppSidebar() {
                 <span>Log in</span>
               </SidebarMenuButton>
             ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild disabled={isGuest}>
-                  <SidebarMenuButton className="h-fit">
-                    <Avatar className="mr-1">
-                      <AvatarImage src={userData.avatar} />
-                      <AvatarFallback>{`${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="truncate font-semibold">{`${userData.firstName} ${userData.lastName}`}</div>
-                      <div className="truncate text-xs">{userData.email}</div>
-                    </div>
-                    <ChevronsUpDown className="ml-auto" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" className="w-[--radix-popper-anchor-width] mb-2">
-                  <DropdownMenuItem onClick={() => routeTo('/settings')}>
-                    <Settings />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
-                    <CircleUserRound />
-                    <span>Account</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={signout}>
-                    <LogOut />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+              userData && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={isGuest}>
+                    <SidebarMenuButton className="h-fit">
+                      <Avatar className="mr-1">
+                        <AvatarImage src={userData.avatar} />
+                        <AvatarFallback>{`${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="truncate font-semibold">{`${userData.firstName} ${userData.lastName}`}</div>
+                        <div className="truncate text-xs">{userData.email}</div>
+                      </div>
+                      <ChevronsUpDown className="ml-auto" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" className="w-[--radix-popper-anchor-width] mb-2">
+                    <DropdownMenuItem onClick={() => routeTo('/settings')}>
+                      <Settings />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
+                      <CircleUserRound />
+                      <span>Account</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={signout}>
+                      <LogOut />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ))}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
