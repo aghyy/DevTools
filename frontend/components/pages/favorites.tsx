@@ -72,15 +72,19 @@ const getToolDescription = (toolPath: string) => {
 };
 
 export default function FavoritesPage() {
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { favorites, loading, refreshFavorites } = useFavoriteTools();
   const [localFavorites, setLocalFavorites] = useState<FavoriteTool[]>(favorites);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
-    setLocalFavorites(favorites);
-  }, [favorites]);
+    // Only sync localFavorites from global favorites if not reordering
+    if (!isReordering) {
+      setLocalFavorites(favorites);
+    }
+  }, [favorites, isReordering]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -179,13 +183,18 @@ export default function FavoritesPage() {
               if (oldIndex === -1 || newIndex === -1) return;
               const newOrder = arrayMove(localFavorites, oldIndex, newIndex);
               setLocalFavorites(newOrder);
+              setIsReordering(true);
               // Persist new order
               const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
               try {
                 await updateFavoritePositions(positions);
-                await refreshFavorites();
+                // Trigger a background refresh for sidebar/global state
+                refreshFavorites(true); // don't await, keeps UI smooth
+                setTimeout(() => setIsReordering(false), 500); // allow refresh to complete, then allow sync
               } catch {
-                // Optionally show error
+                setError('Failed to update order.');
+                setLocalFavorites(favorites); // revert to global state
+                setIsReordering(false);
               }
             }}
             onDragCancel={() => setActiveId(null)}

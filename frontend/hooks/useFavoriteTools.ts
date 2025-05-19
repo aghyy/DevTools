@@ -10,9 +10,11 @@ export function useFavoriteTools() {
   const [error, setError] = useState<Error | null>(null);
   const [isGuest] = useAtom(isGuestAtom);
 
-  const refreshFavorites = async () => {
+  const refreshFavorites = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) {
+        setLoading(true);
+      }
       if (isGuest) {
         setFavorites([]);
         return;
@@ -24,7 +26,9 @@ export function useFavoriteTools() {
       setError(err as Error);
       console.error('Error fetching favorite tools:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   };
 

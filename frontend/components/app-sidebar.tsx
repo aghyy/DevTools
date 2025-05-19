@@ -94,6 +94,7 @@ export function AppSidebar() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const { favorites, loading, refreshFavorites } = useFavoriteTools()
   const [sidebarFavorites, setSidebarFavorites] = useState<FavoriteTool[]>(favorites);
+  const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -112,8 +113,10 @@ export function AppSidebar() {
   }, [initializeGuestState])
 
   useEffect(() => {
-    setSidebarFavorites(favorites);
-  }, [favorites]);
+    if (!isReordering) {
+      setSidebarFavorites(favorites);
+    }
+  }, [favorites, isReordering]);
 
   const signout = async () => {
     try {
@@ -209,17 +212,24 @@ export function AppSidebar() {
                               if (oldIndex === -1 || newIndex === -1) return;
                               const newOrder = arrayMove(sidebarFavorites, oldIndex, newIndex);
                               setSidebarFavorites(newOrder);
+                              setIsReordering(true);
                               // Persist new order
                               const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
                               try {
                                 await updateFavoritePositions(positions);
-                                await refreshFavorites();
+                                refreshFavorites(true);
+                                setTimeout(() => setIsReordering(false), 500);
                               } catch {
-                                // Optionally show error
+                                setSidebarFavorites(favorites);
+                                setIsReordering(false);
                               }
                             }}
                           >
-                            <SortableContext items={sidebarFavorites.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                            <SortableContext
+                              key={sidebarFavorites.map(f => f.id).join('-')}
+                              items={sidebarFavorites.map(f => f.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
                               {sidebarFavorites.map((favorite) => (
                                 <SortableFavorite
                                   key={favorite.id}
