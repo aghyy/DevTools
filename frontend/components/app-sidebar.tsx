@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, CircleUserRound, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn } from "lucide-react"
+import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn } from "lucide-react"
 import { logout as authLogout, getUserDetails } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
@@ -249,10 +249,6 @@ export function AppSidebar() {
                     <DropdownMenuItem onClick={() => routeTo('/settings')}>
                       <Settings />
                       <span>Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
-                      <CircleUserRound />
-                      <span>Account</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={signout}>
                       <LogOut />
