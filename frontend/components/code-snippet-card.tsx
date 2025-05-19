@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Copy, Edit, Trash, ChevronUp, ChevronDown, Code } from "lucide-react";
+import { Copy, Edit, Trash, ChevronUp, ChevronDown, Code, User } from "lucide-react";
 import { CodeSnippet } from "@/types/codeSnippets";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,18 @@ import { CodeHighlighter } from "./code-highlighter";
 import { Badge } from "@/components/ui/badge";
 import { handleCopy } from "@/utils/clipboard";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface CodeSnippetCardProps {
   snippet: CodeSnippet;
   onEdit?: (snippet: CodeSnippet) => void;
   onDelete?: (snippet: CodeSnippet) => void;
   isPublicView?: boolean;
+  userInfo?: {
+    firstName: string;
+    lastName: string;
+    username: string;
+  };
 }
 
 export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
@@ -23,6 +29,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   onEdit,
   onDelete,
   isPublicView = false,
+  userInfo,
 }) => {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
@@ -85,6 +92,23 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
             </CardTitle>
             {snippet.description && (
               <p className="text-sm text-muted-foreground">{snippet.description}</p>
+            )}
+            {userInfo && (
+              <div className="flex items-center gap-2 mt-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-[10px]">
+                    {userInfo.firstName.charAt(0)}
+                    {userInfo.lastName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <User size={12} />
+                  <span>{userInfo.firstName} {userInfo.lastName}</span>
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                    @{userInfo.username}
+                  </Badge>
+                </div>
+              </div>
             )}
           </div>
           <Badge variant="outline">{snippet.language}</Badge>

@@ -32,14 +32,6 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,14 +45,11 @@ import { UserData } from "@/types/user";
 import {
   Plus,
   Search,
-  Filter,
   TagIcon,
   Code2,
   Languages,
-  User,
   Globe,
-  X,
-  RefreshCw
+  User
 } from "lucide-react";
 
 import {
@@ -99,7 +88,6 @@ export default function CodeSnippets() {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(isGuest ? "public" : "personal");
 
   // State for editing
@@ -110,6 +98,7 @@ export default function CodeSnippets() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -127,6 +116,14 @@ export default function CodeSnippets() {
         allSnippets = allSnippets.concat(userSnippets.codeSnippets);
       });
       filtered = allSnippets;
+
+      // Apply user filter
+      if (selectedUser) {
+        const userSnippets = publicSnippets.find(us => us.username === selectedUser);
+        if (userSnippets) {
+          filtered = userSnippets.codeSnippets;
+        }
+      }
     }
 
     if (searchQuery) {
@@ -152,7 +149,7 @@ export default function CodeSnippets() {
     }
 
     setFilteredSnippets(filtered);
-  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, activeTab]);
+  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab]);
 
   // Fetch functions
   const fetchUserData = useCallback(async () => {
@@ -267,6 +264,14 @@ export default function CodeSnippets() {
     applyFilters();
   }, [applyFilters]);
 
+  // Handle guest state changes
+  useEffect(() => {
+    if (isGuest) {
+      setActiveTab("public");
+      clearFilters();
+    }
+  }, [isGuest]);
+
   // Form handling
   const handleOpenForm = (snippet?: CodeSnippet) => {
     setEditingSnippet(snippet);
@@ -350,11 +355,6 @@ export default function CodeSnippets() {
     }
   };
 
-  // Filter toggle
-  const toggleFilters = () => {
-    setFiltersOpen(!filtersOpen);
-  };
-
   // Tab change
   const handleTabChange = (value: string) => {
     clearFilters();
@@ -375,6 +375,7 @@ export default function CodeSnippets() {
     setSearchQuery("");
     setSelectedLanguage(null);
     setSelectedTag(null);
+    setSelectedUser(null);
   };
 
   return (
@@ -428,114 +429,132 @@ export default function CodeSnippets() {
           </div>
         )}
 
-        {/* Search and Filter Bar */}
-        <div className="flex gap-2 mb-6">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search code snippets..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleFilters}
-            className={filtersOpen ? "bg-accent" : ""}
-          >
-            <Filter size={18} />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={activeTab === "personal" ? fetchPersonalSnippets : fetchPublicSnippets}
-          >
-            <RefreshCw size={16} />
-          </Button>
-        </div>
-
-        {/* Active Filters */}
-        {(selectedLanguage || selectedTag) && (
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm text-muted-foreground">Active filters:</span>
-            {selectedLanguage && (
-              <Badge
-                variant="secondary"
-                className="flex gap-1 items-center"
-                onClick={() => setSelectedLanguage(null)}
-              >
-                <Languages size={12} />
-                {selectedLanguage}
-                <X size={12} className="cursor-pointer" />
-              </Badge>
-            )}
-            {selectedTag && (
-              <Badge
-                variant="secondary"
-                className="flex gap-1 items-center"
-                onClick={() => setSelectedTag(null)}
-              >
-                <TagIcon size={12} />
-                {selectedTag}
-                <X size={12} className="cursor-pointer" />
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-7 text-xs"
-            >
-              Clear all
-            </Button>
-          </div>
-        )}
-
-        {/* Filters Dialog */}
-        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Filter Code Snippets</DialogTitle>
-              <DialogDescription>
-                Filter snippets by language or tags
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* Languages Filter Section */}
-            <div className="py-4 space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 flex items-center">
-                  <Languages className="mr-2 h-4 w-4" />
-                  Languages
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {languages.length > 0 ? (
-                    languages.map((lang) => (
-                      <Badge
-                        key={lang.language}
-                        variant={selectedLanguage === lang.language ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => handleLanguageSelect(lang.language)}
-                      >
-                        {lang.language} ({lang.count})
-                      </Badge>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No languages available</p>
-                  )}
-                </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Main content */}
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="w-full h-[250px] animate-pulse">
+                    <div className="h-32 bg-muted" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                  </Card>
+                ))}
               </div>
+            ) : filteredSnippets.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeTab === "public" ? (
+                  // Display public snippets in a grid without user grouping
+                  filteredSnippets.map((snippet) => {
+                    // Find the user who owns this snippet
+                    const userSnippets = publicSnippets.find(us => 
+                      us.codeSnippets.some(s => s.id === snippet.id)
+                    );
+                    
+                    return (
+                      <CodeSnippetCard
+                        key={snippet.id}
+                        snippet={snippet}
+                        isPublicView={true}
+                        userInfo={userSnippets ? {
+                          firstName: userSnippets.firstName,
+                          lastName: userSnippets.lastName,
+                          username: userSnippets.username
+                        } : undefined}
+                      />
+                    );
+                  })
+                ) : (
+                  // Personal snippets view remains unchanged
+                  filteredSnippets.map((snippet) => (
+                    <CodeSnippetCard
+                      key={snippet.id}
+                      snippet={snippet}
+                      onEdit={handleOpenForm}
+                      onDelete={openDeleteDialog}
+                    />
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="text-center p-10 border rounded-lg">
+                <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No code snippets found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {activeTab === "personal"
+                    ? "You haven't created any code snippets yet. Add one now!"
+                    : "No public code snippets are available."}
+                </p>
+                {activeTab === "personal" && (
+                  <Button onClick={() => handleOpenForm()}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Your First Snippet
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
 
-              {/* Tags Filter Section */}
-              <div>
-                <h3 className="font-medium mb-2 flex items-center">
-                  <TagIcon className="mr-2 h-4 w-4" />
+          {/* Sidebar */}
+          <div className="md:w-64 space-y-6">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search code snippets..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Users list - Only show for public snippets */}
+            {(activeTab === "public" || isGuest) && publicSnippets.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
+                  {publicSnippets.map((userSnippets) => (
+                    <div
+                      key={userSnippets.username}
+                      className={`flex items-center p-2 rounded-md hover:bg-muted cursor-pointer ${selectedUser === userSnippets.username ? 'bg-muted' : ''}`}
+                      onClick={() => setSelectedUser(selectedUser === userSnippets.username ? null : userSnippets.username)}
+                    >
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback className="text-xs">
+                          {userSnippets.firstName.charAt(0)}
+                          {userSnippets.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-sm font-medium">{userSnippets.firstName} {userSnippets.lastName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {userSnippets.codeSnippets.length} snippets
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Tags Filter Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <TagIcon className="h-4 w-4 mr-2" />
                   Tags
-                </h3>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {tags.length > 0 ? (
                     tags.map((tag) => (
@@ -552,98 +571,38 @@ export default function CodeSnippets() {
                     <p className="text-sm text-muted-foreground">No tags available</p>
                   )}
                 </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </CardContent>
+            </Card>
 
-        {/* Code Snippets Grid */}
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="text-center">
-              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
-              <p>Loading code snippets...</p>
-            </div>
+            {/* Languages Filter Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Languages className="h-4 w-4 mr-2" />
+                  Languages
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {languages.length > 0 ? (
+                    languages.map((lang) => (
+                      <Badge
+                        key={lang.language}
+                        variant={selectedLanguage === lang.language ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => handleLanguageSelect(lang.language)}
+                      >
+                        {lang.language} ({lang.count})
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No languages available</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : (
-          <>
-            {filteredSnippets.length === 0 ? (
-              <div className="text-center p-10 border rounded-lg">
-                <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No code snippets found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {activeTab === "personal"
-                    ? "You haven't created any code snippets yet. Add one now!"
-                    : "No public code snippets are available."}
-                </p>
-                {activeTab === "personal" && (
-                  <Button onClick={() => handleOpenForm()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Your First Snippet
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === "personal" ? "lg:grid-cols-3" : ""} gap-4`}>
-                {activeTab === "public" && (
-                  // Group snippets by user
-                  publicSnippets.map((userSnippets) => {
-                    // Filter to only show matching snippets
-                    const matchingSnippets = userSnippets.codeSnippets.filter(snippet =>
-                      filteredSnippets.some(fs => fs.id === snippet.id)
-                    );
-
-                    // Skip users with no matching snippets
-                    if (matchingSnippets.length === 0) return null;
-
-                    return (
-                      <Card key={userSnippets.username} className="mb-4">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="flex items-center">
-                            <Avatar className="h-6 w-6 mr-2">
-                              <AvatarFallback className="text-[10px]">
-                                {userSnippets.firstName.charAt(0)}
-                                {userSnippets.lastName.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="flex items-center gap-1">
-                              <User size={14} />
-                              {userSnippets.firstName} {userSnippets.lastName}
-                            </span>
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              @{userSnippets.username}
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 gap-4 pt-2">
-                            {matchingSnippets.map((snippet) => (
-                              <CodeSnippetCard
-                                key={snippet.id}
-                                snippet={snippet}
-                                isPublicView={true}
-                              />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
-
-                {activeTab === "personal" &&
-                  filteredSnippets.map((snippet) => (
-                    <CodeSnippetCard
-                      key={snippet.id}
-                      snippet={snippet}
-                      onEdit={handleOpenForm}
-                      onDelete={openDeleteDialog}
-                    />
-                  ))}
-              </div>
-            )}
-          </>
-        )}
+        </div>
       </div>
 
       {/* Code Snippet Form Sheet - Only show for logged in users */}

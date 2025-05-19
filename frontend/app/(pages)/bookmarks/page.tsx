@@ -77,6 +77,7 @@ export default function Bookmarks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(isGuest ? "public" : "personal");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [publicBookmarks, setPublicBookmarks] = useState<UserPublicBookmarks[]>([]);
@@ -110,54 +111,49 @@ export default function Bookmarks() {
 
   // Apply filters and search for personal bookmarks
   useEffect(() => {
+    let results: Bookmark[] = [];
+
     if (activeTab === "personal" && !isGuest) {
-      let results = [...bookmarks];
-
-      // Apply category filter
-      if (selectedCategory) {
-        results = results.filter(bookmark => bookmark.category === selectedCategory);
-      }
-
-      // Apply tag filter
-      if (selectedTag) {
-        results = results.filter(bookmark => bookmark.tags.includes(selectedTag));
-      }
-
-      // Apply search term
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        results = results.filter(bookmark =>
-          bookmark.title.toLowerCase().includes(term) ||
-          (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
-          bookmark.url.toLowerCase().includes(term) ||
-          (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
-          bookmark.tags.some(tag => tag.toLowerCase().includes(term))
-        );
-      }
-
-      setFilteredBookmarks(results);
+      results = [...bookmarks];
     } else {
-      // Filter public bookmarks
-      let results: Bookmark[] = [];
+      // Flatten public bookmarks
       publicBookmarks.forEach(userBookmarks => {
         results = results.concat(userBookmarks.bookmarks);
       });
-
-      // Apply search term for public bookmarks
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        results = results.filter(bookmark =>
-          bookmark.title.toLowerCase().includes(term) ||
-          (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
-          bookmark.url.toLowerCase().includes(term) ||
-          (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
-          bookmark.tags.some(tag => tag.toLowerCase().includes(term))
-        );
-      }
-
-      setFilteredBookmarks(results);
     }
-  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, activeTab, isGuest]);
+
+    // Apply user filter
+    if (selectedUser) {
+      const userBookmarks = publicBookmarks.find(ub => ub.username === selectedUser);
+      if (userBookmarks) {
+        results = userBookmarks.bookmarks;
+      }
+    }
+
+    // Apply category filter
+    if (selectedCategory) {
+      results = results.filter(bookmark => bookmark.category === selectedCategory);
+    }
+
+    // Apply tag filter
+    if (selectedTag) {
+      results = results.filter(bookmark => bookmark.tags.includes(selectedTag));
+    }
+
+    // Apply search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      results = results.filter(bookmark =>
+        bookmark.title.toLowerCase().includes(term) ||
+        (bookmark.description && bookmark.description.toLowerCase().includes(term)) ||
+        bookmark.url.toLowerCase().includes(term) ||
+        (bookmark.category && bookmark.category.toLowerCase().includes(term)) ||
+        bookmark.tags.some(tag => tag.toLowerCase().includes(term))
+      );
+    }
+
+    setFilteredBookmarks(results);
+  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, selectedUser, activeTab, isGuest]);
 
   // Fetch functions
   const fetchUserData = async () => {
@@ -191,6 +187,30 @@ export default function Bookmarks() {
     try {
       const allPublicBookmarks = await getAllPublicBookmarks();
       setPublicBookmarks(allPublicBookmarks);
+
+      // Get all unique categories and tags from public bookmarks
+      const categoryMap = new Map<string, number>();
+      const tagMap = new Map<string, number>();
+
+      allPublicBookmarks.forEach(userBookmarks => {
+        userBookmarks.bookmarks.forEach(bookmark => {
+          // Count categories
+          if (bookmark.category) {
+            categoryMap.set(bookmark.category, (categoryMap.get(bookmark.category) || 0) + 1);
+          }
+
+          // Count tags
+          bookmark.tags.forEach(tag => {
+            tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+          });
+        });
+      });
+
+      // Update categories and tags for public view
+      if (activeTab === "public" || isGuest) {
+        setCategories(Array.from(categoryMap.keys()));
+        setTags(Array.from(tagMap.entries()).map(([tag, count]) => ({ tag, count })));
+      }
 
       // Flatten all public bookmarks for display
       let allBookmarks: Bookmark[] = [];
@@ -312,6 +332,7 @@ export default function Bookmarks() {
   const clearFilters = () => {
     setSelectedCategory(null);
     setSelectedTag(null);
+    setSelectedUser(null);
     setSearchTerm("");
     setFilterDialogOpen(false);
   };
@@ -321,6 +342,7 @@ export default function Bookmarks() {
     setActiveTab(value);
     setSelectedCategory(null);
     setSelectedTag(null);
+    setSelectedUser(null);
     setSearchTerm("");
   };
 
@@ -400,6 +422,49 @@ export default function Bookmarks() {
         )}
 
         <div className="flex flex-col md:flex-row gap-6">
+          {/* Main content */}
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="w-full h-[250px] animate-pulse">
+                    <div className="h-32 bg-muted" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredBookmarks.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredBookmarks.map((bookmark) => {
+                  // Find the user who owns this bookmark
+                  const userBookmarks = publicBookmarks.find(ub => 
+                    ub.bookmarks.some(b => b.id === bookmark.id)
+                  );
+                  
+                  return (
+                    <BookmarkCard
+                      key={bookmark.id}
+                      bookmark={bookmark}
+                      onEdit={activeTab === "personal" && !isGuest ? handleOpenForm : undefined}
+                      onDelete={activeTab === "personal" && !isGuest ? handleDeleteClick : undefined}
+                      showControls={activeTab === "personal" && !isGuest}
+                      userInfo={userBookmarks ? {
+                        firstName: userBookmarks.user.split(' ')[0],
+                        lastName: userBookmarks.user.split(' ')[1] || '',
+                        username: userBookmarks.username
+                      } : undefined}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              renderNoResults()
+            )}
+          </div>
+
           {/* Sidebar */}
           <div className="md:w-64 space-y-6">
             {/* Search */}
@@ -414,80 +479,6 @@ export default function Bookmarks() {
               />
             </div>
 
-            {/* Categories - Only show for personal bookmarks */}
-            {activeTab === "personal" && !isGuest && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium flex items-center">
-                      <FolderIcon className="h-4 w-4 mr-2" />
-                      Categories
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-1.5">
-                  <div
-                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
-                    onClick={() => setSelectedCategory(null)}
-                  >
-                    <span>All Categories</span>
-                    <Badge variant="outline" className="ml-auto">
-                      {bookmarks.length}
-                    </Badge>
-                  </div>
-                  {categories.map((category) => (
-                    <div
-                      key={category}
-                      className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
-                      onClick={() => setSelectedCategory(category)}
-                    >
-                      <span>{category}</span>
-                      <Badge variant="outline" className="ml-auto">
-                        {bookmarks.filter(bookmark => bookmark.category === category).length}
-                      </Badge>
-                    </div>
-                  ))}
-                  {categories.length === 0 && (
-                    <div className="text-sm text-muted-foreground p-2">
-                      No categories yet
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Popular Tags - Only show for personal bookmarks */}
-            {activeTab === "personal" && !isGuest && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <TagIcon className="h-4 w-4 mr-2" />
-                    Popular Tags
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.slice(0, 15).map((tag) => (
-                      <Badge
-                        key={tag.tag}
-                        variant={selectedTag === tag.tag ? "default" : "secondary"}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
-                      >
-                        {tag.tag}
-                        <span className="ml-1 text-xs opacity-70">{tag.count}</span>
-                      </Badge>
-                    ))}
-                    {tags.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-2">
-                        No tags yet
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Users list - Only show for public bookmarks */}
             {(activeTab === "public" || isGuest) && publicBookmarks.length > 0 && (
               <Card>
@@ -501,7 +492,8 @@ export default function Bookmarks() {
                   {publicBookmarks.map((userBookmarks) => (
                     <div
                       key={userBookmarks.username}
-                      className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
+                      className={`flex items-center p-2 rounded-md hover:bg-muted cursor-pointer ${selectedUser === userBookmarks.username ? 'bg-muted' : ''}`}
+                      onClick={() => setSelectedUser(selectedUser === userBookmarks.username ? null : userBookmarks.username)}
                     >
                       <Avatar className="h-8 w-8 mr-2">
                         <AvatarFallback className="text-xs">
@@ -520,6 +512,76 @@ export default function Bookmarks() {
               </Card>
             )}
 
+            {/* Popular Tags */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <TagIcon className="h-4 w-4 mr-2" />
+                  Popular Tags
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {tags.slice(0, 15).map((tag) => (
+                    <Badge
+                      key={tag.tag}
+                      variant={selectedTag === tag.tag ? "default" : "secondary"}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+                    >
+                      {tag.tag}
+                      <span className="ml-1 text-xs opacity-70">{tag.count}</span>
+                    </Badge>
+                  ))}
+                  {tags.length === 0 && (
+                    <div className="text-sm text-muted-foreground py-2">
+                      No tags yet
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Categories */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <FolderIcon className="h-4 w-4 mr-2" />
+                    Categories
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                <div
+                  className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  <span>All Categories</span>
+                  <Badge variant="outline" className="ml-auto">
+                    {activeTab === "personal" ? bookmarks.length : filteredBookmarks.length}
+                  </Badge>
+                </div>
+                {categories.map((category) => (
+                  <div
+                    key={category}
+                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    <span>{category}</span>
+                    <Badge variant="outline" className="ml-auto">
+                      {filteredBookmarks.filter(bookmark => bookmark.category === category).length}
+                    </Badge>
+                  </div>
+                ))}
+                {categories.length === 0 && (
+                  <div className="text-sm text-muted-foreground p-2">
+                    No categories yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Mobile filters dialog */}
             <div className="md:hidden">
               <Button
@@ -536,37 +598,6 @@ export default function Bookmarks() {
                 )}
               </Button>
             </div>
-          </div>
-
-          {/* Main content */}
-          <div className="flex-1">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="w-full h-[250px] animate-pulse">
-                    <div className="h-32 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredBookmarks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredBookmarks.map((bookmark) => (
-                  <BookmarkCard
-                    key={bookmark.id}
-                    bookmark={bookmark}
-                    onEdit={activeTab === "personal" && !isGuest ? handleOpenForm : undefined}
-                    onDelete={activeTab === "personal" && !isGuest ? handleDeleteClick : undefined}
-                    showControls={activeTab === "personal" && !isGuest}
-                  />
-                ))}
-              </div>
-            ) : (
-              renderNoResults()
-            )}
           </div>
         </div>
       </div>

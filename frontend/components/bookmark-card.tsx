@@ -4,17 +4,23 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Edit, Trash2, Globe, Lock } from "lucide-react";
+import { ExternalLink, Edit, Trash2, Globe, Lock, User } from "lucide-react";
 import { Bookmark } from "@/types/bookmarks";
 import { LinkPreview } from "@/components/ui/link-preview";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
   onEdit?: (bookmark: Bookmark) => void;
   onDelete?: (bookmark: Bookmark) => void;
   showControls?: boolean;
+  userInfo?: {
+    firstName: string;
+    lastName: string;
+    username: string;
+  };
 }
 
 export const BookmarkCard: React.FC<BookmarkCardProps> = ({
@@ -22,6 +28,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
   onEdit,
   onDelete,
   showControls = true,
+  userInfo,
 }) => {
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,7 +66,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-md h-full flex flex-col">
       {bookmark.screenshotUrl && (
-        <div className="relative h-36 w-full overflow-hidden bg-muted">
+        <div className="relative h-48 w-full overflow-hidden bg-muted">
           <div className="h-full w-full">
             <Image
               src={bookmark.screenshotUrl}
@@ -67,7 +74,6 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
               fill
               className="object-cover object-top"
             />
-            <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none bg-gradient-to-b from-transparent to-background/30" />
           </div>
         </div>
       )}
@@ -87,6 +93,23 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
         <CardDescription className="line-clamp-2 mt-1">
           {bookmark.description || "No description provided"}
         </CardDescription>
+        {userInfo && (
+          <div className="flex items-center gap-2 mt-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-[10px]">
+                {userInfo.firstName.charAt(0)}
+                {userInfo.lastName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <User size={12} />
+              <span>{userInfo.firstName} {userInfo.lastName}</span>
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                @{userInfo.username}
+              </Badge>
+            </div>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="pb-2 flex-grow">
