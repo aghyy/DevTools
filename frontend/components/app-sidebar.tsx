@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
-import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn, GripVertical } from "lucide-react"
+import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, LogIn, GripVertical, User } from "lucide-react"
 import { logout as authLogout, getUserDetails } from "@/services/auth"
 import { sidebarItems } from "@/utils/tools"
 import { useFavoriteTools } from "@/hooks/useFavoriteTools"
@@ -324,8 +324,8 @@ export function AppSidebar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild disabled={isGuest}>
                     <SidebarMenuButton className="h-fit">
-                      <Avatar className="mr-1">
-                        <AvatarImage src={userData.avatar} />
+                      <Avatar className="mr-1 border-2 border-white/20 hover:border-white/40 transition-all duration-200">
+                        <AvatarImage src={userData.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined} />
                         <AvatarFallback>{`${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -339,6 +339,10 @@ export function AppSidebar() {
                     <DropdownMenuItem onClick={() => routeTo('/settings')}>
                       <Settings />
                       <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => routeTo('/settings/account')}>
+                      <User />
+                      <span>Account</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={signout}>
                       <LogOut />

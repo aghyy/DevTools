@@ -40,15 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MagicCard } from "@/components/ui/magic-card";
 import DashboardFavorites from "@/components/dashboard-favorites";
 import { getIconComponent } from "@/utils/icons";
-
-// Interface for user data
-interface UserData {
-  id?: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import { UserData } from "@/types/user";
 
 export default function Dashboard() {
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -154,8 +146,8 @@ export default function Dashboard() {
                   {loading ? (
                     <Skeleton className="h-16 w-16 rounded-full" />
                   ) : (
-                    <Avatar className="h-16 w-16 border-4 border-white/20">
-                      <AvatarImage src={userData?.id ? `/images/avatar/${userData.id}.png` : undefined} />
+                    <Avatar className="h-16 w-16 border-4 border-white/20 hover:border-white/40 transition-all duration-200">
+                      <AvatarImage src={userData?.avatar ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/avatars/${userData.avatar}` : undefined} />
                       <AvatarFallback className="bg-primary/5 text-lg">
                         {userData?.firstName?.charAt(0)}{userData?.lastName?.charAt(0)}
                       </AvatarFallback>

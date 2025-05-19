@@ -4,6 +4,8 @@ const db = require("../models");
 const User = db.users;
 const validator = require('validator');
 const userAuth = require("../middlewares/userAuth");
+const fs = require('fs').promises;
+const path = require('path');
 
 const signup = async (req, res) => {
   try {
@@ -176,4 +178,67 @@ const resetPassword = async (req, res) => {
   // }
 };
 
-module.exports = { signup, login, logout, getUser };
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar) {
+      const oldAvatarPath = path.join(__dirname, '../public/uploads/avatars', user.avatar);
+      try {
+        await fs.unlink(oldAvatarPath);
+      } catch (error) {
+        console.error('Error deleting old avatar:', error);
+      }
+    }
+
+    // Update user with new avatar filename
+    await user.update({ avatar: req.file.filename });
+
+    return res.status(200).json({
+      message: "Avatar uploaded successfully",
+      avatar: req.file.filename
+    });
+  } catch (error) {
+    console.error("Error uploading avatar:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const removeAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.avatar) {
+      const avatarPath = path.join(__dirname, '../public/uploads/avatars', user.avatar);
+      try {
+        await fs.unlink(avatarPath);
+      } catch (error) {
+        console.error('Error deleting avatar file:', error);
+      }
+    }
+
+    await user.update({ avatar: null });
+
+    return res.status(200).json({ message: "Avatar removed successfully" });
+  } catch (error) {
+    console.error("Error removing avatar:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports = { signup, login, logout, getUser, uploadAvatar, removeAvatar };

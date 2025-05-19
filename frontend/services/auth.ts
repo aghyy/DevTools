@@ -95,3 +95,21 @@ export const getUserDetails = async () => {
     return null;
   }
 };
+
+export const uploadAvatar = async (file: File) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await api.post('/api/auth/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+};
+
+export const removeAvatar = async () => {
+  const response = await api.delete('/api/auth/avatar');
+  return response.data;
+};

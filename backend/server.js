@@ -10,6 +10,7 @@ const activityRoutes = require('./routes/activityRoutes');
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
 const favoriteToolRoutes = require('./routes/favoriteToolRoutes');
 const codeSnippetRoutes = require('./routes/codeSnippetRoutes');
+const path = require('path');
 
 const PORT = process.env.PORT || 5039;
 const app = express();
@@ -59,6 +60,9 @@ async function handleRedirect(req, res) {
     return res.status(500).send('Internal Server Error');
   }
 }
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 app.use('/api/auth', userRoutes);
 app.use('/api/tools', toolRoutes);
