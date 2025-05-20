@@ -25,14 +25,15 @@ export type ComparisonChartData = {
   data: { name: string; current: number; previous: number; }[];
 };
 
-export type PieChartData = {
+export type ResourceChartData = {
   data: { name: string; value: number }[];
   totalUsage: number;
 };
 
 export type ActivityTrend = ComparisonChartData;
 export type PerformanceStats = DefaultChartData;
-export type ResourceUsageStats = PieChartData;
+export type ResourceUsageStats = ResourceChartData;
+export type ActiveSessionsStats = ComparisonChartData;
 
 export type ChartDescriptions = {
   weeklyActivity: string;

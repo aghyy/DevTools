@@ -29,8 +29,12 @@ export const useThemeColors = () => {
         previous: isDark ? "rgba(249, 115, 22, 0.4)" : "rgba(234, 88, 12, 0.4)",
         grid: isDark ? "rgba(75, 85, 99, 0.2)" : "rgba(203, 213, 225, 0.6)",
       },
+      resource: {
+        bar: isDark ? "#EC4899" : "#DB2777", // Pink
+        grid: isDark ? "rgba(75, 85, 99, 0.2)" : "rgba(203, 213, 225, 0.6)",
+      },
     },
-    pieColors: [
+    barColors: [
       isDark ? "#3B82F6" : "#2563EB", // Blue
       isDark ? "#10B981" : "#059669", // Green
       isDark ? "#F97316" : "#EA580C", // Orange
@@ -54,6 +58,6 @@ export const useChartDescriptions = () => {
     responseTime:
       "Shows the average response time of tools over time. Lower values indicate better performance.",
     resourceUsage:
-      "A breakdown of your most used resources. Hover over each segment to see specific usage counts.",
+      "A breakdown of your most used resources. Displays the top 10 most frequently accessed resources.",
   };
 };
