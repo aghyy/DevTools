@@ -97,51 +97,8 @@ export default function Dashboard() {
     };
   };
 
-  // Get active sessions data (simulated for demo)
-  const getActiveSessionsStats = () => {
-    // Generate data for current week
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    });
-
-    // Current week data with realistic pattern (higher on weekdays)
-    const generateSessionData = (day: string, index: number, baseline: number) => {
-      // Weekend effect (sat/sun)
-      const isWeekend = index === 0 || index === 6;
-      const weekendFactor = isWeekend ? 0.6 : 1;
-
-      // Random variation
-      const variation = Math.random() * 5 - 2.5;
-
-      return Math.round((baseline + variation) * weekendFactor);
-    };
-
-    // Generate current week data and reference data
-    const data = days.map((day, index) => ({
-      name: day,
-      current: generateSessionData(day, index, 12),
-      previous: generateSessionData(day, index, 10)
-    }));
-
-    // Calculate averages
-    const currentAvg = data.reduce((sum, item) => sum + item.current, 0) / data.length;
-    const previousAvg = data.reduce((sum, item) => sum + item.previous, 0) / data.length;
-
-    // Calculate percentage change
-    const change = ((currentAvg - previousAvg) / previousAvg) * 100;
-
-    return {
-      current: Math.round(currentAvg),
-      change,
-      data
-    };
-  };
-
   // Get the usage statistics
   const performanceStats = getPerformanceStats();
-  const sessionsStats = getActiveSessionsStats();
 
   return (
     <div className="h-full w-full">
@@ -166,7 +123,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ChartSection loading={loading} recentItems={recentItems} performanceStats={performanceStats} sessionsStats={sessionsStats} mostUsedItems={mostUsedItems} />
+        <ChartSection loading={loading} recentItems={recentItems} performanceStats={performanceStats} mostUsedItems={mostUsedItems} />
 
         {/* Recent Activity */}
         <div className="mb-6 md:mb-8">

@@ -1,4 +1,4 @@
-import { XAxis, BarChart, CartesianGrid, Bar, ResponsiveContainer, Tooltip as RechartsTooltip, YAxis } from "recharts";
+import { XAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, YAxis, LineChart as RechartsLineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "../stat-card";
 import { BarChart4 } from "lucide-react";
@@ -7,7 +7,7 @@ import CustomTooltip from "../tooltip";
 import { useThemeColors } from "@/hooks/charts";
 import { Activity as ActivityType } from "@/services/activity";
 import { useEffect, useState } from "react";
-import { ActivityTrend } from "@/types/charts";
+import { ComparisonChartData } from "@/types/charts";
 
 export default function WeeklyActivityCard({ loading, recentItems, description }: {
   loading: boolean;
@@ -19,7 +19,11 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
   const isDark = resolvedTheme === 'dark';
   const themeColors = useThemeColors();
 
-  const [activityTrend, setActivityTrend] = useState<ActivityTrend>({ current: 0, change: 0, data: [] });
+  const [activityTrend, setActivityTrend] = useState<ComparisonChartData>({ 
+    current: 0, 
+    change: 0, 
+    data: [] 
+  });
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -38,35 +42,54 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
     const processActivityTimeline = (activities: ActivityType[]) => {
       if (!activities.length) return [];
 
-      // Create a map to count activities by day
-      const dayCount = new Map<string, number>();
+      const now = new Date();
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(now.getDate() - 7);
+      
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(now.getDate() - 14);
 
-      // Get activities of the last 7 days
-      const last7Days: string[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-        last7Days.push(dayStr);
-        // Initialize with zero count
-        dayCount.set(dayStr, 0);
-      }
+      // Create maps to count activities by day for current and previous weeks
+      const currentWeekDayCount = new Map<string, number>();
+      const previousWeekDayCount = new Map<string, number>();
 
-      // Count activities by day
+      // Initialize days of the week
+      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      // Initialize counters for both weeks
+      weekdays.forEach(day => {
+        currentWeekDayCount.set(day, 0);
+        previousWeekDayCount.set(day, 0);
+      });
+
+      // Count activities by day for both current and previous weeks
       activities.forEach(activity => {
         if (activity.createdAt) {
           const date = new Date(activity.createdAt);
           const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-          if (dayCount.has(dayStr)) {
-            dayCount.set(dayStr, (dayCount.get(dayStr) || 0) + 1);
+          
+          if (date >= oneWeekAgo && date <= now) {
+            currentWeekDayCount.set(dayStr, (currentWeekDayCount.get(dayStr) || 0) + 1);
+          } else if (date >= twoWeeksAgo && date < oneWeekAgo) {
+            previousWeekDayCount.set(dayStr, (previousWeekDayCount.get(dayStr) || 0) + 1);
           }
         }
       });
 
+      // Get the current day of the week
+      const today = new Date().getDay();
+      
+      // Create ordered array of days starting from 7 days ago
+      const orderedDays = Array(7).fill(0).map((_, i) => {
+        const dayIndex = (today - 6 + i + 7) % 7;
+        return weekdays[dayIndex];
+      });
+
       // Convert to array format needed by Recharts
-      return last7Days.map(day => ({
+      return orderedDays.map(day => ({
         name: day,
-        value: dayCount.get(day) || 0
+        current: currentWeekDayCount.get(day) || 0,
+        previous: previousWeekDayCount.get(day) || 0
       }));
     };
 
@@ -129,7 +152,7 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
           description={description}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <RechartsLineChart
               data={activityTrend.data}
               margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
             >
@@ -144,16 +167,28 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
               />
               <RechartsTooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)' }}
+                cursor={{ stroke: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
               />
-              <Bar
-                name="Activities"
-                dataKey="value"
-                fill={themeColors.chartColors.activity.bar}
-                radius={[4, 4, 0, 0]}
+              <Line
+                type="monotone"
+                name="Previous"
+                dataKey="previous"
+                stroke={themeColors.chartColors.activity.previous}
+                strokeWidth={1.5}
+                dot={false}
+                animationDuration={1200}
+              />
+              <Line
+                type="monotone"
+                name="Current"
+                dataKey="current"
+                stroke={themeColors.chartColors.activity.current}
+                strokeWidth={2}
+                dot={{ r: 3, fill: themeColors.chartColors.activity.current, stroke: themeColors.chartColors.activity.current }}
+                activeDot={{ r: 5, fill: themeColors.chartColors.activity.current, stroke: themeColors.chartColors.activity.current }}
                 animationDuration={1500}
               />
-            </BarChart>
+            </RechartsLineChart>
           </ResponsiveContainer>
         </StatCard>
       )}

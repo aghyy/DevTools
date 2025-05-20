@@ -30,14 +30,12 @@ export type PieChartData = {
   totalUsage: number;
 };
 
-export type ActivityTrend = DefaultChartData;
+export type ActivityTrend = ComparisonChartData;
 export type PerformanceStats = DefaultChartData;
 export type ResourceUsageStats = PieChartData;
-export type ActiveSessionsStats = ComparisonChartData;
 
 export type ChartDescriptions = {
   weeklyActivity: string;
   responseTime: string;
-  activeSessions: string;
   resourceUsage: string;
 };
