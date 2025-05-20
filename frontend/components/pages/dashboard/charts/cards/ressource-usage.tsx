@@ -1,17 +1,40 @@
 import { ResponsiveContainer, Tooltip as RechartsTooltip, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "../stat-card";
-import { ResourceUsageStats } from "@/types/charts";
 import { useThemeColors } from "@/hooks/charts";
 import { PieChart } from "lucide-react";
 import PieTooltip from "../pie-tooltip";
-
-export default function RessourceUsageCard({ loading, resourceUsageStats, description }: {
+import { MostUsedItem } from "@/services/activity";
+import { useState } from "react";
+import { useEffect } from "react";
+import { ResourceUsageStats } from "@/types/charts";
+export default function RessourceUsageCard({ loading, mostUsedItems, description }: {
   loading: boolean;
-  resourceUsageStats: ResourceUsageStats;
+  mostUsedItems: MostUsedItem[];
   description: string;
 }) {
   const themeColors = useThemeColors();
+  const [resourceUsageStats, setResourceUsageStats] = useState<ResourceUsageStats>({ totalUsage: 0, data: [] });
+
+  useEffect(() => {
+    const getResourceUsageStats = () => {
+      if (!mostUsedItems.length) return { totalUsage: 0, data: [] };
+
+      const data = mostUsedItems.slice(0, 8).map(item => ({
+        name: item.name,
+        value: typeof item.count === 'number' ? item.count : parseInt(String(item.count), 10) || 1
+      }));
+
+      const totalUsage = data.reduce((sum, item) => sum + item.value, 0);
+
+      setResourceUsageStats({
+        data,
+        totalUsage
+      });
+    };
+
+    getResourceUsageStats()
+  }, [mostUsedItems]);
 
   return (
     <>
@@ -26,10 +49,10 @@ export default function RessourceUsageCard({ loading, resourceUsageStats, descri
           description={description}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
               <RechartsTooltip content={<PieTooltip />} />
               <Pie
-                data={resourceUsageStats.data.slice(0, 5)} // Show top 5 for better visualization
+                data={resourceUsageStats.data.slice(0, 5)}
                 cx="50%"
                 cy="50%"
                 innerRadius={30}
@@ -46,6 +69,8 @@ export default function RessourceUsageCard({ loading, resourceUsageStats, descri
                   <Cell
                     key={`cell-${index}`}
                     fill={themeColors.pieColors[index % themeColors.pieColors.length]}
+                    stroke={themeColors.pieColors[index % themeColors.pieColors.length]}
+                    strokeWidth={2}
                   />
                 ))}
               </Pie>

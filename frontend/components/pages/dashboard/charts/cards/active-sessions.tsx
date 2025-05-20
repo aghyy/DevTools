@@ -4,7 +4,7 @@ import StatCard from "../stat-card";
 import { useTheme } from "next-themes";
 import { ActiveSessionsStats } from "@/types/charts";
 import CustomTooltip from "../tooltip";
-import { useThemeColors, useTooltipStyle } from "@/hooks/charts";
+import { useThemeColors } from "@/hooks/charts";
 import { Users } from "lucide-react";
 
 export default function ActiveSessionsCard({ loading, sessionsStats, description }: {
@@ -16,7 +16,6 @@ export default function ActiveSessionsCard({ loading, sessionsStats, description
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
   const isDark = resolvedTheme === 'dark';
   const themeColors = useThemeColors();
-  const tooltipStyle = useTooltipStyle();
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -57,7 +56,7 @@ export default function ActiveSessionsCard({ loading, sessionsStats, description
                 dy={5}
               />
               <RechartsTooltip
-                content={<CustomTooltip style={tooltipStyle} />}
+                content={<CustomTooltip />}
                 cursor={{ stroke: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
               />
               <Line

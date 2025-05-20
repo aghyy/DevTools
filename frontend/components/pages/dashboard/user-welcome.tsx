@@ -17,7 +17,7 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
   return (
     <div className="mb-6 md:mb-8">
       <Card className={cn(
-        "border-0 shadow-lg",
+        "border shadow-lg",
         isDark ? "bg-primary/5" : "bg-primary/5"
       )}>
         <CardContent className="p-4 md:p-6">

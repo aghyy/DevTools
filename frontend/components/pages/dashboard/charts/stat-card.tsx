@@ -16,7 +16,7 @@ export default function StatCard({ title, value, change, suffix, icon, descripti
 }) {
   const { theme, systemTheme } = useTheme();
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
-  const isDark = resolvedTheme === 'dark';  
+  const isDark = resolvedTheme === 'dark';
 
   const isPositive = typeof change === 'number' ? change >= 0 : undefined;
   const showPositiveAsBetter = title !== "Average Response Time"; // For response time, negative change is better
@@ -34,10 +34,7 @@ export default function StatCard({ title, value, change, suffix, icon, descripti
   const displayPositive = showPositiveAsBetter ? isPositive : !isPositive;
 
   return (
-    <Card className={cn(
-      "overflow-hidden border border-border/40",
-      isDark ? "bg-card text-text" : "bg-white"
-    )}>
+    <Card className="overflow-hidden border bg-neutral-100 dark:bg-neutral-900">
       <CardHeader className="p-4 pb-2 space-y-0">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">

@@ -123,11 +123,11 @@ export const sidebarItems = {
 // Static mapping for consistency and to avoid icon name property issues
 export const routeToActivityMap: Record<string, { name: string; type: ToolType; icon: string }> = {
   // Tools
-  "/tools/hash": { name: "Hash Generator", type: "tool", icon: "Hash" },
-  "/tools/base64": { name: "Base64 Converter", type: "tool", icon: "Binary" },
-  "/tools/bcrypt": { name: "Bcrypt Tool", type: "tool", icon: "KeyRound" },
-  "/tools/regex": { name: "Regex Tester", type: "tool", icon: "Regex" },
-  "/tools/proxy": { name: "Proxy Settings", type: "tool", icon: "Hammer" },
+  "/tools/hash": { name: "Hash", type: "tool", icon: "Hash" },
+  "/tools/base64": { name: "Base64", type: "tool", icon: "Binary" },
+  "/tools/bcrypt": { name: "Bcrypt", type: "tool", icon: "KeyRound" },
+  "/tools/regex": { name: "Regex", type: "tool", icon: "Regex" },
+  "/tools/proxy": { name: "Proxy", type: "tool", icon: "Hammer" },
   "/tools/url-shortener": { name: "URL Shortener", type: "tool", icon: "Link" },
   "/tools/json-formatter": { name: "JSON Formatter", type: "tool", icon: "Code" },
   "/tools/steganography": { name: "Steganography", type: "tool", icon: "Lock" },

@@ -1,24 +1,9 @@
-import { useTheme } from "next-themes";
 import { TooltipProps } from "@/types/charts";
 
-export default function Tooltip({ active, payload, label, style }: TooltipProps) {
-  const { theme, systemTheme } = useTheme();
-  const resolvedTheme = theme === 'system' ? systemTheme : theme;
-  const isDark = resolvedTheme === 'dark';
-
+export default function Tooltip({ active, payload, label }: TooltipProps) {
   if (active && payload && payload.length) {
     return (
-      <div className="custom-tooltip" style={{
-        backgroundColor: style?.backgroundColor || isDark ? '#000' : '#fff',
-        color: style?.color || isDark ? '#fff' : '#000',
-        padding: '8px 12px',
-        border: `1px solid ${style?.borderColor || '#374151'}`,
-        borderRadius: '6px',
-        boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
-        fontSize: '12px',
-        minWidth: '120px',
-        backdropFilter: 'blur(4px)',
-      }}>
+      <div className="bg-neutral-100 dark:bg-neutral-900 text-primary py-2 px-3 border border-primary/20 rounded-md min-w-[100px] backdrop-blur-sm shadow-md text-sm">
         <p className="font-medium">{label || ''}</p>
         {payload.map((entry, index) => {
           // Format response time values with 2 decimal places

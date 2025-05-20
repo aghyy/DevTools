@@ -64,104 +64,6 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Process activity data for timeline chart
-  const processActivityTimeline = (activities: ActivityType[]) => {
-    if (!activities.length) return [];
-
-    // Create a map to count activities by day
-    const dayCount = new Map<string, number>();
-
-    // Get activities of the last 7 days
-    const last7Days: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-      last7Days.push(dayStr);
-      // Initialize with zero count
-      dayCount.set(dayStr, 0);
-    }
-
-    // Count activities by day
-    activities.forEach(activity => {
-      if (activity.createdAt) {
-        const date = new Date(activity.createdAt);
-        const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-        if (dayCount.has(dayStr)) {
-          dayCount.set(dayStr, (dayCount.get(dayStr) || 0) + 1);
-        }
-      }
-    });
-
-    // Convert to array format needed by Recharts
-    return last7Days.map(day => ({
-      name: day,
-      value: dayCount.get(day) || 0
-    }));
-  };
-
-  // Get total activity count for last 7 days vs previous 7 days
-  const getActivityTrend = () => {
-    if (!recentItems.length) return { current: 0, change: 0, data: [] };
-
-    const now = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(now.getDate() - 7);
-
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(now.getDate() - 14);
-
-    // Filter activities for current week
-    const currentWeekActivities = recentItems.filter(activity => {
-      if (!activity.createdAt) return false;
-      const date = new Date(activity.createdAt);
-      return date >= oneWeekAgo && date <= now;
-    });
-
-    // Filter activities for previous week
-    const previousWeekActivities = recentItems.filter(activity => {
-      if (!activity.createdAt) return false;
-      const date = new Date(activity.createdAt);
-      return date >= twoWeeksAgo && date < oneWeekAgo;
-    });
-
-    // Calculate current week total
-    const currentWeekCount = currentWeekActivities.length;
-
-    // Calculate previous week total
-    const previousWeekCount = previousWeekActivities.length;
-
-    // Calculate percentage change
-    const change = previousWeekCount === 0
-      ? 100
-      : ((currentWeekCount - previousWeekCount) / previousWeekCount) * 100;
-
-    return {
-      current: currentWeekCount,
-      change,
-      data: processActivityTimeline(recentItems)
-    };
-  };
-
-  // Get resource usage stats from most used items
-  const getResourceUsageStats = () => {
-    if (!mostUsedItems.length) return { totalUsage: 0, data: [] };
-
-    // Convert most used items to data points
-    const data = mostUsedItems.slice(0, 8).map(item => ({
-      name: item.name,
-      value: typeof item.count === 'number' ? item.count : parseInt(String(item.count), 10) || 1
-    }));
-
-    // Calculate total usage
-    const totalUsage = data.reduce((sum, item) => sum + item.value, 0);
-
-    return {
-      data,
-      totalUsage
-    };
-  };
-
   // Generate average response time data (simulated for demo)
   const getPerformanceStats = () => {
     // Simulate average response time for the last 7 days
@@ -238,8 +140,6 @@ export default function Dashboard() {
   };
 
   // Get the usage statistics
-  const activityTrend = getActivityTrend();
-  const resourceUsageStats = getResourceUsageStats();
   const performanceStats = getPerformanceStats();
   const sessionsStats = getActiveSessionsStats();
 
@@ -266,7 +166,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ChartSection loading={loading} activityTrend={activityTrend} performanceStats={performanceStats} sessionsStats={sessionsStats} resourceUsageStats={resourceUsageStats} />
+        <ChartSection loading={loading} recentItems={recentItems} performanceStats={performanceStats} sessionsStats={sessionsStats} mostUsedItems={mostUsedItems} />
 
         {/* Recent Activity */}
         <div className="mb-6 md:mb-8">

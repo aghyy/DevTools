@@ -4,7 +4,7 @@ import StatCard from "../stat-card";
 import { useTheme } from "next-themes";
 import { PerformanceStats } from "@/types/charts";
 import CustomTooltip from "../tooltip";
-import { useThemeColors, useTooltipStyle } from "@/hooks/charts";
+import { useThemeColors } from "@/hooks/charts";
 import { Timer } from "lucide-react";
 
 export default function ResponseTimeCard({ loading, performanceStats, description }: {
@@ -16,7 +16,6 @@ export default function ResponseTimeCard({ loading, performanceStats, descriptio
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
   const isDark = resolvedTheme === 'dark';
   const themeColors = useThemeColors();
-  const tooltipStyle = useTooltipStyle();
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -58,7 +57,7 @@ export default function ResponseTimeCard({ loading, performanceStats, descriptio
                 dy={5}
               />
               <RechartsTooltip
-                content={<CustomTooltip style={tooltipStyle} />}
+                content={<CustomTooltip />}
                 cursor={{ stroke: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
               />
               <Line
