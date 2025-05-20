@@ -66,3 +66,16 @@ export const useTooltipStyle = () => {
 
   return tooltipStyle;
 };
+
+export const useChartDescriptions = () => {
+  return {
+    weeklyActivity:
+      "Shows your activity counts for each day of the past week. Higher bars indicate more activity on those days.",
+    responseTime:
+      "Shows the average response time of tools over time. Lower values indicate better performance.",
+    activeSessions:
+      "Compares the number of active sessions in the current period (orange) with the previous period (light orange).",
+    resourceUsage:
+      "A breakdown of your most used resources. Hover over each segment to see specific usage counts.",
+  };
+};
