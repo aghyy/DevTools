@@ -70,7 +70,7 @@ export default function DashboardFavorites() {
             <CardContent className="p-4 flex items-center gap-4">
               <div className="bg-primary/5 p-3 rounded-full">
                 {tool.icon && (
-                  <Icon icon={getIconComponent(tool.icon)} className='h-5 w-5' />
+                  <Icon icon={getIconComponent(tool.icon)} className='' />
                 )}
               </div>
               <div className="flex-1">
