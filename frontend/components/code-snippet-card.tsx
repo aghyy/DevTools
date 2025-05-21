@@ -58,15 +58,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   const toggleExpand = () => {
     setExpanded(!expanded);
     
-    // If expanding the view, track it as an interaction with the snippet
-    if (!expanded) {
-      trackActivity({
-        type: "codeSnippet",
-        name: `Expanded: ${snippet.title}`,
-        path: `/code-snippets/${snippet.id}`,
-        icon: "Code",
-      }).catch(err => console.error("Failed to track expand activity:", err));
-    }
+    // Removed activity tracking for expanding snippets
   };
   
   const copyCode = async () => {
@@ -134,13 +126,12 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   });
   
   return (
-    <Card className="w-full overflow-hidden flex flex-col justify-between">
+    <Card className="w-full overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer" onClick={handleView}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <CardTitle 
-              className="flex items-center cursor-pointer" 
-              onClick={handleView}
+              className="flex items-center" 
             >
               <Code className="mr-2 h-5 w-5" />
               {snippet.title}
@@ -212,7 +203,10 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
               variant="ghost" 
               size="sm" 
               className="h-8 w-8 p-0" 
-              onClick={toggleExpand}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpand();
+              }}
             >
               {expanded ? (
                 <ChevronUp className="h-4 w-4" />
@@ -226,7 +220,10 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
             variant="ghost" 
             size="sm" 
             className="h-8 w-8 p-0" 
-            onClick={copyCode}
+            onClick={(e) => {
+              e.stopPropagation();
+              copyCode();
+            }}
           >
             <Copy className="h-4 w-4" />
           </Button>
@@ -237,7 +234,10 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -246,7 +246,10 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0 hover:text-destructive" 
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
               >
                 <Trash className="h-4 w-4" />
               </Button>

@@ -5,7 +5,6 @@ import { TopSpacing } from "@/components/top-spacing";
 import { useToast } from "@/hooks/use-toast";
 import { useAtom } from "jotai";
 import { isGuestAtom, userDataAtom } from "@/atoms/auth";
-import { trackActivity } from "@/services/activity";
 
 import {
   Breadcrumb,
@@ -49,7 +48,8 @@ import {
   Code2,
   Languages,
   Globe,
-  User
+  User,
+  Copy
 } from "lucide-react";
 
 import {
@@ -69,6 +69,8 @@ import {
   getUserTags,
   getAllPublicCodeSnippets
 } from "@/services/codeSnippetService";
+
+import { CodeHighlighter } from "@/components/code-highlighter";
 
 export default function CodeSnippets() {
   const { toast } = useToast();
@@ -107,16 +109,6 @@ export default function CodeSnippets() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-
-  // Track page visit when component mounts
-  useEffect(() => {
-    trackActivity({
-      type: "codeSnippet",
-      name: "Code Snippets Page",
-      path: "/code-snippets",
-      icon: "Code2",
-    }).catch(err => console.error("Failed to track page visit:", err));
-  }, []);
 
   // Filter code snippets based on search query and selected filters
   const applyFilters = useCallback(() => {
@@ -416,6 +408,11 @@ export default function CodeSnippets() {
     setDetailUserInfo(null);
   };
 
+  // Handle copying code to clipboard
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+  };
+
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
@@ -692,51 +689,84 @@ export default function CodeSnippets() {
         </AlertDialog>
       )}
 
-      {/* Detail View Sheet - Only show for logged in users */}
-      {!isGuest && (
-        <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <SheetContent className="sm:max-w-xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Code Snippet Details</SheetTitle>
-              <SheetDescription>
-                {detailSnippet && (
-                  <>
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2">{detailSnippet.title}</h3>
-                      <p className="text-muted-foreground">{detailSnippet.description}</p>
+      {/* Detail View Sheet */}
+      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-xl">{detailSnippet?.title}</SheetTitle>
+            <SheetDescription>
+              {detailSnippet?.description}
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6">
+            {detailSnippet && (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Badge>{detailSnippet.language}</Badge>
+                    <span className="text-muted-foreground text-sm">
+                      Created {new Date(detailSnippet.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  {detailUserInfo && (
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-[10px]">
+                          {detailUserInfo.firstName.charAt(0)}
+                          {detailUserInfo.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm">{detailUserInfo.firstName} {detailUserInfo.lastName}</span>
                     </div>
-                    <div className="mb-4">
-                      <strong>Language:</strong> {detailSnippet.language}
+                  )}
+                </div>
+                
+                <div className="mb-4">
+                  {detailSnippet.tags && detailSnippet.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {detailSnippet.tags.map((tag, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
-                    <div className="mb-4">
-                      <strong>Tags:</strong> {detailSnippet.tags.join(', ')}
-                    </div>
-                    <div className="mb-4">
-                      <strong>Code:</strong>
-                      <pre className="mt-2 p-2 bg-muted rounded-md">
-                        {detailSnippet.code}
-                      </pre>
-                    </div>
-                    <div className="mt-4">
-                      <strong>Created by:</strong>
-                      {detailUserInfo ? (
-                        <span>{detailUserInfo.firstName} {detailUserInfo.lastName} ({detailUserInfo.username})</span>
-                      ) : (
-                        <span>Unknown</span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-6">
-              <Button onClick={closeDetailView} className="w-full">
-                Close
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
+                  )}
+                </div>
+                
+                <div className="rounded-md border mb-6 overflow-hidden">
+                  <CodeHighlighter 
+                    code={detailSnippet.code} 
+                    language={detailSnippet.language}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="flex justify-between">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      handleCopy(detailSnippet.code);
+                      toast({
+                        title: "Code copied to clipboard",
+                        duration: 2000,
+                      });
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Code
+                  </Button>
+                  
+                  <Button onClick={closeDetailView}>
+                    Close
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -135,8 +135,5 @@ export const routeToActivityMap: Record<string, { name: string; type: ToolType; 
   "/tools/token-generator": { name: "Token Generator", type: "tool", icon: "Code" },
   "/tools/uuid-generator": { name: "UUID Generator", type: "tool", icon: "Fingerprint" },
   "/tools/ulid-generator": { name: "ULID Generator", type: "tool", icon: "Barcode" },
-  // Bookmarks
-  "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Book" },
-  // Favorites 
-  "/favorites": { name: "Favorites", type: "bookmark", icon: "Heart" },
+  // Bookmarks and Favorites removed
 }; 

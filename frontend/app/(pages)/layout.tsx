@@ -27,7 +27,12 @@ export default function PagesLayout({
     }
     
     // Only track main sections and specific tools (not the dashboard itself)
-    if (pathname === "/dashboard") {
+    // Also skip tracking for main paths: /tools, /bookmarks, and /code-snippets
+    if (pathname === "/dashboard" || 
+        pathname === "/tools" || 
+        pathname === "/bookmarks" || 
+        pathname === "/code-snippets" ||
+        pathname === "/favorites") {
       return;
     }
     
@@ -41,9 +46,9 @@ export default function PagesLayout({
       const mainPath = '/' + pathname.split('/')[1];
       
       // Default activity metadata based on section
+      // Removed /tools and /bookmarks from here since we're excluding them
       const defaultActivityMap: Record<string, {name: string; type: 'tool' | 'bookmark'; icon: string}> = {
-        "/tools": { name: "Tools", type: "tool", icon: "Hammer" },
-        "/bookmarks": { name: "Bookmarks", type: "bookmark", icon: "Bookmark" },
+        // We've removed /tools and /bookmarks from here
       };
       
       activity = defaultActivityMap[mainPath];
