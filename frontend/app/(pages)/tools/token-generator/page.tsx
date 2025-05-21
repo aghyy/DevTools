@@ -22,6 +22,7 @@ import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { debounce } from '@/utils/debounce';
 
 export default function TokenGeneratorPage() {
   return (
@@ -44,6 +45,9 @@ function TokenGenerator() {
   const generateTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
+
+  // Track user modifications to trigger generation
+  const [pendingChanges, setPendingChanges] = useState(false);
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -88,6 +92,7 @@ function TokenGenerator() {
       }
 
       setToken(result);
+      setPendingChanges(false);
       
       // Complete tracking if we started it
       if (generateTracker.current) {
@@ -109,13 +114,32 @@ function TokenGenerator() {
     generateToken();
   };
 
-  // Generate a token when component mounts or options change
-  useMemo(() => {
+  // Debounced version of generateToken for option changes
+  const debouncedGenerateToken = useMemo(
+    () => debounce(generateToken, 500),
+    [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols]
+  );
+
+  // Flag that changes were made and schedule debounced token generation
+  useEffect(() => {
+    if (isInitialLoad) return;
+    
+    setPendingChanges(true);
+    debouncedGenerateToken();
+  }, [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols, debouncedGenerateToken, isInitialLoad]);
+
+  // Initial token generation
+  useEffect(() => {
     generateToken();
-  }, [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols]);
+  }, []);
 
   const handleClear = () => {
     setToken("");
+  };
+
+  // Handle length change without triggering immediate updates
+  const handleLengthChange = (value: number) => {
+    setLength(value);
   };
 
   return (
@@ -176,7 +200,7 @@ function TokenGenerator() {
                   onClick={handleGenerateToken}
                   className="h-8 w-8"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className={`h-4 w-4 ${pendingChanges ? "animate-spin" : ""}`} />
                 </Button>
               </div>
             </div>
@@ -185,7 +209,7 @@ function TokenGenerator() {
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Your generated token will appear here"
-              className="font-mono"
+              className={`font-mono ${pendingChanges ? "opacity-50" : ""}`}
             />
           </div>
         </Card>
@@ -204,7 +228,7 @@ function TokenGenerator() {
                 min={4}
                 max={128}
                 value={length}
-                onChange={(e) => setLength(parseInt(e.target.value) || 16)}
+                onChange={(e) => handleLengthChange(parseInt(e.target.value) || 16)}
                 className="w-20"
               />
             </div>
@@ -213,7 +237,7 @@ function TokenGenerator() {
               min={4}
               max={128}
               value={length}
-              onChange={(e) => setLength(parseInt(e.target.value))}
+              onChange={(e) => handleLengthChange(parseInt(e.target.value))}
               className="w-full"
             />
           </div>

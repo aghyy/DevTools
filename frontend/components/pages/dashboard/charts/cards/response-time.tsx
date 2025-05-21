@@ -144,7 +144,7 @@ export default function ResponseTimeCard({ loading, description }: {
         <Skeleton className="h-[180px] md:h-[220px] w-full rounded-xl" />
       ) : (
         <StatCard
-          title="Tools Response Time"
+          title="Average Response Time"
           value={performanceStats.current}
           suffix="ms"
           change={performanceStats.change}

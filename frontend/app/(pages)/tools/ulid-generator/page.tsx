@@ -26,6 +26,7 @@ import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { debounce } from '@/utils/debounce';
 
 export default function UlidGeneratorPage() {
   return (
@@ -39,9 +40,11 @@ function UlidGenerator() {
   const [ulids, setUlids] = useState<string[]>([ulid()]);
   const [quantity, setQuantity] = useState(1);
   const [format, setFormat] = useState("raw");
+  const [isPending, setIsPending] = useState(false);
   
   const { trackOperation } = useClientToolPerformance('ulid-generator');
   const generateTracker = useRef<{ complete: () => void } | null>(null);
+  const debouncedUpdateRef = useRef<(newQuantity: number) => void>();
 
   const router = useRouter();
 
@@ -80,37 +83,50 @@ function UlidGenerator() {
     setFormat(value);
   };
 
+  // Create a debounced version of the quantity update function
+  React.useEffect(() => {
+    const updateQuantity = (newQuantity: number) => {
+      // Start tracking for quantity change
+      generateTracker.current = trackOperation(`quantity-change-${newQuantity}`);
+      setIsPending(false);
+      
+      try {
+        if (newQuantity > ulids.length) {
+          // Generate more ULIDs
+          const newUlids = [...ulids];
+          for (let i = ulids.length; i < newQuantity; i++) {
+            newUlids.push(ulid());
+          }
+          setUlids(newUlids);
+        } else if (newQuantity < ulids.length) {
+          // Reduce number of ULIDs
+          setUlids(ulids.slice(0, newQuantity));
+        }
+        
+        // Complete tracking
+        if (generateTracker.current) {
+          generateTracker.current.complete();
+          generateTracker.current = null;
+        }
+      } catch (error) {
+        // Handle errors and clean up tracker
+        if (generateTracker.current) {
+          generateTracker.current = null;
+        }
+        console.error("Error updating ULID quantity:", error);
+      }
+    };
+    
+    debouncedUpdateRef.current = debounce(updateQuantity, 500);
+  }, [ulids, trackOperation]);
+
   const handleQuantityChange = (value: number) => {
     const newQuantity = Math.max(1, Math.min(100, value));
     setQuantity(newQuantity);
-
-    // Start tracking for quantity change
-    generateTracker.current = trackOperation(`quantity-change-${newQuantity}`);
+    setIsPending(true);
     
-    try {
-      if (newQuantity > ulids.length) {
-        // Generate more ULIDs
-        const newUlids = [...ulids];
-        for (let i = ulids.length; i < newQuantity; i++) {
-          newUlids.push(ulid());
-        }
-        setUlids(newUlids);
-      } else if (newQuantity < ulids.length) {
-        // Reduce number of ULIDs
-        setUlids(ulids.slice(0, newQuantity));
-      }
-      
-      // Complete tracking
-      if (generateTracker.current) {
-        generateTracker.current.complete();
-        generateTracker.current = null;
-      }
-    } catch (error) {
-      // Handle errors and clean up tracker
-      if (generateTracker.current) {
-        generateTracker.current = null;
-      }
-      console.error("Error updating ULID quantity:", error);
+    if (debouncedUpdateRef.current) {
+      debouncedUpdateRef.current(newQuantity);
     }
   };
 
@@ -211,6 +227,7 @@ function UlidGenerator() {
                 max={100}
                 value={quantity}
                 onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                className={isPending ? "opacity-70" : ""}
               />
             </div>
           </div>
@@ -228,7 +245,7 @@ function UlidGenerator() {
               Clear
             </Button>
             <Button onClick={generateUlids}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className={`h-4 w-4 mr-2 ${isPending ? "animate-spin" : ""}`} />
               Refresh
             </Button>
           </div>

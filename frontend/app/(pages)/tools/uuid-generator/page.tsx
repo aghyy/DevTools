@@ -33,6 +33,7 @@ import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { debounce } from '@/utils/debounce';
 
 // UUID namespace constants
 const NAMESPACE_DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -52,9 +53,11 @@ function UuidGenerator() {
   const [version, setVersion] = useState("v4");
   const [namespace, setNamespace] = useState(NAMESPACE_DNS);
   const [name, setName] = useState("example.com");
+  const [isPending, setIsPending] = useState(false);
   
   const { trackOperation } = useClientToolPerformance('uuid-generator');
   const generateTracker = useRef<{ complete: () => void } | null>(null);
+  const debouncedUpdateRef = useRef<(newQuantity: number) => void>();
 
   const router = useRouter();
 
@@ -119,56 +122,69 @@ function UuidGenerator() {
     }
   };
 
+  // Create a debounced version of the quantity update function
+  React.useEffect(() => {
+    const updateQuantity = (newQuantity: number) => {
+      // Start tracking for quantity change
+      const operationName = `quantity-change-${version}-${newQuantity}`;
+      generateTracker.current = trackOperation(operationName);
+      setIsPending(false);
+
+      try {
+        if (newQuantity > uuids.length) {
+          // Generate more UUIDs
+          const newUuids = [...uuids];
+          for (let i = uuids.length; i < newQuantity; i++) {
+            switch (version) {
+              case "nil":
+                newUuids.push(NIL_UUID);
+                break;
+              case "v1":
+                newUuids.push(uuidv1());
+                break;
+              case "v3":
+                newUuids.push(uuidv3(name, namespace));
+                break;
+              case "v4":
+                newUuids.push(uuidv4());
+                break;
+              case "v5":
+                newUuids.push(uuidv5(name, namespace));
+                break;
+              default:
+                newUuids.push(uuidv4());
+            }
+          }
+          setUuids(newUuids);
+        } else if (newQuantity < uuids.length) {
+          // Reduce number of UUIDs
+          setUuids(uuids.slice(0, newQuantity));
+        }
+        
+        // Complete tracking
+        if (generateTracker.current) {
+          generateTracker.current.complete();
+          generateTracker.current = null;
+        }
+      } catch (error) {
+        // Handle any errors and cleanup tracker
+        if (generateTracker.current) {
+          generateTracker.current = null;
+        }
+        console.error("Error updating quantity:", error);
+      }
+    };
+    
+    debouncedUpdateRef.current = debounce(updateQuantity, 500);
+  }, [uuids, version, name, namespace, trackOperation]);
+
   const handleQuantityChange = (value: number) => {
     const newQuantity = Math.max(1, Math.min(100, value));
     setQuantity(newQuantity);
-
-    // Start tracking for quantity change
-    const operationName = `quantity-change-${version}-${newQuantity}`;
-    generateTracker.current = trackOperation(operationName);
-
-    try {
-      if (newQuantity > uuids.length) {
-        // Generate more UUIDs
-        const newUuids = [...uuids];
-        for (let i = uuids.length; i < newQuantity; i++) {
-          switch (version) {
-            case "nil":
-              newUuids.push(NIL_UUID);
-              break;
-            case "v1":
-              newUuids.push(uuidv1());
-              break;
-            case "v3":
-              newUuids.push(uuidv3(name, namespace));
-              break;
-            case "v4":
-              newUuids.push(uuidv4());
-              break;
-            case "v5":
-              newUuids.push(uuidv5(name, namespace));
-              break;
-            default:
-              newUuids.push(uuidv4());
-          }
-        }
-        setUuids(newUuids);
-      } else if (newQuantity < uuids.length) {
-        // Reduce number of UUIDs
-        setUuids(uuids.slice(0, newQuantity));
-      }
-      
-      // Complete tracking
-      if (generateTracker.current) {
-        generateTracker.current.complete();
-        generateTracker.current = null;
-      }
-    } catch (error) {
-      // Handle any errors and cleanup tracker
-      if (generateTracker.current) {
-        generateTracker.current = null;
-      }
-      console.error("Error updating quantity:", error);
+    setIsPending(true);
+    
+    if (debouncedUpdateRef.current) {
+      debouncedUpdateRef.current(newQuantity);
     }
   };
 
@@ -246,6 +262,7 @@ function UuidGenerator() {
                 max={100}
                 value={quantity}
                 onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                className={isPending ? "opacity-70" : ""}
               />
             </div>
           </div>
