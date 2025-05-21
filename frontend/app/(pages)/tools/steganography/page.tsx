@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -22,6 +22,8 @@ import { Card } from '@/components/ui/card';
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from '@/components/ui/textarea';
 import FavoriteButton from '@/components/favorite-button';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
 // F5 Algorithm Implementation
 class F5Steganography {
@@ -178,6 +180,14 @@ class F5Steganography {
   }
 }
 
+export default function SteganographyPage() {
+  return (
+    <ClientToolTracker name="Steganography" icon="Lock" trackInitialLoad={false}>
+      <Steganography />
+    </ClientToolTracker>
+  );
+}
+
 const Steganography: React.FC = () => {
   // State for encoding
   const [message, setMessage] = useState('');
@@ -191,6 +201,11 @@ const Steganography: React.FC = () => {
   // State for decoding
   const [decodePassword, setDecodePassword] = useState('');
   const [decodedMessage, setDecodedMessage] = useState('');
+  
+  // Performance tracking
+  const { trackOperation } = useClientToolPerformance('steganography');
+  const encodeTracker = useRef<{ complete: () => void } | null>(null);
+  const decodeTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -198,7 +213,7 @@ const Steganography: React.FC = () => {
     router.push(path);
   }
 
-  // Handle base image selection for encoding
+  // Handle base image select for encoding
   const handleBaseImageSelect = (files: File[]) => {
     const file = files?.[0];
     if (file) {
@@ -221,6 +236,9 @@ const Steganography: React.FC = () => {
       alert('Please select a base image to encode your message');
       return;
     }
+    
+    // Start tracking encode operation
+    encodeTracker.current = trackOperation(`encode-${message.length}`);
 
     // Create canvas to manipulate image
     const img = document.createElement('img');
@@ -230,7 +248,13 @@ const Steganography: React.FC = () => {
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
 
-      if (!ctx) return;
+      if (!ctx) {
+        // Clear tracker if context creation fails
+        if (encodeTracker.current) {
+          encodeTracker.current = null;
+        }
+        return;
+      }
 
       // Draw original image
       ctx.drawImage(img, 0, 0);
@@ -248,20 +272,44 @@ const Steganography: React.FC = () => {
         // Convert to data URL
         const encodedDataUrl = canvas.toDataURL('image/png');
         setEncodedImage(encodedDataUrl);
+        
+        // Complete tracking on success
+        if (encodeTracker.current) {
+          encodeTracker.current.complete();
+          encodeTracker.current = null;
+        }
       } catch (error) {
-        alert('Encoding failed: ' + error);
+        console.error('Error during encoding:', error);
+        alert('Failed to encode the message into the image.');
+        
+        // Clear tracker on error
+        if (encodeTracker.current) {
+          encodeTracker.current = null;
+        }
       }
     };
+
+    img.onerror = () => {
+      alert('Failed to load the image for encoding.');
+      // Clear tracker on error
+      if (encodeTracker.current) {
+        encodeTracker.current = null;
+      }
+    };
+
     img.src = baseImage;
   };
 
   // Decode process
   const handleDecode = () => {
-    if (!decodeFiles?.length) {
+    if (!decodeFiles || decodeFiles.length === 0) {
       alert('Please select an image to decode');
       return;
     }
 
+    // Start tracking for decode operation
+    decodeTracker.current = trackOperation('decode');
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = document.createElement('img');
@@ -271,32 +319,69 @@ const Steganography: React.FC = () => {
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
 
-        if (!ctx) return;
+        if (!ctx) {
+          alert('Failed to create canvas context');
+          // Clear tracker on error
+          if (decodeTracker.current) {
+            decodeTracker.current = null;
+          }
+          return;
+        }
 
-        // Draw image
+        // Draw image to canvas
         ctx.drawImage(img, 0, 0);
 
-        // Get image data
+        // Extract image data
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
         try {
-          // Decode message using F5 algorithm
-          const decodedMessage = F5Steganography.decode(imageData, decodePassword);
-
-          if (decodedMessage !== null) {
-            setDecodedMessage(decodedMessage);
+          // Attempt to decode the message
+          const message = F5Steganography.decode(imageData, decodePassword);
+          
+          if (message) {
+            setDecodedMessage(message);
           } else {
-            setDecodedMessage('Incorrect password or no hidden message');
+            alert('No message found or incorrect password');
+            setDecodedMessage('');
+          }
+          
+          // Complete tracking on success
+          if (decodeTracker.current) {
+            decodeTracker.current.complete();
+            decodeTracker.current = null;
           }
         } catch (error) {
-          alert('Decoding failed: ' + error);
+          console.error('Error during decoding:', error);
+          alert('Failed to decode the image.');
+          setDecodedMessage('');
+          
+          // Clear tracker on error
+          if (decodeTracker.current) {
+            decodeTracker.current = null;
+          }
         }
       };
+
+      img.onerror = () => {
+        alert('Failed to load the image for decoding.');
+        // Clear tracker on error
+        if (decodeTracker.current) {
+          decodeTracker.current = null;
+        }
+      };
+
       img.src = e.target?.result as string;
     };
 
-    const file = decodeFiles[0];
-    reader.readAsDataURL(file);
+    reader.onerror = () => {
+      alert('Error reading the file');
+      // Clear tracker on error
+      if (decodeTracker.current) {
+        decodeTracker.current = null;
+      }
+    };
+
+    reader.readAsDataURL(decodeFiles[0]);
   };
 
   // Clear all fields
@@ -517,5 +602,3 @@ const Steganography: React.FC = () => {
 
   );
 };
-
-export default Steganography;

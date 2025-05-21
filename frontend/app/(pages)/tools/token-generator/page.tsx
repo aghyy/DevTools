@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Copy, Trash } from "lucide-react";
 
@@ -20,14 +20,28 @@ import {
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
-export default function TokenGenerator() {
+export default function TokenGeneratorPage() {
+  return (
+    <ClientToolTracker name="Token Generator" icon="Code" trackInitialLoad={false}>
+      <TokenGenerator />
+    </ClientToolTracker>
+  );
+}
+
+function TokenGenerator() {
   const [token, setToken] = useState("");
   const [length, setLength] = useState(16);
   const [includeUppercase, setIncludeUppercase] = useState(true);
   const [includeLowercase, setIncludeLowercase] = useState(true);
   const [includeNumbers, setIncludeNumbers] = useState(true);
   const [includeSymbols, setIncludeSymbols] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  const { trackOperation } = useClientToolPerformance('token-generator');
+  const generateTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -35,26 +49,64 @@ export default function TokenGenerator() {
     router.push(path);
   }
 
+  // Flag to control initial load
+  useEffect(() => {
+    setIsInitialLoad(false);
+  }, []);
+
   // Generate a random token based on the selected options
   const generateToken = () => {
-    let characters = "";
-
-    if (includeLowercase) characters += "abcdefghijklmnopqrstuvwxyz";
-    if (includeUppercase) characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    if (includeNumbers) characters += "0123456789";
-    if (includeSymbols) characters += "!@#$%^&*()_+{}|:<>?-=[];,./";
-
-    // Default to lowercase if nothing is selected
-    if (characters === "") characters = "abcdefghijklmnopqrstuvwxyz";
-
-    let result = "";
-    const charactersLength = characters.length;
-
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    // Start performance tracking for explicit generation (manual refresh)
+    // We only track when explicitly generating, not on initial load or option changes
+    if (!isInitialLoad) {
+      const charsetDescription = [
+        includeLowercase ? 'lower' : '',
+        includeUppercase ? 'upper' : '',
+        includeNumbers ? 'num' : '',
+        includeSymbols ? 'sym' : ''
+      ].filter(Boolean).join('-');
+      
+      generateTracker.current = trackOperation(`generate-${length}-${charsetDescription}`);
     }
+    
+    try {
+      let characters = "";
 
-    setToken(result);
+      if (includeLowercase) characters += "abcdefghijklmnopqrstuvwxyz";
+      if (includeUppercase) characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      if (includeNumbers) characters += "0123456789";
+      if (includeSymbols) characters += "!@#$%^&*()_+{}|:<>?-=[];,./";
+
+      // Default to lowercase if nothing is selected
+      if (characters === "") characters = "abcdefghijklmnopqrstuvwxyz";
+
+      let result = "";
+      const charactersLength = characters.length;
+
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+
+      setToken(result);
+      
+      // Complete tracking if we started it
+      if (generateTracker.current) {
+        generateTracker.current.complete();
+        generateTracker.current = null;
+      }
+    } catch (error) {
+      console.error("Token generation error:", error);
+      
+      // Clear tracker on error
+      if (generateTracker.current) {
+        generateTracker.current = null;
+      }
+    }
+  };
+
+  // Generate token on explicit user request
+  const handleGenerateToken = () => {
+    generateToken();
   };
 
   // Generate a token when component mounts or options change
@@ -121,7 +173,7 @@ export default function TokenGenerator() {
                 <Button
                   variant="secondary"
                   size="icon"
-                  onClick={generateToken}
+                  onClick={handleGenerateToken}
                   className="h-8 w-8"
                 >
                   <RefreshCw className="h-4 w-4" />

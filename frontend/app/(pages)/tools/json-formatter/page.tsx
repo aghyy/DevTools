@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AlertTriangle, Copy } from "lucide-react";
 
 import { handleCopy } from "@/utils/clipboard";
+import { useClientToolPerformance } from "@/utils/performanceTracker";
+import { ClientToolTracker } from "@/components/client-tool-tracker";
 
 import {
   Breadcrumb,
@@ -20,8 +22,19 @@ import {
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
 
-export default function JSONFormatter() {
+export default function JSONFormatterPage() {
+  return (
+    <ClientToolTracker name="JSON Formatter" icon="Braces" trackInitialLoad={false}>
+      <JSONFormatter />
+    </ClientToolTracker>
+  );
+}
+
+function JSONFormatter() {
   const router = useRouter();
+  const { trackOperation } = useClientToolPerformance('json-formatter');
+  const formatTracker = useRef<{ complete: () => void } | null>(null);
+  const validateTracker = useRef<{ complete: () => void } | null>(null);
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -32,22 +45,50 @@ export default function JSONFormatter() {
   const [formattedJson, setFormattedJson] = useState<string>('');
 
   const handleFormatJson = () => {
+    // Start format tracking
+    formatTracker.current = trackOperation('format');
+    
     try {
       const parsedJson = JSON.parse(jsonInput);
       const formatted = JSON.stringify(parsedJson, null, 2);
       setFormattedJson(formatted);
       setValidationStatus('valid');
+      
+      // Complete tracking on success
+      if (formatTracker.current) {
+        formatTracker.current.complete();
+        formatTracker.current = null;
+      }
     } catch {
       setValidationStatus('invalid');
+      
+      // Clear tracker on error
+      if (formatTracker.current) {
+        formatTracker.current = null;
+      }
     }
   }
 
   const handleValidateJson = () => {
+    // Start validate tracking
+    validateTracker.current = trackOperation('validate');
+    
     try {
       JSON.parse(jsonInput);
       setValidationStatus('valid');
+      
+      // Complete tracking on success
+      if (validateTracker.current) {
+        validateTracker.current.complete();
+        validateTracker.current = null;
+      }
     } catch {
       setValidationStatus('invalid');
+      
+      // Clear tracker on error
+      if (validateTracker.current) {
+        validateTracker.current = null;
+      }
     }
   }
 
@@ -55,6 +96,15 @@ export default function JSONFormatter() {
     setJsonInput('');
     setFormattedJson('');
     setValidationStatus(null);
+    
+    // Clear any active trackers
+    if (formatTracker.current) {
+      formatTracker.current = null;
+    }
+    
+    if (validateTracker.current) {
+      validateTracker.current = null;
+    }
   }
 
   return (

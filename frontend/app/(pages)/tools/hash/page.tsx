@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
 import CryptoJS from "crypto-js";
@@ -23,13 +23,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 import FavoriteButton from "@/components/favorite-button";
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
-export default function Hash() {
+export default function HashPage() {
+  return (
+    <ClientToolTracker name="Hash" icon="Hash" trackInitialLoad={false}>
+      <HashTool />
+    </ClientToolTracker>
+  );
+}
+
+function HashTool() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
   const [error, setError] = useState("");
   const [algorithm, setAlgorithm] = useState("md5");
   const [encoding, setEncoding] = useState("hex");
+  
+  const { trackOperation } = useClientToolPerformance('hash');
+  const encryptTracker = useRef<{ complete: () => void } | null>(null);
+  const decryptTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -41,6 +55,14 @@ export default function Hash() {
     setDecodedText("");
     setEncodedText("");
     setError("");
+    
+    // Clear any active trackers
+    if (encryptTracker.current) {
+      encryptTracker.current = null;
+    }
+    if (decryptTracker.current) {
+      decryptTracker.current = null;
+    }
   };
 
   const fetchDecryptedText = async (hash: string) => {
@@ -49,6 +71,9 @@ export default function Hash() {
       return;
     }
 
+    // Start tracking for client-side decrypt attempt
+    decryptTracker.current = trackOperation(`decrypt-attempt-${algorithm}`);
+    
     try {
       let response;
 
@@ -65,8 +90,19 @@ export default function Hash() {
       } else {
         setError("Hash not found in dictionary.");
       }
+      
+      // Complete tracking
+      if (decryptTracker.current) {
+        decryptTracker.current.complete();
+        decryptTracker.current = null;
+      }
     } catch {
       setError("An error occurred while trying to decrypt the hash.");
+      
+      // Clear tracker on error
+      if (decryptTracker.current) {
+        decryptTracker.current = null;
+      }
     }
   };
 
@@ -84,65 +120,84 @@ export default function Hash() {
       return;
     }
 
-    let hash;
+    // Start tracking for client-side encryption
+    encryptTracker.current = trackOperation(`encrypt-${algorithm}-${encoding}`);
+    
+    try {
+      let hash;
 
-    // Get hash based on selected algorithm
-    switch (algorithm) {
-      case 'md5':
-        hash = CryptoJS.MD5(text);
-        break;
-      case 'sha1':
-        hash = CryptoJS.SHA1(text);
-        break;
-      case 'sha256':
-        hash = CryptoJS.SHA256(text);
-        break;
-      case 'sha224':
-        hash = CryptoJS.SHA224(text);
-        break;
-      case 'sha512':
-        hash = CryptoJS.SHA512(text);
-        break;
-      case 'sha384':
-        hash = CryptoJS.SHA384(text);
-        break;
-      case 'sha3':
-        hash = CryptoJS.SHA3(text);
-        break;
-      case 'ripemd160':
-        hash = CryptoJS.RIPEMD160(text);
-        break;
-      default:
-        hash = CryptoJS.MD5(text);
-        break;
-    }
+      // Get hash based on selected algorithm
+      switch (algorithm) {
+        case 'md5':
+          hash = CryptoJS.MD5(text);
+          break;
+        case 'sha1':
+          hash = CryptoJS.SHA1(text);
+          break;
+        case 'sha256':
+          hash = CryptoJS.SHA256(text);
+          break;
+        case 'sha224':
+          hash = CryptoJS.SHA224(text);
+          break;
+        case 'sha512':
+          hash = CryptoJS.SHA512(text);
+          break;
+        case 'sha384':
+          hash = CryptoJS.SHA384(text);
+          break;
+        case 'sha3':
+          hash = CryptoJS.SHA3(text);
+          break;
+        case 'ripemd160':
+          hash = CryptoJS.RIPEMD160(text);
+          break;
+        default:
+          hash = CryptoJS.MD5(text);
+          break;
+      }
 
-    // Format the hash according to the selected encoding
-    switch (encoding) {
-      case 'binary':
-        // Convert hex to binary manually since CryptoJS doesn't have Base2 encoder
-        const hexString = hash.toString(CryptoJS.enc.Hex);
-        const binaryString = hexString.split('')
-          .map(hex => parseInt(hex, 16).toString(2).padStart(4, '0'))
-          .join('');
-        setEncodedText(binaryString);
-        break;
-      case 'hex':
-        setEncodedText(hash.toString(CryptoJS.enc.Hex));
-        break;
-      case 'base64':
-        setEncodedText(hash.toString(CryptoJS.enc.Base64));
-        break;
-      case 'base64url':
-        setEncodedText(hash.toString(CryptoJS.enc.Base64url));
-        break;
-      default:
-        setEncodedText(hash.toString(CryptoJS.enc.Hex));
-        break;
-    }
+      // Format the hash according to the selected encoding
+      switch (encoding) {
+        case 'binary':
+          // Convert hex to binary manually since CryptoJS doesn't have Base2 encoder
+          const hexString = hash.toString(CryptoJS.enc.Hex);
+          const binaryString = hexString.split('')
+            .map(hex => parseInt(hex, 16).toString(2).padStart(4, '0'))
+            .join('');
+          setEncodedText(binaryString);
+          break;
+        case 'hex':
+          setEncodedText(hash.toString(CryptoJS.enc.Hex));
+          break;
+        case 'base64':
+          setEncodedText(hash.toString(CryptoJS.enc.Base64));
+          break;
+        case 'base64url':
+          setEncodedText(hash.toString(CryptoJS.enc.Base64url));
+          break;
+        default:
+          setEncodedText(hash.toString(CryptoJS.enc.Hex));
+          break;
+      }
 
-    if (!text.includes('\n') && text !== '') {
-      addWordToDictionary(text);
+      if (!text.includes('\n') && text !== '') {
+        addWordToDictionary(text);
+      }
+      
+      // Complete tracking on success
+      if (encryptTracker.current) {
+        encryptTracker.current.complete();
+        encryptTracker.current = null;
+      }
+    } catch (error) {
+      console.error("Encryption error:", error);
+      setError("An error occurred during encryption.");
+      
+      // Clear tracker on error
+      if (encryptTracker.current) {
+        encryptTracker.current = null;
+      }
     }
   }
 

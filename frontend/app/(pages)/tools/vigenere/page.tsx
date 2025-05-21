@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
 import {
   Trash,
@@ -30,8 +30,18 @@ import { handleCopy, handlePaste } from '@/utils/clipboard';
 import { encrypt, decrypt } from '@/utils/vigenere';
 import { VigenereVariant, VigenereOperation } from '@/types/vigenere';
 import FavoriteButton from '@/components/favorite-button';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
 export default function Vigenere() {
+  return (
+    <ClientToolTracker name="Vigenère Cipher" icon="Lock" trackInitialLoad={false}>
+      <VigenereTool />
+    </ClientToolTracker>
+  );
+}
+
+function VigenereTool() {
   const [message, setMessage] = useState('');
   const [key, setKey] = useState('');
   const [variant, setVariant] = useState<VigenereVariant>('vigenère');
@@ -40,6 +50,9 @@ export default function Vigenere() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const { trackOperation } = useClientToolPerformance('vigenere');
+  const operationTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -55,6 +68,9 @@ export default function Vigenere() {
 
     setError(null);
     setIsProcessing(true);
+    
+    // Start performance tracking
+    operationTracker.current = trackOperation(operation);
 
     try {
       if (operation === 'encrypt') {
@@ -64,9 +80,20 @@ export default function Vigenere() {
         const decryptedResult = decrypt(message, key, variant, alphabet);
         setResult(decryptedResult);
       }
+      
+      // Complete performance tracking on success
+      if (operationTracker.current) {
+        operationTracker.current.complete();
+        operationTracker.current = null;
+      }
     } catch (err) {
       setError(`Error processing: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setResult(null);
+      
+      // Still clear tracker on error
+      if (operationTracker.current) {
+        operationTracker.current = null;
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -77,6 +104,11 @@ export default function Vigenere() {
     setKey('');
     setResult(null);
     setError(null);
+    
+    // Clear any active tracker
+    if (operationTracker.current) {
+      operationTracker.current = null;
+    }
   };
 
   return (

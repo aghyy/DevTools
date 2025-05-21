@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { TopSpacing } from "@/components/top-spacing";
 import FavoriteButton from "@/components/favorite-button";
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,6 +25,14 @@ import {
 } from "@/components/ui/breadcrumb";
 
 export default function BcryptPage() {
+  return (
+    <ClientToolTracker name="Bcrypt" icon="KeyRound" trackInitialLoad={false}>
+      <BcryptTool />
+    </ClientToolTracker>
+  );
+}
+
+function BcryptTool() {
   const router = useRouter();
   // Hash tab state
   const [inputText, setInputText] = useState("");
@@ -33,6 +43,11 @@ export default function BcryptPage() {
   const [compareText, setCompareText] = useState("");
   const [compareHash, setCompareHash] = useState("");
   const [matchResult, setMatchResult] = useState<boolean | null>(null);
+  
+  // Performance tracking
+  const { trackOperation } = useClientToolPerformance('bcrypt');
+  const hashTracker = useRef<{ complete: () => void } | null>(null);
+  const compareTracker = useRef<{ complete: () => void } | null>(null);
 
   // Navigation function
   const routeTo = (path: string) => {
@@ -46,14 +61,28 @@ export default function BcryptPage() {
       return;
     }
 
+    // Start tracking hash operation
+    hashTracker.current = trackOperation(`hash-rounds-${saltRounds}`);
+    
     try {
       const salt = bcrypt.genSaltSync(saltRounds);
       const hash = bcrypt.hashSync(inputText, salt);
       setHashResult(hash);
       toast.success("Hash generated successfully");
+      
+      // Complete tracking
+      if (hashTracker.current) {
+        hashTracker.current.complete();
+        hashTracker.current = null;
+      }
     } catch (error) {
       console.error("Hashing error:", error);
       toast.error("Error generating hash");
+      
+      // Clear tracker on error
+      if (hashTracker.current) {
+        hashTracker.current = null;
+      }
     }
   };
 
@@ -63,15 +92,29 @@ export default function BcryptPage() {
       toast.error("Please provide both text and hash for comparison");
       return;
     }
+    
+    // Start tracking compare operation
+    compareTracker.current = trackOperation('compare');
 
     try {
       const result = bcrypt.compareSync(compareText, compareHash);
       setMatchResult(result);
       toast.success("Comparison completed");
+      
+      // Complete tracking
+      if (compareTracker.current) {
+        compareTracker.current.complete();
+        compareTracker.current = null;
+      }
     } catch (error) {
       console.error("Comparison error:", error);
       toast.error("Invalid hash format");
       setMatchResult(false);
+      
+      // Clear tracker on error
+      if (compareTracker.current) {
+        compareTracker.current = null;
+      }
     }
   };
 

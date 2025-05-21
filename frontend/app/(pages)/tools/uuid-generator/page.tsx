@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Copy, Trash } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
@@ -31,17 +31,30 @@ import {
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
 // UUID namespace constants
 const NAMESPACE_DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 const NAMESPACE_URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
 
-export default function UuidGenerator() {
+export default function UuidGeneratorPage() {
+  return (
+    <ClientToolTracker name="UUID Generator" icon="Fingerprint" trackInitialLoad={false}>
+      <UuidGenerator />
+    </ClientToolTracker>
+  );
+}
+
+function UuidGenerator() {
   const [uuids, setUuids] = useState<string[]>([uuidv4()]);
   const [quantity, setQuantity] = useState(1);
   const [version, setVersion] = useState("v4");
   const [namespace, setNamespace] = useState(NAMESPACE_DNS);
   const [name, setName] = useState("example.com");
+  
+  const { trackOperation } = useClientToolPerformance('uuid-generator');
+  const generateTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -50,53 +63,13 @@ export default function UuidGenerator() {
   };
 
   const generateUuids = () => {
+    // Start tracking performance
+    generateTracker.current = trackOperation(`generate-${version}-${quantity}`);
+    
     const newUuids: string[] = [];
 
-    for (let i = 0; i < quantity; i++) {
-      switch (version) {
-        case "nil":
-          newUuids.push(NIL_UUID);
-          break;
-        case "v1":
-          newUuids.push(uuidv1());
-          break;
-        case "v3":
-          newUuids.push(uuidv3(name, namespace));
-          break;
-        case "v4":
-          newUuids.push(uuidv4());
-          break;
-        case "v5":
-          newUuids.push(uuidv5(name, namespace));
-          break;
-        default:
-          newUuids.push(uuidv4());
-      }
-    }
-
-    setUuids(newUuids);
-  };
-
-  const handleVersionChange = (value: string) => {
-    setVersion(value);
-    generateUuids();
-  };
-
-  const handleNamespaceChange = (value: string) => {
-    setNamespace(value);
-    if (version === "v3" || version === "v5") {
-      generateUuids();
-    }
-  };
-
-  const handleQuantityChange = (value: number) => {
-    const newQuantity = Math.max(1, Math.min(100, value));
-    setQuantity(newQuantity);
-
-    if (newQuantity > uuids.length) {
-      // Generate more UUIDs
-      const newUuids = [...uuids];
-      for (let i = uuids.length; i < newQuantity; i++) {
+    try {
+      for (let i = 0; i < quantity; i++) {
         switch (version) {
           case "nil":
             newUuids.push(NIL_UUID);
@@ -117,10 +90,85 @@ export default function UuidGenerator() {
             newUuids.push(uuidv4());
         }
       }
+
       setUuids(newUuids);
-    } else if (newQuantity < uuids.length) {
-      // Reduce number of UUIDs
-      setUuids(uuids.slice(0, newQuantity));
+      
+      // Complete tracking
+      if (generateTracker.current) {
+        generateTracker.current.complete();
+        generateTracker.current = null;
+      }
+    } catch (error) {
+      // Handle any errors and cleanup tracker
+      if (generateTracker.current) {
+        generateTracker.current = null;
+      }
+      console.error("Error generating UUIDs:", error);
+    }
+  };
+
+  const handleVersionChange = (value: string) => {
+    setVersion(value);
+    generateUuids();
+  };
+
+  const handleNamespaceChange = (value: string) => {
+    setNamespace(value);
+    if (version === "v3" || version === "v5") {
+      generateUuids();
+    }
+  };
+
+  const handleQuantityChange = (value: number) => {
+    const newQuantity = Math.max(1, Math.min(100, value));
+    setQuantity(newQuantity);
+
+    // Start tracking for quantity change
+    const operationName = `quantity-change-${version}-${newQuantity}`;
+    generateTracker.current = trackOperation(operationName);
+
+    try {
+      if (newQuantity > uuids.length) {
+        // Generate more UUIDs
+        const newUuids = [...uuids];
+        for (let i = uuids.length; i < newQuantity; i++) {
+          switch (version) {
+            case "nil":
+              newUuids.push(NIL_UUID);
+              break;
+            case "v1":
+              newUuids.push(uuidv1());
+              break;
+            case "v3":
+              newUuids.push(uuidv3(name, namespace));
+              break;
+            case "v4":
+              newUuids.push(uuidv4());
+              break;
+            case "v5":
+              newUuids.push(uuidv5(name, namespace));
+              break;
+            default:
+              newUuids.push(uuidv4());
+          }
+        }
+        setUuids(newUuids);
+      } else if (newQuantity < uuids.length) {
+        // Reduce number of UUIDs
+        setUuids(uuids.slice(0, newQuantity));
+      }
+      
+      // Complete tracking
+      if (generateTracker.current) {
+        generateTracker.current.complete();
+        generateTracker.current = null;
+      }
+    } catch (error) {
+      // Handle any errors and cleanup tracker
+      if (generateTracker.current) {
+        generateTracker.current = null;
+      }
+      console.error("Error updating quantity:", error);
     }
   };
 

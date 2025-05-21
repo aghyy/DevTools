@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Copy, Trash } from "lucide-react";
 import { ulid } from 'ulid';
@@ -24,11 +24,24 @@ import {
 } from "@/components/ui/radio-group";
 import FavoriteButton from "@/components/favorite-button";
 import { handleCopy } from '@/utils/clipboard';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
-export default function UlidGenerator() {
+export default function UlidGeneratorPage() {
+  return (
+    <ClientToolTracker name="ULID Generator" icon="Barcode" trackInitialLoad={false}>
+      <UlidGenerator />
+    </ClientToolTracker>
+  );
+}
+
+function UlidGenerator() {
   const [ulids, setUlids] = useState<string[]>([ulid()]);
   const [quantity, setQuantity] = useState(1);
   const [format, setFormat] = useState("raw");
+  
+  const { trackOperation } = useClientToolPerformance('ulid-generator');
+  const generateTracker = useRef<{ complete: () => void } | null>(null);
 
   const router = useRouter();
 
@@ -37,13 +50,30 @@ export default function UlidGenerator() {
   };
 
   const generateUlids = () => {
-    const newUlids: string[] = [];
+    // Start tracking performance
+    generateTracker.current = trackOperation(`generate-${quantity}`);
+    
+    try {
+      const newUlids: string[] = [];
 
-    for (let i = 0; i < quantity; i++) {
-      newUlids.push(ulid());
+      for (let i = 0; i < quantity; i++) {
+        newUlids.push(ulid());
+      }
+
+      setUlids(newUlids);
+      
+      // Complete tracking
+      if (generateTracker.current) {
+        generateTracker.current.complete();
+        generateTracker.current = null;
+      }
+    } catch (error) {
+      // Handle errors and clean up tracker
+      if (generateTracker.current) {
+        generateTracker.current = null;
+      }
+      console.error("Error generating ULIDs:", error);
     }
-
-    setUlids(newUlids);
   };
 
   const handleFormatChange = (value: string) => {
@@ -54,16 +84,33 @@ export default function UlidGenerator() {
     const newQuantity = Math.max(1, Math.min(100, value));
     setQuantity(newQuantity);
 
-    if (newQuantity > ulids.length) {
-      // Generate more ULIDs
-      const newUlids = [...ulids];
-      for (let i = ulids.length; i < newQuantity; i++) {
-        newUlids.push(ulid());
+    // Start tracking for quantity change
+    generateTracker.current = trackOperation(`quantity-change-${newQuantity}`);
+    
+    try {
+      if (newQuantity > ulids.length) {
+        // Generate more ULIDs
+        const newUlids = [...ulids];
+        for (let i = ulids.length; i < newQuantity; i++) {
+          newUlids.push(ulid());
+        }
+        setUlids(newUlids);
+      } else if (newQuantity < ulids.length) {
+        // Reduce number of ULIDs
+        setUlids(ulids.slice(0, newQuantity));
       }
-      setUlids(newUlids);
-    } else if (newQuantity < ulids.length) {
-      // Reduce number of ULIDs
-      setUlids(ulids.slice(0, newQuantity));
+      
+      // Complete tracking
+      if (generateTracker.current) {
+        generateTracker.current.complete();
+        generateTracker.current = null;
+      }
+    } catch (error) {
+      // Handle errors and clean up tracker
+      if (generateTracker.current) {
+        generateTracker.current = null;
+      }
+      console.error("Error updating ULID quantity:", error);
     }
   };
 
