@@ -69,6 +69,34 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
+// Middleware for optional authentication
+const optionalToken = async (req, res, next) => {
+  const token = req.cookies.jwt;
+
+  if (!token) {
+    // Continue without authentication
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+    
+    // Find the user to attach to the request
+    const user = await User.findOne({
+      where: { id: decoded.id },
+    });
+
+    if (user) {
+      req.user = decoded;
+    }
+
+    next();
+  } catch (err) {
+    // Continue without authentication on error
+    next();
+  }
+};
+
 // Add a new endpoint to get the public key
 const getPublicKey = (req, res) => {
   res.json({ publicKey });
@@ -77,6 +105,7 @@ const getPublicKey = (req, res) => {
 module.exports = {
   saveUser,
   verifyToken,
+  optionalToken,
   getPublicKey,
   privateKey,
 };

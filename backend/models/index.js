@@ -23,6 +23,7 @@ db.bookmarks = require("./bookmarkModel")(sequelize, DataTypes);
 db.shortenedUrls = require("./shortenedUrl")(sequelize, DataTypes);
 db.favoriteTools = require("./favoriteToolModel")(sequelize, DataTypes);
 db.codeSnippets = require("./codeSnippetModel")(sequelize, DataTypes);
+db.performanceMetrics = require("./performanceMetricsModel")(sequelize, DataTypes);
 
 // Define relationships
 db.users.hasMany(db.activities, { foreignKey: "userId" });
@@ -35,5 +36,9 @@ db.users.hasMany(db.favoriteTools, { foreignKey: "userId" });
 db.favoriteTools.belongsTo(db.users, { foreignKey: "userId" });
 
 db.users.hasMany(db.codeSnippets, { foreignKey: "userId" });
+
+// Performance metrics relationship
+db.users.hasMany(db.performanceMetrics, { foreignKey: "userId" });
+db.performanceMetrics.belongsTo(db.users, { foreignKey: "userId" });
 
 module.exports = db;

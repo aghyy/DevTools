@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
 import { Trash } from "lucide-react";
-
 import { TopSpacing } from "@/components/top-spacing";
 import { TextAreaWithActions } from "@/components/text-area-with-actions";
 import { Button } from "@/components/ui/button";
@@ -18,50 +16,172 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
-
 import { handleCopy, handlePaste } from '@/utils/clipboard';
+import { useClientToolPerformance } from '@/utils/performanceTracker';
+import { ClientToolTracker } from '@/components/client-tool-tracker';
 
 export default function Base64() {
+  return (
+    <ClientToolTracker name="Base64" icon="Binary" trackInitialLoad={false}>
+      <Base64Tool />
+    </ClientToolTracker>
+  );
+}
+
+function Base64Tool() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
+  const [updateSource, setUpdateSource] = useState<'encoded' | 'decoded' | null>(null);
+  const { trackOperation } = useClientToolPerformance('base64');
 
   const router = useRouter();
+  const debounceTimeoutEncoding = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutDecoding = useRef<NodeJS.Timeout | null>(null);
+  const encodingTracker = useRef<{ complete: () => void } | null>(null);
+  const decodingTracker = useRef<{ complete: () => void } | null>(null);
 
   const routeTo = (path: string) => {
     router.push(path);
   }
 
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // Debounced encoding
+  // Track page activity
   useEffect(() => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    // Force a re-render on initial mount 
+    setUpdateSource(null);
+  }, []);
 
-    debounceTimeout.current = setTimeout(() => {
+  // Update decoded text when user types in the plain text field
+  const handleDecodedTextChange = (text: string) => {
+    // Start tracking when user starts typing
+    if (!encodingTracker.current && text !== decodedText) {
+      encodingTracker.current = trackOperation('encode');
+    }
+
+    setDecodedText(text);
+    setUpdateSource('decoded');
+  };
+
+  // Update encoded text when user types in the Base64 field
+  const handleEncodedTextChange = (text: string) => {
+    // Start tracking when user starts typing
+    if (!decodingTracker.current && text !== encodedText) {
+      decodingTracker.current = trackOperation('decode');
+    }
+
+    setEncodedText(text);
+    setUpdateSource('encoded');
+  };
+
+  // Encoding (when plain text changes)
+  useEffect(() => {
+    if (updateSource !== 'decoded') return;
+
+    if (debounceTimeoutEncoding.current) clearTimeout(debounceTimeoutEncoding.current);
+
+    debounceTimeoutEncoding.current = setTimeout(() => {
+      if (decodedText === "") {
+        setEncodedText("");
+        if (encodingTracker.current) {
+          encodingTracker.current = null; // Discard tracker if input is empty
+        }
+        return;
+      }
+
       try {
-        setEncodedText(btoa(decodedText));
-      } catch {
+        const result = btoa(decodedText);
+        setEncodedText(result);
+
+        // Complete tracking if started
+        if (encodingTracker.current) {
+          encodingTracker.current.complete();
+          encodingTracker.current = null;
+        }
+      } catch (error) {
+        console.error("Encoding error:", error);
         setEncodedText("Error encoding text. Please check your input.");
+        
+        // Still clear tracker on error
+        if (encodingTracker.current) {
+          encodingTracker.current = null;
+        }
       }
     }, 500);
-  }, [decodedText]);
+  }, [decodedText, trackOperation, updateSource]);
 
-  // Debounced decoding
+  // Decoding (when Base64 text changes)
   useEffect(() => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    if (updateSource !== 'encoded') return;
 
-    debounceTimeout.current = setTimeout(() => {
+    if (debounceTimeoutDecoding.current) clearTimeout(debounceTimeoutDecoding.current);
+
+    debounceTimeoutDecoding.current = setTimeout(() => {
+      if (encodedText === "") {
+        setDecodedText("");
+        if (decodingTracker.current) {
+          decodingTracker.current = null; // Discard tracker if input is empty
+        }
+        return;
+      }
+      
       try {
-        setDecodedText(atob(encodedText));
-      } catch {
+        const result = atob(encodedText);
+        setDecodedText(result);
+
+        // Complete tracking if started
+        if (decodingTracker.current) {
+          decodingTracker.current.complete();
+          decodingTracker.current = null;
+        }
+      } catch (error) {
+        console.error("Decoding error:", error);
         setDecodedText("Error decoding text. Please check your input.");
+        
+        // Still clear tracker on error
+        if (decodingTracker.current) {
+          decodingTracker.current = null;
+        }
       }
     }, 500);
-  }, [encodedText]);
+  }, [encodedText, trackOperation, updateSource]);
 
   const handleClear = () => {
     setDecodedText("");
     setEncodedText("");
+    setUpdateSource(null);
+    
+    // Clear any active trackers
+    if (encodingTracker.current) {
+      encodingTracker.current = null;
+    }
+    
+    if (decodingTracker.current) {
+      decodingTracker.current = null;
+    }
+  };
+
+  // Create wrapper functions for paste that manage the update source
+  const handlePasteDecoded = () => {
+    // Start tracking when user pastes
+    if (!encodingTracker.current) {
+      encodingTracker.current = trackOperation('encode');
+    }
+    
+    handlePaste((text) => {
+      setDecodedText(text);
+      setUpdateSource('decoded');
+    });
+  };
+
+  const handlePasteEncoded = () => {
+    // Start tracking when user pastes
+    if (!decodingTracker.current) {
+      decodingTracker.current = trackOperation('decode');
+    }
+    
+    handlePaste((text) => {
+      setEncodedText(text);
+      setUpdateSource('encoded');
+    });
   };
 
   return (
@@ -109,9 +229,9 @@ export default function Base64() {
               label="Plain Text (Decoded)"
               placeholder="Type or paste your plain text here..."
               value={decodedText}
-              onChange={setDecodedText}
+              onChange={handleDecodedTextChange}
               onCopy={() => handleCopy(decodedText)}
-              onPaste={() => handlePaste(setDecodedText)}
+              onPaste={handlePasteDecoded}
             />
           </Card>
 
@@ -121,9 +241,9 @@ export default function Base64() {
               label="Base64 Text (Encoded)"
               placeholder="Type or paste your Base64 text here..."
               value={encodedText}
-              onChange={setEncodedText}
+              onChange={handleEncodedTextChange}
               onCopy={() => handleCopy(encodedText)}
-              onPaste={() => handlePaste(setEncodedText)}
+              onPaste={handlePasteEncoded}
             />
           </Card>
         </div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppLayout } from "./app-layout";
 import { Provider as JotaiProvider } from "jotai";
 import { ThemeProvider } from "@/components/wrappers/themes/theme-provider";
+import { PerformanceTracker } from "@/components/performance-tracker";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -47,6 +48,7 @@ export default function RootLayout({
           <JotaiProvider>
             <AppLayout>
               {children}
+              <PerformanceTracker />
             </AppLayout>
           </JotaiProvider>
         </ThemeProvider>

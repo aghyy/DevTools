@@ -4,9 +4,20 @@ import StatCard from "../stat-card";
 import { useTheme } from "next-themes";
 import CustomTooltip from "../tooltip";
 import { useThemeColors } from "@/hooks/charts";
-import { Timer } from "lucide-react";
+import { AlertTriangle, Hammer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PerformanceStats } from "@/types/charts";
+import api from "@/utils/axios";
+
+// Extended PerformanceStats type that includes tool names
+interface DetailedPerformanceStats extends PerformanceStats {
+  tools: string[];
+  topTools: {
+    name: string;
+    avgResponseTime: number;
+    count: number;
+  }[];
+}
 
 export default function ResponseTimeCard({ loading, description }: {
   loading: boolean;
@@ -17,7 +28,14 @@ export default function ResponseTimeCard({ loading, description }: {
   const isDark = resolvedTheme === 'dark';
   const themeColors = useThemeColors();
 
-  const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({ current: 0, change: 0, data: [] });
+  const [performanceStats, setPerformanceStats] = useState<DetailedPerformanceStats>({ 
+    current: 0, 
+    change: 0, 
+    data: [],
+    tools: [],
+    topTools: [] 
+  });
+  const [error, setError] = useState<string | null>(null);
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -32,41 +50,93 @@ export default function ResponseTimeCard({ loading, description }: {
   );
 
   useEffect(() => {
-    // Generate average response time data (simulated for demo)
-    const getPerformanceStats = () => {
-      // Simulate average response time for the last 7 days
-      const days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
-      });
-
-      // Simulate downward trend (improving response times)
-      const baseResponseTime = 350; // ms
-      const data = days.map((day, index) => ({
-        name: day,
-        value: parseFloat((Math.max(120, baseResponseTime - (index * 30) + (Math.random() * 40 - 20))).toFixed(2))
-      }));
-
-      // Calculate current and previous period averages
-      const currentPeriod = data.slice(3).map(d => d.value);
-      const previousPeriod = data.slice(0, 3).map(d => d.value);
-
-      const currentAvg = currentPeriod.reduce((sum, val) => sum + val, 0) / currentPeriod.length;
-      const previousAvg = previousPeriod.reduce((sum, val) => sum + val, 0) / previousPeriod.length;
-
-      // Calculate percentage change (negative is good for response time)
-      const change = ((currentAvg - previousAvg) / previousAvg) * 100;
-
-      setPerformanceStats({
-        current: parseFloat(currentAvg.toFixed(2)),
-        change,
-        data
-      });
+    const fetchPerformanceStats = async () => {
+      try {
+        // Request daily averages from the API
+        const response = await api.get('/api/performance/daily-averages');
+        
+        // Get additional data about the tools being tracked
+        const toolsResponse = await api.get('/api/performance/tools-breakdown');
+        
+        // Combine the data
+        const combinedData = {
+          ...response.data,
+          tools: toolsResponse.data.tools || [],
+          topTools: toolsResponse.data.topTools || []
+        };
+        
+        setPerformanceStats(combinedData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching performance stats:', err);
+        setError('Failed to load performance data');
+        
+        // Fall back to mock data if we can't get real data
+        generateMockData();
+      }
     };
 
-    getPerformanceStats();
+    fetchPerformanceStats();
   }, []);
+
+  // Generate mock data for fallback
+  const generateMockData = () => {
+    // Simulate average response time for the last 7 days
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    });
+
+    // Simulate downward trend (improving response times)
+    const baseResponseTime = 350; // ms
+    const data = days.map((day, index) => ({
+      name: day,
+      value: parseFloat((Math.max(120, baseResponseTime - (index * 30) + (Math.random() * 40 - 20))).toFixed(2))
+    }));
+
+    // Calculate current and previous period averages
+    const currentPeriod = data.slice(3).map(d => d.value);
+    const previousPeriod = data.slice(0, 3).map(d => d.value);
+
+    const currentAvg = currentPeriod.reduce((sum, val) => sum + val, 0) / currentPeriod.length;
+    const previousAvg = previousPeriod.reduce((sum, val) => sum + val, 0) / previousPeriod.length;
+
+    // Calculate percentage change (negative is good for response time)
+    const change = ((currentAvg - previousAvg) / previousAvg) * 100;
+
+    // Mock tool data
+    const mockTools = ['hash', 'base64', 'proxy', 'decrypt-md5', 'decrypt-sha1'];
+    const mockTopTools = [
+      { name: 'hash', avgResponseTime: 142.3, count: 12 },
+      { name: 'proxy', avgResponseTime: 523.7, count: 8 },
+      { name: 'base64', avgResponseTime: 85.2, count: 6 }
+    ];
+
+    setPerformanceStats({
+      current: parseFloat(currentAvg.toFixed(2)),
+      change,
+      data,
+      tools: mockTools,
+      topTools: mockTopTools
+    });
+  };
+
+  // Format the description to include tool information
+  const getEnhancedDescription = () => {
+    if (error) return `${description} (Using fallback data)`;
+    
+    if (performanceStats.tools.length > 0) {
+      const toolCount = performanceStats.tools.length;
+      const toolsText = toolCount === 1 
+        ? '1 tool endpoint' 
+        : `${toolCount} tool endpoints`;
+      
+      return `${description} Tracking ${toolsText}.`;
+    }
+    
+    return description;
+  };
 
   return (
     <>
@@ -74,12 +144,12 @@ export default function ResponseTimeCard({ loading, description }: {
         <Skeleton className="h-[180px] md:h-[220px] w-full rounded-xl" />
       ) : (
         <StatCard
-          title="Average Response Time"
+          title="Tools Response Time"
           value={performanceStats.current}
           suffix="ms"
           change={performanceStats.change}
-          icon={<Timer className="h-4 w-4 text-indigo-500" />}
-          description={description}
+          icon={error ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <Hammer className="h-4 w-4 text-indigo-500" />}
+          description={getEnhancedDescription()}
         >
           <ResponsiveContainer width="100%" height="100%">
             <RechartsLineChart
