@@ -24,18 +24,14 @@ export const useThemeColors = () => {
         line: isDark ? "#6366F1" : "#4F46E5",
         grid: isDark ? "rgba(75, 85, 99, 0.2)" : "rgba(203, 213, 225, 0.6)",
       },
-      sessions: {
-        current: isDark ? "#F97316" : "#EA580C",
-        previous: isDark ? "rgba(249, 115, 22, 0.4)" : "rgba(234, 88, 12, 0.4)",
-        grid: isDark ? "rgba(75, 85, 99, 0.2)" : "rgba(203, 213, 225, 0.6)",
-      },
       resource: {
-        bar: isDark ? "#EC4899" : "#DB2777", // Pink
+        bar: isDark ? "#EC4899" : "#DB2777",
         grid: isDark ? "rgba(75, 85, 99, 0.2)" : "rgba(203, 213, 225, 0.6)",
       },
     },
     barColors: [
-      isDark ? "#3B82F6" : "#2563EB", // Blue
+      isDark ? "#4C9EEB" : "#1D75DE",
+      // isDark ? "#3B82F6" : "#2563EB", // Blue
       // isDark ? "#10B981" : "#059669", // Green
       // isDark ? "#F97316" : "#EA580C", // Orange
       // isDark ? "#8B5CF6" : "#7C3AED", // Purple

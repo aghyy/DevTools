@@ -61,7 +61,7 @@ export default function RessourceUsageCard({ loading, mostUsedItems, description
           title="Resource Usage"
           value={resourceUsageStats.totalUsage || 0}
           suffix=" uses"
-          icon={<BarChart4 className="h-4 w-4 text-blue-500" />}
+          icon={<BarChart4 className="h-4 w-4 text-[#4C9EEB]" />}
           description={description}
         >
           <ResponsiveContainer width="100%" height="100%">
