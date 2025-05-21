@@ -36,13 +36,13 @@ export const useThemeColors = () => {
     },
     barColors: [
       isDark ? "#3B82F6" : "#2563EB", // Blue
-      isDark ? "#10B981" : "#059669", // Green
-      isDark ? "#F97316" : "#EA580C", // Orange
-      isDark ? "#8B5CF6" : "#7C3AED", // Purple
-      isDark ? "#EC4899" : "#DB2777", // Pink
-      isDark ? "#F43F5E" : "#E11D48", // Red
-      isDark ? "#6366F1" : "#4F46E5", // Indigo
-      isDark ? "#14B8A6" : "#0D9488", // Teal
+      // isDark ? "#10B981" : "#059669", // Green
+      // isDark ? "#F97316" : "#EA580C", // Orange
+      // isDark ? "#8B5CF6" : "#7C3AED", // Purple
+      // isDark ? "#EC4899" : "#DB2777", // Pink
+      // isDark ? "#F43F5E" : "#E11D48", // Red
+      // isDark ? "#6366F1" : "#4F46E5", // Indigo
+      // isDark ? "#14B8A6" : "#0D9488", // Teal
     ],
     positiveChange: isDark ? "#10B981" : "#059669",
     negativeChange: isDark ? "#F43F5E" : "#E11D48",
