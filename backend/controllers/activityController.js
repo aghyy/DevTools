@@ -85,10 +85,26 @@ const getActivityStats = async (req, res) => {
       }
     });
     
+    const favoriteCount = await Activity.count({
+      where: { 
+        userId,
+        type: 'favorite'
+      }
+    });
+    
+    const codeSnippetCount = await Activity.count({
+      where: { 
+        userId,
+        type: 'codeSnippet'
+      }
+    });
+    
     return res.status(200).json({
       tools: toolCount,
       bookmarks: bookmarkCount,
-      total: toolCount + bookmarkCount
+      favorites: favoriteCount,
+      codeSnippets: codeSnippetCount,
+      total: toolCount + bookmarkCount + favoriteCount + codeSnippetCount
     });
   } catch (error) {
     console.error("Error fetching activity stats:", error);

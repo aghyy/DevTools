@@ -11,11 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { handleCopy } from "@/utils/clipboard";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { trackActivity } from "@/services/activity";
 
 interface CodeSnippetCardProps {
   snippet: CodeSnippet;
   onEdit?: (snippet: CodeSnippet) => void;
   onDelete?: (snippet: CodeSnippet) => void;
+  onView?: (snippet: CodeSnippet) => void;
   isPublicView?: boolean;
   userInfo?: {
     firstName: string;
@@ -28,6 +30,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   snippet,
   onEdit,
   onDelete,
+  onView,
   isPublicView = false,
   userInfo,
 }) => {
@@ -54,25 +57,74 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   
   const toggleExpand = () => {
     setExpanded(!expanded);
+    
+    // If expanding the view, track it as an interaction with the snippet
+    if (!expanded) {
+      trackActivity({
+        type: "codeSnippet",
+        name: `Expanded: ${snippet.title}`,
+        path: `/code-snippets/${snippet.id}`,
+        icon: "Code",
+      }).catch(err => console.error("Failed to track expand activity:", err));
+    }
   };
   
-  const copyCode = () => {
+  const copyCode = async () => {
     handleCopy(snippet.code);
+    
+    // Track copy activity
+    await trackActivity({
+      type: "codeSnippet",
+      name: `Copied: ${snippet.title}`,
+      path: `/code-snippets/${snippet.id}`,
+      icon: "Copy",
+    }).catch(err => console.error("Failed to track copy activity:", err));
+    
     toast({
       title: "Code copied to clipboard",
       duration: 2000,
     });
   };
   
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (onEdit) {
+      // Track edit activity
+      await trackActivity({
+        type: "codeSnippet",
+        name: `Editing: ${snippet.title}`,
+        path: `/code-snippets/${snippet.id}`,
+        icon: "Edit",
+      }).catch(err => console.error("Failed to track edit activity:", err));
+      
       onEdit(snippet);
     }
   };
   
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (onDelete) {
+      // Track delete activity
+      await trackActivity({
+        type: "codeSnippet",
+        name: `Deleting: ${snippet.title}`,
+        path: `/code-snippets/${snippet.id}`,
+        icon: "Trash",
+      }).catch(err => console.error("Failed to track delete activity:", err));
+      
       onDelete(snippet);
+    }
+  };
+  
+  const handleView = async () => {
+    if (onView) {
+      // Track view activity only when explicitly opened in a focused view
+      await trackActivity({
+        type: "codeSnippet",
+        name: `Viewed: ${snippet.title}`,
+        path: `/code-snippets/${snippet.id}`,
+        icon: "Code",
+      }).catch(err => console.error("Failed to track view activity:", err));
+      
+      onView(snippet);
     }
   };
 
@@ -86,7 +138,10 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle className="flex items-center">
+            <CardTitle 
+              className="flex items-center cursor-pointer" 
+              onClick={handleView}
+            >
               <Code className="mr-2 h-5 w-5" />
               {snippet.title}
             </CardTitle>

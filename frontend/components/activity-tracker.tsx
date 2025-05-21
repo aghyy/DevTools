@@ -7,7 +7,7 @@ import { trackActivity } from '@/services/activity';
 // Activity tracking component that should be used in tool and bookmark pages
 interface ActivityTrackerProps {
   name: string;
-  type: 'tool' | 'bookmark';
+  type: 'tool' | 'bookmark' | 'favorite' | 'codeSnippet';
   icon: string;
   children: React.ReactNode;
 }

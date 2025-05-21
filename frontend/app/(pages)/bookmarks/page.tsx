@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useToast } from "@/hooks/use-toast";
+import { trackActivity } from "@/services/activity";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -97,6 +98,14 @@ export default function Bookmarks() {
       fetchPersonalBookmarks();
     }
     fetchPublicBookmarks();
+    
+    // Track page visit
+    trackActivity({
+      type: "bookmark",
+      name: "Bookmarks Page",
+      path: "/bookmarks",
+      icon: "Bookmark",
+    }).catch(err => console.error("Failed to track page visit:", err));
   }, []);
 
   useEffect(() => {

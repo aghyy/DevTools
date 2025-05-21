@@ -56,19 +56,21 @@ export default function FavoriteButton({ toolUrl, toolName, iconName, className 
       } finally {
         setIsLoading(false);
       }
-    } else if (favoriteId) {
+    } else {
       // Remove from favorites
       try {
         setIsLoading(true);
-        await removeFromFavorites(favoriteId);
-        setIsFavorite(false);
-        setFavoriteId(null);
-        // Refresh favorites in global state
-        await refreshFavorites();
-        toast.success('Removed from favorites', {
-          description: `${toolName} has been removed from your favorites.`,
-          duration: 3000,
-        });
+        if (favoriteId) {
+          await removeFromFavorites(favoriteId);
+          setIsFavorite(false);
+          setFavoriteId(null);
+          // Refresh favorites in global state
+          await refreshFavorites();
+          toast.success('Removed from favorites', {
+            description: `${toolName} has been removed from your favorites.`,
+            duration: 3000,
+          });
+        }
       } catch (error) {
         console.error('Error removing from favorites:', error);
         toast.error('Error', {

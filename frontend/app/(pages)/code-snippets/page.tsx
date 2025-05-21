@@ -5,6 +5,7 @@ import { TopSpacing } from "@/components/top-spacing";
 import { useToast } from "@/hooks/use-toast";
 import { useAtom } from "jotai";
 import { isGuestAtom, userDataAtom } from "@/atoms/auth";
+import { trackActivity } from "@/services/activity";
 
 import {
   Breadcrumb,
@@ -80,9 +81,18 @@ export default function CodeSnippets() {
   const [publicSnippets, setPublicSnippets] = useState<PublicCodeSnippets[]>([]);
   const [languages, setLanguages] = useState<CodeSnippetLanguage[]>([]);
   const [tags, setTags] = useState<CodeSnippetTag[]>([]);
+  
+  // State for detailed snippet view
+  const [detailSnippet, setDetailSnippet] = useState<CodeSnippet | null>(null);
+  const [detailUserInfo, setDetailUserInfo] = useState<{
+    firstName: string;
+    lastName: string;
+    username: string;
+  } | null>(null);
 
   // State for UI components
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -97,6 +107,16 @@ export default function CodeSnippets() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+
+  // Track page visit when component mounts
+  useEffect(() => {
+    trackActivity({
+      type: "codeSnippet",
+      name: "Code Snippets Page",
+      path: "/code-snippets",
+      icon: "Code2",
+    }).catch(err => console.error("Failed to track page visit:", err));
+  }, []);
 
   // Filter code snippets based on search query and selected filters
   const applyFilters = useCallback(() => {
@@ -363,6 +383,39 @@ export default function CodeSnippets() {
     setSelectedUser(null);
   };
 
+  // Handle opening a snippet in detail view
+  const handleViewSnippet = (snippet: CodeSnippet) => {
+    setDetailSnippet(snippet);
+    
+    // Find user info for public snippets
+    if (activeTab === "public") {
+      const userSnippets = publicSnippets.find(us => 
+        us.codeSnippets.some(s => s.id === snippet.id)
+      );
+      
+      if (userSnippets) {
+        setDetailUserInfo({
+          firstName: userSnippets.firstName,
+          lastName: userSnippets.lastName,
+          username: userSnippets.username
+        });
+      } else {
+        setDetailUserInfo(null);
+      }
+    } else {
+      setDetailUserInfo(null);
+    }
+    
+    setIsDetailOpen(true);
+  };
+
+  // Close detail view
+  const closeDetailView = () => {
+    setIsDetailOpen(false);
+    setDetailSnippet(null);
+    setDetailUserInfo(null);
+  };
+
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
@@ -444,6 +497,7 @@ export default function CodeSnippets() {
                         key={snippet.id}
                         snippet={snippet}
                         isPublicView={true}
+                        onView={handleViewSnippet}
                         userInfo={userSnippets ? {
                           firstName: userSnippets.firstName,
                           lastName: userSnippets.lastName,
@@ -460,6 +514,7 @@ export default function CodeSnippets() {
                       snippet={snippet}
                       onEdit={handleOpenForm}
                       onDelete={openDeleteDialog}
+                      onView={handleViewSnippet}
                     />
                   ))
                 )}
@@ -635,6 +690,52 @@ export default function CodeSnippets() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      )}
+
+      {/* Detail View Sheet - Only show for logged in users */}
+      {!isGuest && (
+        <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+          <SheetContent className="sm:max-w-xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Code Snippet Details</SheetTitle>
+              <SheetDescription>
+                {detailSnippet && (
+                  <>
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold mb-2">{detailSnippet.title}</h3>
+                      <p className="text-muted-foreground">{detailSnippet.description}</p>
+                    </div>
+                    <div className="mb-4">
+                      <strong>Language:</strong> {detailSnippet.language}
+                    </div>
+                    <div className="mb-4">
+                      <strong>Tags:</strong> {detailSnippet.tags.join(', ')}
+                    </div>
+                    <div className="mb-4">
+                      <strong>Code:</strong>
+                      <pre className="mt-2 p-2 bg-muted rounded-md">
+                        {detailSnippet.code}
+                      </pre>
+                    </div>
+                    <div className="mt-4">
+                      <strong>Created by:</strong>
+                      {detailUserInfo ? (
+                        <span>{detailUserInfo.firstName} {detailUserInfo.lastName} ({detailUserInfo.username})</span>
+                      ) : (
+                        <span>Unknown</span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <Button onClick={closeDetailView} className="w-full">
+                Close
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

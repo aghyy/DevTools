@@ -4,7 +4,7 @@ import api from "@/utils/axios";
 export interface Activity {
   id?: number;
   userId?: number;
-  type: "tool" | "bookmark";
+  type: "tool" | "bookmark" | "favorite" | "codeSnippet";
   name: string;
   path: string;
   icon: string;
@@ -16,6 +16,8 @@ export interface Activity {
 export interface ActivityStats {
   tools: number;
   bookmarks: number;
+  favorites: number;
+  codeSnippets: number;
   total: number;
 }
 

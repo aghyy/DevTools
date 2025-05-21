@@ -63,7 +63,7 @@ export default function RecentActivities({ loading, recentItems }: { loading: bo
                       <IconComponent className="h-4 w-4 md:h-5 md:w-5" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium">{item.name}</h3>
+                      <h3 className="font-medium text-ellipsis overflow-hidden whitespace-nowrap">{item.name}</h3>
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Clock className="h-3 w-3 mr-1" />
                         {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}

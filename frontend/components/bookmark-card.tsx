@@ -10,6 +10,7 @@ import { LinkPreview } from "@/components/ui/link-preview";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { trackActivity } from "@/services/activity";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -44,6 +45,21 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
     if (onDelete) {
       onDelete(bookmark);
     }
+  };
+  
+  const handleOpenLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Track bookmark opening as activity
+    trackActivity({
+      type: "bookmark",
+      name: `Opened: ${bookmark.title}`,
+      path: bookmark.url,
+      icon: bookmark.favicon ? "Link" : "Globe",
+    }).catch(err => console.error("Failed to track bookmark activity:", err));
+    
+    window.open(bookmark.url, "_blank");
   };
 
   const renderFavicon = () => {
@@ -132,7 +148,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
       <CardFooter className="pt-2 pb-4 flex justify-between">
         <LinkPreview
           url={bookmark.url}
-          onClick={() => window.open(bookmark.url, "_blank")}
+          onClick={() => handleOpenLink(new MouseEvent('click') as unknown as React.MouseEvent)}
           width={300}
           height={200}
         >
@@ -140,11 +156,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
             variant="outline"
             size="sm"
             className="text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              window.open(bookmark.url, "_blank");
-            }}
+            onClick={handleOpenLink}
           >
             <ExternalLink className="w-3 h-3 mr-1" />
             Open Link

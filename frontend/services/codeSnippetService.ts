@@ -1,4 +1,5 @@
 import api from "@/utils/axios";
+import { trackActivity } from "@/services/activity";
 import { 
   CodeSnippet, 
   CodeSnippetFormData, 
@@ -36,6 +37,15 @@ export const getUserCodeSnippets = async (
 export const getCodeSnippetById = async (id: number): Promise<CodeSnippet> => {
   try {
     const response = await api.get(`/api/code-snippets/${id}`);
+    
+    // Track viewing this code snippet as an activity
+    await trackActivity({
+      type: "codeSnippet",
+      name: response.data.title,
+      path: `/code-snippets/${id}`,
+      icon: "Code",
+    });
+    
     return response.data;
   } catch (error) {
     console.error(`Error fetching code snippet with ID ${id}:`, error);
@@ -47,6 +57,15 @@ export const getCodeSnippetById = async (id: number): Promise<CodeSnippet> => {
 export const createCodeSnippet = async (data: CodeSnippetFormData): Promise<CodeSnippet> => {
   try {
     const response = await api.post("/api/code-snippets", data);
+    
+    // Track creating this code snippet as an activity
+    await trackActivity({
+      type: "codeSnippet",
+      name: data.title,
+      path: `/code-snippets/${response.data.codeSnippet.id}`,
+      icon: "CodeSquare",
+    });
+    
     return response.data.codeSnippet;
   } catch (error) {
     console.error("Error creating code snippet:", error);
@@ -61,6 +80,15 @@ export const updateCodeSnippet = async (
 ): Promise<CodeSnippet> => {
   try {
     const response = await api.put(`/api/code-snippets/${id}`, data);
+    
+    // Track updating this code snippet as an activity
+    await trackActivity({
+      type: "codeSnippet",
+      name: `Updated: ${data.title}`,
+      path: `/code-snippets/${id}`,
+      icon: "CodeSquare",
+    });
+    
     return response.data.codeSnippet;
   } catch (error) {
     console.error(`Error updating code snippet with ID ${id}:`, error);
@@ -71,7 +99,18 @@ export const updateCodeSnippet = async (
 // Delete a code snippet
 export const deleteCodeSnippet = async (id: number): Promise<void> => {
   try {
+    // Get the snippet info before deleting (to track activity)
+    const snippet = await getCodeSnippetById(id);
+    
     await api.delete(`/api/code-snippets/${id}`);
+    
+    // Track deleting this code snippet as an activity
+    await trackActivity({
+      type: "codeSnippet",
+      name: `Deleted: ${snippet.title}`,
+      path: `/code-snippets`,
+      icon: "Trash",
+    });
   } catch (error) {
     console.error(`Error deleting code snippet with ID ${id}:`, error);
     throw error;
