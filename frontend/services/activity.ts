@@ -4,7 +4,7 @@ import api from "@/utils/axios";
 export interface Activity {
   id?: number;
   userId?: number;
-  type: 'tool' | 'bookmark';
+  type: "tool" | "bookmark";
   name: string;
   path: string;
   icon: string;
@@ -20,7 +20,8 @@ export interface ActivityStats {
 }
 
 // Interface for most used items
-export interface MostUsedItem extends Omit<Activity, 'userId' | 'createdAt' | 'updatedAt'> {
+export interface MostUsedItem
+  extends Omit<Activity, "userId" | "createdAt" | "updatedAt"> {
   count: number;
 }
 
@@ -34,22 +35,26 @@ interface ApiError {
 }
 
 // Track a new activity
-export const trackActivity = async (activity: Omit<Activity, 'userId' | 'id' | 'createdAt' | 'updatedAt'>) => {
+export const trackActivity = async (
+  activity: Omit<Activity, "userId" | "id" | "createdAt" | "updatedAt">
+) => {
   try {
     const response = await api.post("/api/activities", activity);
     return response.data;
   } catch (error: unknown) {
     const apiError = error as ApiError;
     // Add useful debug info
-    console.error(`Error tracking activity (${activity.type}:${activity.name}):`, 
-      apiError.response?.data || apiError.message);
-    
+    console.error(
+      `Error tracking activity (${activity.type}:${activity.name}):`,
+      apiError.response?.data || apiError.message
+    );
+
     // If the error is due to authentication, don't retry
     if (apiError.response?.status === 401) {
       console.log("Authentication required. Activity not tracked.");
       throw error;
     }
-    
+
     // For other errors (like network issues), retry once after a delay
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
@@ -67,13 +72,16 @@ export const trackActivity = async (activity: Omit<Activity, 'userId' | 'id' | '
 };
 
 // Get user's recent activities
-export const getRecentActivities = async (limit: number = 10) => {
+export const getRecentActivities = async () => {
   try {
-    const response = await api.get(`/api/activities?limit=${limit}`);
+    const response = await api.get(`/api/activities`);
     return response.data as Activity[];
   } catch (error: unknown) {
     const apiError = error as ApiError;
-    console.error("Error fetching recent activities:", apiError.response?.data || apiError.message);
+    console.error(
+      "Error fetching recent activities:",
+      apiError.response?.data || apiError.message
+    );
     throw error;
   }
 };
@@ -85,7 +93,10 @@ export const getActivityStats = async () => {
     return response.data as ActivityStats;
   } catch (error: unknown) {
     const apiError = error as ApiError;
-    console.error("Error fetching activity stats:", apiError.response?.data || apiError.message);
+    console.error(
+      "Error fetching activity stats:",
+      apiError.response?.data || apiError.message
+    );
     throw error;
   }
 };
@@ -97,7 +108,10 @@ export const getMostUsedItems = async (limit: number = 5) => {
     return response.data as MostUsedItem[];
   } catch (error: unknown) {
     const apiError = error as ApiError;
-    console.error("Error fetching most used items:", apiError.response?.data || apiError.message);
+    console.error(
+      "Error fetching most used items:",
+      apiError.response?.data || apiError.message
+    );
     throw error;
   }
-}; 
+};

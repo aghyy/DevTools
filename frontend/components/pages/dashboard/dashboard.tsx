@@ -46,11 +46,11 @@ export default function Dashboard() {
         setLoading(true);
 
         // Get recent activities
-        const activities = await getRecentActivities(20); // Fetch more activities for better stats
+        const activities = await getRecentActivities();
         setRecentItems(activities);
 
         // Get most used items
-        const mostUsed = await getMostUsedItems(10); // Fetch more items for better stats
+        const mostUsed = await getMostUsedItems(10);
         setMostUsedItems(mostUsed);
 
       } catch (error) {

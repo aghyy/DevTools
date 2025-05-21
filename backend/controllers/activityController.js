@@ -1,7 +1,5 @@
 const db = require("../models");
 const Activity = db.activities;
-const User = db.users;
-const { Op } = require("sequelize");
 
 // Track user activity
 const trackActivity = async (req, res) => {
@@ -37,8 +35,7 @@ const trackActivity = async (req, res) => {
 const getUserActivities = async (req, res) => {
   try {
     const userId = req.user.id;
-    const limit = parseInt(req.query.limit) || 10;
-    
+
     // First get all recent activities
     const allActivities = await Activity.findAll({
       where: { userId },
@@ -46,18 +43,25 @@ const getUserActivities = async (req, res) => {
       attributes: { exclude: ['metadata'] }
     });
     
-    // Manual deduplication by path
-    const uniquePaths = new Set();
+    console.log(allActivities.length);
+
+    // Manual deduplication by path and day
+    const uniquePathsAndDays = new Set();
     const deduplicated = [];
     
     for (const activity of allActivities) {
-      if (!uniquePaths.has(activity.path)) {
-        uniquePaths.add(activity.path);
+      // Extract the date part from createdAt (YYYY-MM-DD)
+      const day = activity.createdAt.toISOString().split('T')[0];
+      const pathDayKey = `${activity.path}-${day}`;
+      
+      if (!uniquePathsAndDays.has(pathDayKey)) {
+        uniquePathsAndDays.add(pathDayKey);
         deduplicated.push(activity);
-        if (deduplicated.length >= limit) break;
       }
     }
-    
+
+    console.log(deduplicated.length);
+
     return res.status(200).json(deduplicated);
   } catch (error) {
     console.error("Error fetching user activities:", error);
