@@ -43,8 +43,6 @@ const getUserActivities = async (req, res) => {
       attributes: { exclude: ['metadata'] }
     });
     
-    console.log(allActivities.length);
-
     // Manual deduplication by path and day
     const uniquePathsAndDays = new Set();
     const deduplicated = [];
@@ -59,8 +57,6 @@ const getUserActivities = async (req, res) => {
         deduplicated.push(activity);
       }
     }
-
-    console.log(deduplicated.length);
 
     return res.status(200).json(deduplicated);
   } catch (error) {

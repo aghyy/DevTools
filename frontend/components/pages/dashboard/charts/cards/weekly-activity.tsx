@@ -96,8 +96,6 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
     // Get total activity count for last 7 days vs previous 7 days
     const getActivityTrend = () => {
       if (!recentItems.length) return { current: 0, change: 0, data: [] };
-      
-      console.log(recentItems);
 
       const now = new Date();
       const oneWeekAgo = new Date();
