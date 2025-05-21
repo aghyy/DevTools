@@ -2,20 +2,22 @@ import { XAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, 
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "../stat-card";
 import { useTheme } from "next-themes";
-import { PerformanceStats } from "@/types/charts";
 import CustomTooltip from "../tooltip";
 import { useThemeColors } from "@/hooks/charts";
 import { Timer } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PerformanceStats } from "@/types/charts";
 
-export default function ResponseTimeCard({ loading, performanceStats, description }: {
+export default function ResponseTimeCard({ loading, description }: {
   loading: boolean;
-  performanceStats: PerformanceStats;
   description: string;
 }) {
   const { theme, systemTheme } = useTheme();
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
   const isDark = resolvedTheme === 'dark';
   const themeColors = useThemeColors();
+
+  const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({ current: 0, change: 0, data: [] });
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -28,6 +30,43 @@ export default function ResponseTimeCard({ loading, performanceStats, descriptio
       domain={chart === 'activity' ? [0, 'dataMax + 2'] : ['dataMin - 5', 'dataMax + 5']}
     />
   );
+
+  useEffect(() => {
+    // Generate average response time data (simulated for demo)
+    const getPerformanceStats = () => {
+      // Simulate average response time for the last 7 days
+      const days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+      });
+
+      // Simulate downward trend (improving response times)
+      const baseResponseTime = 350; // ms
+      const data = days.map((day, index) => ({
+        name: day,
+        value: parseFloat((Math.max(120, baseResponseTime - (index * 30) + (Math.random() * 40 - 20))).toFixed(2))
+      }));
+
+      // Calculate current and previous period averages
+      const currentPeriod = data.slice(3).map(d => d.value);
+      const previousPeriod = data.slice(0, 3).map(d => d.value);
+
+      const currentAvg = currentPeriod.reduce((sum, val) => sum + val, 0) / currentPeriod.length;
+      const previousAvg = previousPeriod.reduce((sum, val) => sum + val, 0) / previousPeriod.length;
+
+      // Calculate percentage change (negative is good for response time)
+      const change = ((currentAvg - previousAvg) / previousAvg) * 100;
+
+      setPerformanceStats({
+        current: parseFloat(currentAvg.toFixed(2)),
+        change,
+        data
+      });
+    };
+
+    getPerformanceStats();
+  }, []);
 
   return (
     <>

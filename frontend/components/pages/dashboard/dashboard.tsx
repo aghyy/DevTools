@@ -64,42 +64,6 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Generate average response time data (simulated for demo)
-  const getPerformanceStats = () => {
-    // Simulate average response time for the last 7 days
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    });
-
-    // Simulate downward trend (improving response times)
-    const baseResponseTime = 350; // ms
-    const data = days.map((day, index) => ({
-      name: day,
-      value: parseFloat((Math.max(120, baseResponseTime - (index * 30) + (Math.random() * 40 - 20))).toFixed(2))
-    }));
-
-    // Calculate current and previous period averages
-    const currentPeriod = data.slice(3).map(d => d.value);
-    const previousPeriod = data.slice(0, 3).map(d => d.value);
-
-    const currentAvg = currentPeriod.reduce((sum, val) => sum + val, 0) / currentPeriod.length;
-    const previousAvg = previousPeriod.reduce((sum, val) => sum + val, 0) / previousPeriod.length;
-
-    // Calculate percentage change (negative is good for response time)
-    const change = ((currentAvg - previousAvg) / previousAvg) * 100;
-
-    return {
-      current: parseFloat(currentAvg.toFixed(2)),
-      change,
-      data
-    };
-  };
-
-  // Get the usage statistics
-  const performanceStats = getPerformanceStats();
-
   return (
     <div className="h-full w-full">
       <div className="relative size-0">
@@ -123,7 +87,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ChartSection loading={loading} recentItems={recentItems} performanceStats={performanceStats} mostUsedItems={mostUsedItems} />
+        <ChartSection loading={loading} recentItems={recentItems} mostUsedItems={mostUsedItems} />
 
         {/* Recent Activity */}
         <div className="mb-6 md:mb-8">
