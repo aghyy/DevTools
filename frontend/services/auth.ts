@@ -68,23 +68,52 @@ export const logout = async () => {
 };
 
 export const sendResetLink = async (email: string) => {
-  const response = await api.post("/api/auth/forgot-password", { email });
-  return response.data;
+  try {
+    if (!email) {
+      const error = "Email field is required";
+      toast.error(error);
+      throw new Error(error);
+    }
+
+    const response = await api.post("/api/auth/forgot-password", { email });
+    
+    // Always show success message regardless of whether the email exists
+    // This is a security best practice to prevent email enumeration
+    toast.success("If this email is registered, you will receive a reset link.");
+    return response.data;
+  } catch (error) {
+    // If there's an error, still show the same message for security
+    toast.success("If this email is registered, you will receive a reset link.");
+    throw error;
+  }
 };
 
 export const resetPassword = async (
-  uid: string,
   token: string,
   newPassword: string,
   confirmPassword: string
 ) => {
-  const response = await api.post("/api/auth/reset-password", {
-    uid,
-    token,
-    new_password: newPassword,
-    confirm_password: confirmPassword,
-  });
-  return response.data;
+  try {
+    const response = await api.post("/api/auth/reset-password", {
+      token,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+    
+    if (response.status === 200) {
+      toast.success("Password has been reset successfully");
+    } else {
+      const error = response.data.message || "Failed to reset password. Please try again.";
+      toast.error(error);
+      throw new Error(error);
+    }
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to reset password. Please try again.";
+    toast.error(errorMessage);
+    throw error;
+  }
 };
 
 export const getUserDetails = async () => {

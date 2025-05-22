@@ -7,8 +7,7 @@ import Image from 'next/image';
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,13 +15,38 @@ export default function ForgotPassword() {
 
     try {
       await sendResetLink(email);
-      setSuccessMessage('A password reset link has been sent to your email.');
-    } catch {
-      setError('Error sending reset link. Please try again.');
+      setIsSubmitted(true);
+    } catch (error) {
+      // Error is already handled in the service with toast
+      console.error('Password reset error:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-login-background">
+        <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg">
+          <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
+            <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
+            <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
+          </div>
+          
+          <div className="text-center space-y-4">
+            <p className="text-login-success-foreground">
+              If this email is registered, you will receive a reset link.
+            </p>
+            <p className="text-sm text-login-foreground">
+              <a href="/auth/login" className="text-blue-accent hover:underline">
+                Return to login
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-login-background">
@@ -42,6 +66,7 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full p-3 border border-login-border bg-login-card-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus"
+              disabled={loading}
             />
           </div>
           <button
@@ -52,9 +77,6 @@ export default function ForgotPassword() {
             {loading ? 'Sending reset link...' : 'Send Reset Link'}
           </button>
         </form>
-
-        {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
-        {successMessage && <p className="mt-4 text-login-success-foreground text-sm text-center">{successMessage}</p>}
 
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">

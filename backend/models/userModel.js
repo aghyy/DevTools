@@ -29,6 +29,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     },
+    // Password reset fields
+    resetToken: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    resetTokenExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     // Notification preferences
     emailNotifications: {
       type: DataTypes.BOOLEAN,

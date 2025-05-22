@@ -7,6 +7,8 @@ const userAuth = require("../middlewares/userAuth");
 const fs = require("fs").promises;
 const path = require("path");
 const { Op } = require("sequelize");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const signup = async (req, res) => {
   try {
@@ -139,40 +141,49 @@ const getUser = async (req, res) => {
   }
 };
 
-const sendPasswordResetEmail = async (email, token) => {
-  // const transporter = nodemailer.createTransport({
-  //   service: "Gmail",
-  //   auth: {
-  //     user: process.env.EMAIL_USER,
-  //     pass: process.env.EMAIL_PASS,
-  //   },
-  // });
-  // const mailOptions = {
-  //   from: process.env.EMAIL_USER,
-  //   to: email,
-  //   subject: "Password Reset",
-  //   text: `You requested a password reset. Click the link to reset your password: ${process.env.FRONTEND_URL}/reset-password?token=${token}`,
-  // };
-  // await transporter.sendMail(mailOptions);
-};
-
 const resetPassword = async (req, res) => {
-  // try {
-  //   const { email } = req.body;
-  //   if (!email) {
-  //     return res.status(400).json({ message: "Email is required" });
-  //   }
-  //   const user = await User.findOne({ where: { email } });
-  //   if (!user) {
-  //     return res.status(404).json({ message: "User not found" });
-  //   }
-  //   const token = jwt.sign({ id: user.id }, process.env.secretKey, { expiresIn: "1h" });
-  //   await sendPasswordResetEmail(email, token);
-  //   return res.status(200).json({ message: "Password reset email sent" });
-  // } catch (error) {
-  //   console.error("Reset password error:", error);
-  //   return res.status(500).json({ error: "Internal server error" });
-  // }
+  try {
+    const { token, new_password, confirm_password } = req.body;
+
+    if (!token || !new_password || !confirm_password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          [Op.gt]: new Date() // Token hasn't expired
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired reset token. Please request a new password reset link." 
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    // Update user's password and clear reset token
+    await user.update({
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null
+    });
+
+    return res.status(200).json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 const uploadAvatar = async (req, res) => {
@@ -369,11 +380,81 @@ const updatePrivacySettings = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email field is required" });
+    }
+
+    const user = await User.findOne({ 
+      where: { 
+        email: { [Op.iLike]: email } // Case-insensitive email search
+      } 
+    });
+
+    // Always return success even if user doesn't exist (security best practice)
+    if (!user) {
+      return res.status(200).json({ 
+        message: "If this email is registered, you will receive a reset link." 
+      });
+    }
+
+    // Generate password reset token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Store token and expiry in user record
+    await user.update({
+      resetToken: token,
+      resetTokenExpiry: tokenExpiry
+    });
+
+    // Create reset URL
+    const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS // your app password
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Click the link to reset your password: ${resetUrl}`,
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetUrl}">Reset Password</a>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `
+    });
+
+    return res.status(200).json({ 
+      message: "If this email is registered, you will receive a reset link." 
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   signup,
   login,
   logout,
   getUser,
+  forgotPassword,
+  resetPassword,
   uploadAvatar,
   removeAvatar,
   updateProfile,

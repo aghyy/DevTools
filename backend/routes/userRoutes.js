@@ -5,6 +5,8 @@ const {
   login, 
   logout, 
   getUser, 
+  forgotPassword,
+  resetPassword,
   uploadAvatar, 
   removeAvatar,
   updateProfile,
@@ -51,6 +53,8 @@ const upload = multer({
 router.post("/signup", userAuth.saveUser, signup);
 router.post("/login", login);
 router.post("/logout", logout);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 router.get("/jwt-public-key", userAuth.getPublicKey);
 
 // User profile routes
