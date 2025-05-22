@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -77,6 +77,7 @@ export function AppSidebar() {
   const [userData] = useAtom(userDataAtom);
   const [isLoading, setIsLoading] = useState(true);
   const { favorites, loading: favoritesLoading, refreshFavorites } = useFavoriteTools();
+  const pathname = usePathname();
 
   const [openStates, setOpenStates] = useState({
     codeSnippets: true,
@@ -121,7 +122,7 @@ export function AppSidebar() {
   const signout = async () => {
     try {
       await authLogout();
-      router.push(window.location.href);
+      router.push(pathname);
       setTimeout(() => {
         setIsGuest(true);
       }, 500);
