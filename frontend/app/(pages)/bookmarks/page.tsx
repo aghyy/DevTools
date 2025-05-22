@@ -52,8 +52,9 @@ import {
 } from "@/services/bookmarkService";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAtom } from "jotai";
-import { isGuestAtom, userDataAtom } from "@/atoms/auth";
+import { userDataAtom } from "@/atoms/auth";
 import { toast } from "sonner";
+import { ActiveTab } from "@/types/user";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -63,21 +64,20 @@ interface UserPublicBookmarks {
 }
 
 export default function Bookmarks() {
-  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
+  // Atoms
   const [userData] = useAtom(userDataAtom);
-  const [isGuestLoading, setIsGuestLoading] = useState(true);
 
   // State
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("personal");
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [filteredBookmarks, setFilteredBookmarks] = useState<Bookmark[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<{ tag: string; count: number }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("personal");
   const [publicBookmarks, setPublicBookmarks] = useState<UserPublicBookmarks[]>([]);
 
   // Form and dialog state
@@ -91,49 +91,63 @@ export default function Bookmarks() {
   // Initialize data
   useEffect(() => {
     const initializeData = async () => {
+      setIsLoading(true);
       try {
-        if (userData) {
-          setIsGuest(false);
-          setActiveTab("personal");
-        } else {
-          setIsGuest(true);
+        // Set initial tab based on auth state
+        if (!userData) {
           setActiveTab("public");
+          await fetchPublicBookmarks();
+        } else {
+          setActiveTab("personal");
+          await Promise.all([
+            fetchPublicBookmarks(),
+            fetchPersonalBookmarks(),
+            fetchCategories(),
+            fetchTags()
+          ]);
         }
       } catch {
         toast.error("Failed to load bookmarks");
-        setIsGuest(true);
-        setActiveTab("public");
       } finally {
-        setIsGuestLoading(false);
+        setIsLoading(false);
       }
     };
 
     initializeData();
   }, [userData]);
 
-  // Add effect to enforce public tab when guest
+  // Handle tab changes
   useEffect(() => {
-    if (!isGuestLoading && isGuest) {
-      setActiveTab("public");
-    }
-  }, [isGuest, isGuestLoading]);
+    const loadTabData = async () => {
+      if (isLoading || !userData) return; // Don't load if guest or loading
 
-  useEffect(() => {
-    if (!isGuestLoading) {
-      if (!isGuest) {
-        fetchPersonalBookmarks();
-        fetchCategories();
-        fetchTags();
+      setIsLoading(true);
+      try {
+        if (activeTab === "public") {
+          await fetchPublicBookmarks();
+        } else {
+          await Promise.all([
+            fetchPersonalBookmarks(),
+            fetchCategories(),
+            fetchTags()
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to load tab data:', err);
+        toast.error("Failed to load bookmarks");
+      } finally {
+        setIsLoading(false);
       }
-      fetchPublicBookmarks();
-    }
-  }, [isGuestLoading, isGuest]);
+    };
 
-  // Apply filters and search for personal bookmarks
+    loadTabData();
+  }, [activeTab, userData]);
+
+  // Apply filters and search
   useEffect(() => {
     let results: Bookmark[] = [];
 
-    if (activeTab === "personal" && !isGuest) {
+    if (activeTab === "personal" && userData) {
       results = [...bookmarks];
     } else {
       // Flatten public bookmarks
@@ -173,7 +187,7 @@ export default function Bookmarks() {
     }
 
     setFilteredBookmarks(results);
-  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, selectedUser, activeTab, isGuest]);
+  }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, selectedUser, activeTab, userData]);
 
   // Fetch functions
   const fetchPersonalBookmarks = async () => {
@@ -214,7 +228,7 @@ export default function Bookmarks() {
       });
 
       // Update categories and tags for public view
-      if (activeTab === "public" || isGuest) {
+      if (activeTab === "public") {
         setCategories(Array.from(categoryMap.keys()));
         setTags(Array.from(tagMap.entries()).map(([tag, count]) => ({ tag, count })));
       }
@@ -322,15 +336,13 @@ export default function Bookmarks() {
     setFilterDialogOpen(false);
   };
 
-  // Handle tab change
+  // Handle tab change - only called for logged-in users
   const handleTabChange = (value: string) => {
-    if (isGuestLoading) return;
-    // Force public tab if guest
-    if (isGuest) {
-      setActiveTab("public");
-    } else {
-      setActiveTab(value);
+    // Only allow switching to personal if logged in
+    if (value === "personal" && !userData) {
+      return;
     }
+    setActiveTab(value as ActiveTab);
   };
 
   // Rendering
@@ -349,7 +361,7 @@ export default function Bookmarks() {
           "No public bookmarks available"
         )}
       </p>
-      {activeTab === "personal" && !isGuest && (
+      {activeTab === "personal" && userData && (
         <Button onClick={() => handleOpenForm()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Bookmark
@@ -376,9 +388,7 @@ export default function Bookmarks() {
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
           <div className="text-muted-foreground">
-            {isGuestLoading ? (
-              <div className="h-4 w-64 bg-muted rounded animate-pulse" />
-            ) : activeTab === "personal" && userData ? (
+            {userData ? (
               `${userData.firstName}'s bookmarks and favorite resources`
             ) : (
               "Public bookmarks shared by the community"
@@ -386,12 +396,16 @@ export default function Bookmarks() {
           </div>
         </div>
 
-        {/* Tabs - Only show for logged in users */}
-        {!isGuestLoading && !isGuest && (
+        {/* Tabs - Show for everyone but disable personal if not logged in */}
+        {userData && (
           <div className="flex justify-between items-center mb-4">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList>
-                <TabsTrigger value="personal" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="personal"
+                  className="flex items-center gap-2"
+                  disabled={!userData}
+                >
                   <User className="h-4 w-4" />
                   Personal
                 </TabsTrigger>
@@ -402,7 +416,7 @@ export default function Bookmarks() {
               </TabsList>
             </Tabs>
 
-            {activeTab === "personal" && (
+            {userData && activeTab === "personal" && (
               <Button onClick={() => handleOpenForm()} className="gap-1">
                 <Plus size={16} />
                 Add Bookmark
@@ -414,19 +428,7 @@ export default function Bookmarks() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Main content */}
           <div className="flex-1">
-            {isGuestLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="w-full h-[250px] animate-pulse">
-                    <div className="h-32 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : isLoading ? (
+            {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="w-full h-[250px] animate-pulse">
@@ -450,9 +452,9 @@ export default function Bookmarks() {
                     <BookmarkCard
                       key={bookmark.id}
                       bookmark={bookmark}
-                      onEdit={activeTab === "personal" && !isGuest ? handleOpenForm : undefined}
-                      onDelete={activeTab === "personal" && !isGuest ? handleDeleteClick : undefined}
-                      showControls={activeTab === "personal" && !isGuest}
+                      onEdit={activeTab === "personal" && userData ? handleOpenForm : undefined}
+                      onDelete={activeTab === "personal" && userData ? handleDeleteClick : undefined}
+                      showControls={Boolean(activeTab === "personal" && userData)}
                       userInfo={userBookmarks ? {
                         firstName: userBookmarks.user.split(' ')[0],
                         lastName: userBookmarks.user.split(' ')[1] || '',
@@ -482,7 +484,7 @@ export default function Bookmarks() {
             </div>
 
             {/* Users list - Only show for public bookmarks */}
-            {(activeTab === "public" || isGuest) && publicBookmarks.length > 0 && (
+            {(activeTab === "public" || !userData) && publicBookmarks.length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center">
@@ -605,7 +607,7 @@ export default function Bookmarks() {
       </div>
 
       {/* Form Sheet - Only show for logged in users */}
-      {!isGuestLoading && !isGuest && (
+      {userData && (
         <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
           <SheetContent className="sm:max-w-xl overflow-y-auto">
             <SheetHeader>
@@ -629,7 +631,7 @@ export default function Bookmarks() {
       )}
 
       {/* Delete Confirmation Dialog - Only show for logged in users */}
-      {!isGuestLoading && !isGuest && (
+      {userData && (
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -652,7 +654,7 @@ export default function Bookmarks() {
       )}
 
       {/* Mobile Filters Dialog - Only show for logged in users */}
-      {!isGuestLoading && !isGuest && (
+      {userData && (
         <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
           <DialogContent>
             <DialogHeader>

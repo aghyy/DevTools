@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useAtom } from "jotai";
-import { isGuestAtom, userDataAtom } from "@/atoms/auth";
+import { userDataAtom } from "@/atoms/auth";
 
 import {
   Breadcrumb,
@@ -71,13 +71,15 @@ import {
 
 import { CodeHighlighter } from "@/components/code-snippets/code-highlighter";
 import { toast } from "sonner";
+import { ActiveTab } from "@/types/user";
 
 export default function CodeSnippets() {
-  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
+  // Atoms
   const [userData] = useAtom(userDataAtom);
-  const [isGuestLoading, setIsGuestLoading] = useState(true);
 
-  // State for managing code snippets
+  // State
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("personal");
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
   const [filteredSnippets, setFilteredSnippets] = useState<CodeSnippet[]>([]);
   const [publicSnippets, setPublicSnippets] = useState<PublicCodeSnippets[]>([]);
@@ -95,10 +97,8 @@ export default function CodeSnippets() {
   // State for UI components
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("personal");
 
   // State for editing
   const [editingSnippet, setEditingSnippet] = useState<CodeSnippet | undefined>(undefined);
@@ -114,8 +114,7 @@ export default function CodeSnippets() {
   const applyFilters = useCallback(() => {
     let filtered;
 
-    // Use different source data depending on the active tab
-    if (activeTab === "personal" && !isGuest) {
+    if (activeTab === "personal" && userData) {
       filtered = [...codeSnippets];
     } else {
       // For public snippets, use the flattened list
@@ -157,7 +156,7 @@ export default function CodeSnippets() {
     }
 
     setFilteredSnippets(filtered);
-  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab, isGuest]);
+  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab, userData]);
 
   // Fetch functions
   const fetchPersonalSnippets = useCallback(async () => {
@@ -239,50 +238,63 @@ export default function CodeSnippets() {
   // Initialize data
   useEffect(() => {
     const initializeData = async () => {
+      setIsLoading(true);
       try {
-        if (userData) {
-          setIsGuest(false);
-          setActiveTab("personal");
-        } else {
-          setIsGuest(true);
+        // Set initial tab based on auth state
+        if (!userData) {
           setActiveTab("public");
+          await fetchPublicSnippets();
+        } else {
+          setActiveTab("personal");
+          await Promise.all([
+            fetchPublicSnippets(),
+            fetchPersonalSnippets(),
+            fetchLanguages(),
+            fetchTags()
+          ]);
         }
-      } catch {
+      } catch (err) {
+        console.error('Failed to initialize code snippets:', err);
         toast.error("Failed to load code snippets");
-        setIsGuest(true);
-        setActiveTab("public");
       } finally {
-        setIsGuestLoading(false);
+        setIsLoading(false);
       }
     };
 
     initializeData();
   }, [userData]);
 
-  // Add effect to enforce public tab when guest
+  // Handle tab changes
   useEffect(() => {
-    if (!isGuestLoading && isGuest) {
-      setActiveTab("public");
-    }
-  }, [isGuest, isGuestLoading]);
+    const loadTabData = async () => {
+      if (isLoading || !userData) return; // Don't load if guest or loading
 
-  useEffect(() => {
-    if (!isGuestLoading) {
-      if (!isGuest) {
-        fetchPersonalSnippets();
-        fetchLanguages();
-        fetchTags();
+      setIsLoading(true);
+      try {
+        if (activeTab === "public") {
+          await fetchPublicSnippets();
+        } else {
+          await Promise.all([
+            fetchPersonalSnippets(),
+            fetchLanguages(),
+            fetchTags()
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to load tab data:', err);
+        toast.error("Failed to load code snippets");
+      } finally {
+        setIsLoading(false);
       }
-      fetchPublicSnippets();
-    }
-  }, [isGuestLoading, isGuest, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags]);
+    };
+
+    loadTabData();
+  }, [activeTab, userData]);
 
   // Apply filters when they change
   useEffect(() => {
-    if (!isGuestLoading) {
-      applyFilters();
-    }
-  }, [applyFilters, isGuestLoading]);
+    applyFilters();
+  }, [applyFilters]);
 
   // Form handling
   const handleOpenForm = (snippet?: CodeSnippet) => {
@@ -348,15 +360,13 @@ export default function CodeSnippets() {
     }
   };
 
-  // Tab change
+  // Handle tab change - only called for logged-in users
   const handleTabChange = (value: string) => {
-    if (isGuestLoading) return;
-    // Force public tab if guest
-    if (isGuest) {
-      setActiveTab("public");
-    } else {
-      setActiveTab(value);
+    // Only allow switching to personal if logged in
+    if (value === "personal" && !userData) {
+      return;
     }
+    setActiveTab(value as ActiveTab);
     clearFilters();
   };
 
@@ -433,9 +443,7 @@ export default function CodeSnippets() {
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold mb-2">Code Snippets</h1>
           <div className="text-muted-foreground">
-            {isGuestLoading ? (
-              <div className="h-4 w-64 bg-muted rounded animate-pulse" />
-            ) : activeTab === "personal" && userData ? (
+            {userData ? (
               `${userData.firstName}'s code snippets`
             ) : (
               "Public code snippets shared by the community"
@@ -443,23 +451,27 @@ export default function CodeSnippets() {
           </div>
         </div>
 
-        {/* Tabs - Only show for logged in users */}
-        {!isGuestLoading && !isGuest && (
+        {/* Tabs - Show for everyone but disable personal if not logged in */}
+        {userData && (
           <div className="flex justify-between items-center mb-4">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList>
-                <TabsTrigger value="personal" className="flex gap-2">
-                  <Code2 size={16} />
+                <TabsTrigger
+                  value="personal"
+                  className="flex gap-2"
+                  disabled={!userData}
+                >
+                  <User className="h-4 w-4" />
                   Personal
                 </TabsTrigger>
                 <TabsTrigger value="public" className="flex gap-2">
-                  <Globe size={16} />
+                  <Globe className="h-4 w-4" />
                   Public
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            {activeTab === "personal" && (
+            {userData && activeTab === "personal" && (
               <Button onClick={() => handleOpenForm()} className="gap-1">
                 <Plus size={16} />
                 Add Snippet
@@ -471,19 +483,7 @@ export default function CodeSnippets() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Main content */}
           <div className="flex-1">
-            {isGuestLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="w-full h-[250px] animate-pulse">
-                    <div className="h-32 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : isLoading ? (
+            {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="w-full h-[250px] animate-pulse">
@@ -537,11 +537,13 @@ export default function CodeSnippets() {
                 <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No code snippets found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {activeTab === "personal"
-                    ? "You haven't created any code snippets yet. Add one now!"
-                    : "No public code snippets are available."}
+                  {userData ? (
+                    "You haven't created any code snippets yet. Add one now!"
+                  ) : (
+                    "No public code snippets are available."
+                  )}
                 </p>
-                {activeTab === "personal" && (
+                {userData && (
                   <Button onClick={() => handleOpenForm()}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Your First Snippet
@@ -566,7 +568,7 @@ export default function CodeSnippets() {
             </div>
 
             {/* Users list - Only show for public snippets */}
-            {(activeTab === "public" || isGuest) && publicSnippets.length > 0 && (
+            {activeTab === "public" && publicSnippets.length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center">
@@ -659,7 +661,7 @@ export default function CodeSnippets() {
       </div>
 
       {/* Code Snippet Form Sheet - Only show for logged in users */}
-      {!isGuestLoading && !isGuest && (
+      {userData && (
         <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
           <SheetContent className="sm:max-w-xl overflow-y-auto">
             <SheetHeader>
@@ -683,7 +685,7 @@ export default function CodeSnippets() {
       )}
 
       {/* Delete Confirmation Dialog - Only show for logged in users */}
-      {!isGuestLoading && !isGuest && (
+      {userData && (
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>

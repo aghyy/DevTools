@@ -4,7 +4,7 @@ import { getFavoriteTools } from "@/services/favoriteToolService";
 import {
   favoriteToolsAtom,
   isLoadingFavoritesAtom,
-} from "@/atoms/favoriteTools";
+} from "@/atoms/favorite-tools";
 import { isGuestAtom } from "@/atoms/auth";
 import { toast } from "sonner";
 

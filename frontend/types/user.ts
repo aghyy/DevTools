@@ -12,3 +12,5 @@ export interface UserData {
   showEmail: boolean;
   showActivity: boolean;
 }
+
+export type ActiveTab = "personal" | "public";

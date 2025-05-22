@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -89,11 +89,10 @@ function DroppableFavoritesList({ children }: { children: React.ReactNode }) {
 
 export function AppSidebar() {
   const [isGuest, setIsGuest] = useAtom(isGuestAtom);
-  const [userData] = useAtom(userDataAtom);
+  const [userData, setUserData] = useAtom(userDataAtom);
   const [isLoading, setIsLoading] = useState(true);
   const { favorites, loading: favoritesLoading, refreshFavorites } = useFavoriteTools();
-  const pathname = usePathname();
-
+  
   const [openStates, setOpenStates] = useState({
     codeSnippets: true,
     tools: true,
@@ -138,8 +137,9 @@ export function AppSidebar() {
     try {
       const response = await authLogout();
       if (response) {
-        router.push(pathname);
+        router.refresh();
         setTimeout(() => {
+          setUserData(null);
           setIsGuest(true);
         }, 500);
       }
