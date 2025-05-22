@@ -32,10 +32,11 @@ import RecentActivities from "@/components/pages/dashboard/recent-activities";
 import MostUsed from "@/components/pages/dashboard/most-used";
 import DashboardFavorites from "@/components/pages/dashboard/favorites-section";
 import FeaturedSection from "@/components/pages/dashboard/featured-section";
+import { toast } from "sonner";
 
 const pageVariants = {
   initial: { opacity: 0 },
-  animate: { 
+  animate: {
     opacity: 1,
     transition: {
       duration: 0.5,
@@ -47,8 +48,8 @@ const pageVariants = {
 
 const sectionVariants = {
   initial: { opacity: 0, y: 20 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     transition: {
       duration: 0.5,
@@ -60,8 +61,8 @@ const sectionVariants = {
 
 const cardVariants = {
   initial: { opacity: 0, y: 20 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     transition: {
       duration: 0.4,
@@ -75,9 +76,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [recentItems, setRecentItems] = useState<ActivityType[]>([]);
   const [mostUsedItems, setMostUsedItems] = useState<MostUsedItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch activities
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -91,9 +90,8 @@ export default function Dashboard() {
         const mostUsed = await getMostUsedItems(10);
         setMostUsedItems(mostUsed);
 
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        setError("Failed to load dashboard data. Please try again later.");
+      } catch {
+        toast.error("Failed to load dashboard data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -103,7 +101,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <motion.div 
+    <motion.div
       className="h-full w-full"
       initial="initial"
       animate="animate"
@@ -122,18 +120,16 @@ export default function Dashboard() {
       <TopSpacing />
 
       <div className="w-full px-4 md:px-8 pt-6 md:pt-8 pb-8 mx-auto">
-        <UserWelcome userData={userData} loading={loading} />
+        {/* User Welcome */}
+        <motion.div
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+        >
+          <UserWelcome userData={userData} loading={loading} />
+        </motion.div>
 
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 md:mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400"
-          >
-            {error}
-          </motion.div>
-        )}
-
+        {/* Charts */}
         <motion.div
           variants={sectionVariants}
           initial="initial"
@@ -143,7 +139,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Recent Activity */}
-        <motion.div 
+        <motion.div
           variants={sectionVariants}
           initial="initial"
           animate="animate"
@@ -159,7 +155,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Most Used */}
-        <motion.div 
+        <motion.div
           variants={sectionVariants}
           initial="initial"
           animate="animate"
@@ -175,7 +171,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Favorites section */}
-        <motion.div 
+        <motion.div
           variants={sectionVariants}
           initial="initial"
           animate="animate"
