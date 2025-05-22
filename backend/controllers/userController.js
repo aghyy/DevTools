@@ -467,6 +467,25 @@ const checkUsernameAvailability = async (req, res) => {
   }
 };
 
+const checkEmailAvailability = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const existingUser = await User.findOne({
+      where: { email }
+    });
+
+    return res.status(200).json({ available: !existingUser });
+  } catch (error) {
+    console.error("Error checking email availability:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -480,5 +499,6 @@ module.exports = {
   changePassword,
   updateNotificationPreferences,
   updatePrivacySettings,
-  checkUsernameAvailability
+  checkUsernameAvailability,
+  checkEmailAvailability
 };

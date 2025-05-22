@@ -13,7 +13,8 @@ const {
   changePassword,
   updateNotificationPreferences,
   updatePrivacySettings,
-  checkUsernameAvailability
+  checkUsernameAvailability,
+  checkEmailAvailability
 } = userController;
 const userAuth = require("../middlewares/userAuth");
 const multer = require("multer");
@@ -54,6 +55,7 @@ const upload = multer({
 router.post("/signup", userAuth.saveUser, signup);
 router.post("/login", login);
 router.get("/check-username", checkUsernameAvailability);
+router.get("/check-email", checkEmailAvailability);
 router.post("/logout", logout);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);

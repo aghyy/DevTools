@@ -176,6 +176,22 @@ export default function AccountPage() {
       }
     }
 
+    // If email was changed, check availability
+    if (formData.email !== userData?.email) {
+      try {
+        const { data } = await api.get(`/api/auth/check-email`, {
+          params: { email: formData.email }
+        });
+        if (!data.available) {
+          toast.error("Email is already in use");
+          return;
+        }
+      } catch {
+        toast.error("Failed to check email availability");
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const updatedUser = await updateProfile({
