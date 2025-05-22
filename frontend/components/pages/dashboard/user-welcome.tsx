@@ -5,8 +5,10 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserData } from "@/types/user";
-import { Activity } from "lucide-react";
+import { Activity, Cpu, HardDrive } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { getSystemHealth, SystemHealth } from "@/services/healthService";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -41,6 +43,34 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
   const { theme, systemTheme } = useTheme();
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
   const isDark = resolvedTheme === 'dark';
+  const [healthData, setHealthData] = useState<SystemHealth | null>(null);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHealthData = async () => {
+      try {
+        setHealthLoading(true);
+        const data = await getSystemHealth();
+        setHealthData(data);
+        setHealthError(null);
+      } catch (error) {
+        console.error('Error fetching health data:', error);
+        setHealthError('Failed to load system health');
+      } finally {
+        setHealthLoading(false);
+      }
+    };
+
+    fetchHealthData();
+    const interval = setInterval(fetchHealthData, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = (status: 'healthy' | 'unhealthy') => {
+    return status === 'healthy' ? 'text-emerald-400' : 'text-red-400';
+  };
 
   return (
     <motion.div 
@@ -112,19 +142,61 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
             </div>
 
             <AnimatePresence mode="wait">
-              {!loading && (
-                <motion.div 
-                  key="status"
+              {healthLoading ? (
+                <motion.div
+                  key="loading-health"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-primary/5 rounded-lg p-2 md:p-3 backdrop-blur-sm"
+                >
+                  <Skeleton className="h-8 w-48" />
+                </motion.div>
+              ) : healthError ? (
+                <motion.div
+                  key="error-health"
                   variants={itemVariants}
                   initial="hidden"
                   animate="visible"
-                  className="bg-primary/5 rounded-lg p-3 md:p-4 backdrop-blur-sm"
+                  className="bg-primary/5 rounded-lg p-2 md:p-3 backdrop-blur-sm"
                 >
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 md:h-5 md:w-5 text-emerald-400" />
-                    <span className="text-xs md:text-sm text-emerald-400 font-medium">Active Session</span>
+                  <div className="flex items-center gap-2 text-red-400">
+                    <Activity className="h-4 w-4" />
+                    <span className="text-sm font-medium">System Status Unavailable</span>
                   </div>
-                  <p className="text-xs text-primary/50 mt-1">Last login: {new Date().toLocaleDateString()}</p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="health"
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-primary/5 rounded-lg p-2 md:p-3 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Cpu className={cn("h-4 w-4", getStatusColor(healthData?.services.system.status || 'unhealthy'))} />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-muted-foreground">System Uptime</span>
+                        <span className="text-xs font-medium">{healthData?.services.system.uptime}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-blue-400" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-muted-foreground">Memory Usage</span>
+                        <span className="text-xs font-medium">{healthData?.services.system.memory.percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-purple-400" />
+                        <div className="flex flex-col">
+                        <span className="text-xs font-medium text-muted-foreground">CPU Load</span>
+                        <span className="text-xs font-medium">{healthData?.services.system.cpu.loadAverage[0]}</span>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
