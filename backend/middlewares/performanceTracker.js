@@ -28,7 +28,18 @@ const extractToolName = (url) => {
   
   // For standard tool endpoints like /api/tools/[toolName]
   if (urlWithoutQuery.startsWith('/api/tools/')) {
-    const toolName = urlParts[3] || 'unknown-tool';
+    let toolName = urlParts[3] || 'unknown-tool';
+    
+    // Consolidate hash-related tools
+    if (toolName.startsWith('decrypt-')) {
+      return 'hash';
+    }
+    
+    // Consolidate vigenere tools (though only one exists in the codebase)
+    if (toolName === 'vigenere-cipher') {
+      return 'vigenere';
+    }
+    
     return toolName;
   }
   

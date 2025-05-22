@@ -17,6 +17,7 @@ interface DetailedPerformanceStats extends PerformanceStats {
     avgResponseTime: number;
     count: number;
   }[];
+  weeklyAvg?: number; // New field for weekly average
 }
 
 export default function ResponseTimeCard({ loading, description }: {
@@ -33,7 +34,8 @@ export default function ResponseTimeCard({ loading, description }: {
     change: 0, 
     data: [],
     tools: [],
-    topTools: [] 
+    topTools: [],
+    weeklyAvg: 0 
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -58,69 +60,29 @@ export default function ResponseTimeCard({ loading, description }: {
         // Get additional data about the tools being tracked
         const toolsResponse = await api.get('/api/performance/tools-breakdown');
         
+        // Calculate weekly average from all data points
+        const weeklyAvg = response.data.data.reduce((sum: number, item: { value: number }) => 
+          sum + item.value, 0) / response.data.data.length;
+        
         // Combine the data
         const combinedData = {
           ...response.data,
           tools: toolsResponse.data.tools || [],
-          topTools: toolsResponse.data.topTools || []
+          topTools: toolsResponse.data.topTools || [],
+          weeklyAvg: parseFloat(weeklyAvg.toFixed(2))
         };
         
         setPerformanceStats(combinedData);
+        console.log(combinedData);
         setError(null);
       } catch (err) {
         console.error('Error fetching performance stats:', err);
         setError('Failed to load performance data');
-        
-        // Fall back to mock data if we can't get real data
-        generateMockData();
       }
     };
 
     fetchPerformanceStats();
   }, []);
-
-  // Generate mock data for fallback
-  const generateMockData = () => {
-    // Simulate average response time for the last 7 days
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    });
-
-    // Simulate downward trend (improving response times)
-    const baseResponseTime = 350; // ms
-    const data = days.map((day, index) => ({
-      name: day,
-      value: parseFloat((Math.max(120, baseResponseTime - (index * 30) + (Math.random() * 40 - 20))).toFixed(2))
-    }));
-
-    // Calculate current and previous period averages
-    const currentPeriod = data.slice(3).map(d => d.value);
-    const previousPeriod = data.slice(0, 3).map(d => d.value);
-
-    const currentAvg = currentPeriod.reduce((sum, val) => sum + val, 0) / currentPeriod.length;
-    const previousAvg = previousPeriod.reduce((sum, val) => sum + val, 0) / previousPeriod.length;
-
-    // Calculate percentage change (negative is good for response time)
-    const change = ((currentAvg - previousAvg) / previousAvg) * 100;
-
-    // Mock tool data
-    const mockTools = ['hash', 'base64', 'proxy', 'decrypt-md5', 'decrypt-sha1'];
-    const mockTopTools = [
-      { name: 'hash', avgResponseTime: 142.3, count: 12 },
-      { name: 'proxy', avgResponseTime: 523.7, count: 8 },
-      { name: 'base64', avgResponseTime: 85.2, count: 6 }
-    ];
-
-    setPerformanceStats({
-      current: parseFloat(currentAvg.toFixed(2)),
-      change,
-      data,
-      tools: mockTools,
-      topTools: mockTopTools
-    });
-  };
 
   // Format the description to include tool information
   const getEnhancedDescription = () => {
@@ -145,7 +107,7 @@ export default function ResponseTimeCard({ loading, description }: {
       ) : (
         <StatCard
           title="Average Response Time"
-          value={performanceStats.current}
+          value={performanceStats.weeklyAvg || 0}
           suffix="ms"
           change={performanceStats.change}
           icon={error ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <Hammer className="h-4 w-4 text-indigo-500" />}
