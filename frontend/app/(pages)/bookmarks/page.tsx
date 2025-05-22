@@ -55,6 +55,7 @@ import { useAtom } from "jotai";
 import { userDataAtom } from "@/atoms/auth";
 import { toast } from "sonner";
 import { ActiveTab } from "@/types/user";
+import { motion } from "framer-motion";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -62,6 +63,29 @@ interface UserPublicBookmarks {
   username: string;
   bookmarks: Bookmark[];
 }
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
+
+const item = (index: number) => ({
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: index * 0.1,
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  }
+});
 
 export default function Bookmarks() {
   // Atoms
@@ -429,41 +453,40 @@ export default function Bookmarks() {
           {/* Main content */}
           <div className="flex-1">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="w-full h-[250px] animate-pulse">
-                    <div className="h-32 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <></>
             ) : filteredBookmarks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredBookmarks.map((bookmark) => {
-                  // Find the user who owns this bookmark
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                variants={container}
+                initial="hidden"
+                animate="show"
+              >
+                {filteredBookmarks.map((bookmark, index) => {
                   const userBookmarks = publicBookmarks.find(ub =>
                     ub.bookmarks.some(b => b.id === bookmark.id)
                   );
 
                   return (
-                    <BookmarkCard
+                    <motion.div
                       key={bookmark.id}
-                      bookmark={bookmark}
-                      onEdit={activeTab === "personal" && userData ? handleOpenForm : undefined}
-                      onDelete={activeTab === "personal" && userData ? handleDeleteClick : undefined}
-                      showControls={Boolean(activeTab === "personal" && userData)}
-                      userInfo={userBookmarks ? {
-                        firstName: userBookmarks.user.split(' ')[0],
-                        lastName: userBookmarks.user.split(' ')[1] || '',
-                        username: userBookmarks.username
-                      } : undefined}
-                    />
+                      custom={index}
+                      variants={item(index)}
+                    >
+                      <BookmarkCard
+                        bookmark={bookmark}
+                        onEdit={activeTab === "personal" && userData ? handleOpenForm : undefined}
+                        onDelete={activeTab === "personal" && userData ? handleDeleteClick : undefined}
+                        showControls={Boolean(activeTab === "personal" && userData)}
+                        userInfo={userBookmarks ? {
+                          firstName: userBookmarks.user.split(' ')[0],
+                          lastName: userBookmarks.user.split(' ')[1] || '',
+                          username: userBookmarks.username
+                        } : undefined}
+                      />
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             ) : (
               renderNoResults()
             )}

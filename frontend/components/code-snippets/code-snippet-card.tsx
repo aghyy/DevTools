@@ -122,7 +122,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   });
   
   return (
-    <Card className="w-full overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer" onClick={handleView}>
+    <Card className="w-full h-full overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer" onClick={handleView}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">

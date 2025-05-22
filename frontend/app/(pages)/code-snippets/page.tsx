@@ -72,6 +72,30 @@ import {
 import { CodeHighlighter } from "@/components/code-snippets/code-highlighter";
 import { toast } from "sonner";
 import { ActiveTab } from "@/types/user";
+import { motion } from "framer-motion";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
+
+const item = (index: number) => ({
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: index * 0.1,
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  }
+});
 
 export default function CodeSnippets() {
   // Atoms
@@ -484,54 +508,61 @@ export default function CodeSnippets() {
           {/* Main content */}
           <div className="flex-1">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="w-full h-[250px] animate-pulse">
-                    <div className="h-32 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <></>
             ) : filteredSnippets.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                variants={container}
+                initial="hidden"
+                animate="show"
+              >
                 {activeTab === "public" ? (
                   // Display public snippets in a grid without user grouping
-                  filteredSnippets.map((snippet) => {
+                  filteredSnippets.map((snippet, index) => {
                     // Find the user who owns this snippet
                     const userSnippets = publicSnippets.find(us =>
                       us.codeSnippets.some(s => s.id === snippet.id)
                     );
 
                     return (
-                      <CodeSnippetCard
+                      <motion.div
                         key={snippet.id}
-                        snippet={snippet}
-                        isPublicView={true}
-                        onView={handleViewSnippet}
-                        userInfo={userSnippets ? {
-                          firstName: userSnippets.firstName,
-                          lastName: userSnippets.lastName,
-                          username: userSnippets.username
-                        } : undefined}
-                      />
+                        custom={index}
+                        variants={item(index)}
+                      >
+                        <CodeSnippetCard
+                          key={snippet.id}
+                          snippet={snippet}
+                          isPublicView={true}
+                          onView={handleViewSnippet}
+                          userInfo={userSnippets ? {
+                            firstName: userSnippets.firstName,
+                            lastName: userSnippets.lastName,
+                            username: userSnippets.username
+                          } : undefined}
+                        />
+                      </motion.div>
                     );
                   })
                 ) : (
                   // Personal snippets view remains unchanged
-                  filteredSnippets.map((snippet) => (
-                    <CodeSnippetCard
+                  filteredSnippets.map((snippet, index) => (
+                    <motion.div
                       key={snippet.id}
-                      snippet={snippet}
-                      onEdit={handleOpenForm}
-                      onDelete={openDeleteDialog}
-                      onView={handleViewSnippet}
-                    />
+                      custom={index}
+                      variants={item(index)}
+                    >
+                      <CodeSnippetCard
+                        key={snippet.id}
+                        snippet={snippet}
+                        onEdit={handleOpenForm}
+                        onDelete={openDeleteDialog}
+                        onView={handleViewSnippet}
+                      />
+                    </motion.div>
                   ))
                 )}
-              </div>
+              </motion.div>
             ) : (
               <div className="text-center p-10 border rounded-lg">
                 <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
