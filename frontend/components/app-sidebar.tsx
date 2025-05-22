@@ -328,7 +328,10 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem suppressHydrationWarning>
+          <SidebarMenuItem
+            className={`${isGuest ? 'p-2' : ''}`}
+            suppressHydrationWarning
+          >
             {isLoading ? (
               <div className="flex items-center gap-2 px-2 mb-2">
                 <Skeleton className="h-10 w-10 rounded-full" />
