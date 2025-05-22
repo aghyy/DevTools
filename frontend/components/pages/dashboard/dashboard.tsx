@@ -119,7 +119,7 @@ export default function Dashboard() {
         {/* Featured links */}
         <div>
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Quick Access</h2>
-          <FeaturedSection />
+          <FeaturedSection loading={loading} />
         </div>
       </div>
     </div>

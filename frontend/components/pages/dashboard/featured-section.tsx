@@ -1,11 +1,12 @@
 import { CardHeader, CardContent, CardTitle, CardDescription, Card } from "@/components/ui/card";
 import { MagicCard } from "@/components/ui/magic-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Code, Hammer, Book } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
-export default function FeaturedSection() {
+export default function FeaturedSection({ loading = false }: { loading?: boolean }) {
   const featuredLinks = [
     {
       name: "Tools",
@@ -35,6 +36,16 @@ export default function FeaturedSection() {
   const routeTo = (path: string) => {
     router.push(path);
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[160px] md:h-[180px] w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">

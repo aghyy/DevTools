@@ -5,6 +5,7 @@ import { MagicCard } from "@/components/ui/magic-card";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { MostUsedItem } from "@/services/activity";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MostUsed({ loading, mostUsedItems }: { loading: boolean, mostUsedItems: MostUsedItem[] }) {
   const { theme, systemTheme } = useTheme();
@@ -19,7 +20,13 @@ export default function MostUsed({ loading, mostUsedItems }: { loading: boolean,
 
   return (
     <>
-      {!loading && mostUsedItems.length > 0 && (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-20 md:h-24 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : mostUsedItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {mostUsedItems.slice(0, 6).map((item, idx) => {
             const IconComponent = getIconComponent(item.icon);
@@ -56,8 +63,11 @@ export default function MostUsed({ loading, mostUsedItems }: { loading: boolean,
             );
           })}
         </div>
-      )
-      }
+      ) : (
+        <div className="p-6 md:p-8 text-center border rounded-lg bg-slate-50 dark:bg-slate-900/20">
+          <p className="text-slate-500">No most used items recorded yet.</p>
+        </div>
+      )}
     </>
   )
 }

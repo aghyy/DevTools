@@ -39,8 +39,8 @@ export default function RecentActivities({ loading, recentItems }: { loading: bo
   return (
    <>
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {[1, 2, 3, 4].map(i => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
             <Skeleton key={i} className="h-20 md:h-24 w-full rounded-lg" />
           ))}
         </div>
