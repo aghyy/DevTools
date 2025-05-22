@@ -11,7 +11,6 @@ const bookmarkRoutes = require('./routes/bookmarkRoutes');
 const favoriteToolRoutes = require('./routes/favoriteToolRoutes');
 const codeSnippetRoutes = require('./routes/codeSnippetRoutes');
 const performanceRoutes = require('./routes/performanceRoutes');
-const { trackToolPerformance } = require('./middlewares/performanceTracker');
 const path = require('path');
 
 const PORT = process.env.PORT || 5039;
@@ -27,9 +26,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-// Performance tracking middleware - must be before routes
-app.use(trackToolPerformance);
 
 // URL Shortener redirect handler - handle both /s/:shortCode and /:shortCode paths
 app.get('/s/:shortCode', handleRedirect);

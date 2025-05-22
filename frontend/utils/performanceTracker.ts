@@ -41,6 +41,7 @@ const extractToolName = (url: string): string => {
     const toolsIndex = urlParts.findIndex(part => part === 'tools');
     if (toolsIndex >= 0 && toolsIndex + 1 < urlParts.length) {
       const toolName = urlParts[toolsIndex + 1];
+      
       return toolName;
     }
   }
