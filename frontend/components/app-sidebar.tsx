@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarHeader, SidebarMenuSkeleton } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Icon from "@/components/icon"
 import { Settings, ChevronsUpDown, ChevronDown, ChevronRight, LogOut, Heart, GripVertical, User, LogIn } from "lucide-react"
@@ -74,6 +74,7 @@ function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onCli
 export function AppSidebar() {
   const [isGuest, setIsGuest] = useAtom(isGuestAtom);
   const [userData] = useAtom(userDataAtom);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [openStates, setOpenStates] = useState({
     codeSnippets: false,
@@ -95,7 +96,14 @@ export function AppSidebar() {
   const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
-    initializeGuestState();
+    const init = async () => {
+      try {
+        await initializeGuestState();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    init();
   }, [initializeGuestState]);
 
   useEffect(() => {
@@ -171,13 +179,13 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {loading ? (
-                          <SidebarMenuSubItem>
-                            <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
-                              <div className="cursor-default opacity-50">
-                                <span>Loading...</span>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuSubItem>
+                          <>
+                            {[1, 2, 3].map((i) => (
+                              <SidebarMenuSubItem key={i}>
+                                <SidebarMenuSkeleton showIcon />
+                              </SidebarMenuSubItem>
+                            ))}
+                          </>
                         ) : favorites.length === 0 ? (
                           <SidebarMenuSubItem>
                             <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
@@ -289,7 +297,9 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem suppressHydrationWarning>
-            {isGuest ? (
+            {isLoading ? (
+              <SidebarMenuSkeleton showIcon className="h-12" />
+            ) : isGuest ? (
               <SidebarMenuButton
                 className="h-fit flex items-center justify-center"
                 variant="primary"
