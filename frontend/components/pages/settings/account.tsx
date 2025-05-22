@@ -385,7 +385,8 @@ export default function AccountPage() {
                 (formData.firstName === userData?.firstName &&
                  formData.lastName === userData?.lastName &&
                  formData.username === userData?.username &&
-                 formData.email === userData?.email)}
+                 formData.email === userData?.email) ||
+                usernameStatus.available === false}
             >
               Save Changes
             </Button>
