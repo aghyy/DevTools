@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { MagicCard } from '@/components/ui/magic-card';
 import Icon from '@/components/icon';
@@ -45,10 +44,10 @@ const itemVariants = {
 export default function DashboardFavorites() {
   const [error] = useState<string | null>(null);
   const router = useRouter();
-  const { favorites, loading } = useFavoriteTools();
+  const { favorites = [], loading } = useFavoriteTools();
 
   // Get only the first 3 favorites to display
-  const displayFavorites = favorites.slice(0, 3);
+  const displayFavorites = favorites?.slice(0, 3) ?? [];
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -80,25 +79,6 @@ export default function DashboardFavorites() {
         >
           {error}
         </motion.div>
-      ) : displayFavorites.length === 0 ? (
-        <motion.div 
-          key="empty"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="px-4 py-10 text-center border rounded-lg bg-primary/5"
-        >
-          <Heart className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-          <p className="mb-3">No favorite tools yet.</p>
-          <Button
-            onClick={() => routeTo('/tools/base64')}
-            variant="outline"
-            size="sm"
-          >
-            Explore Tools
-          </Button>
-        </motion.div>
       ) : (
         <motion.div 
           key="content"
@@ -120,7 +100,7 @@ export default function DashboardFavorites() {
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="bg-primary/5 p-3 rounded-full">
                       {tool.icon && (
-                        <Icon icon={getIconComponent(tool.icon)} className='' />
+                        <Icon icon={getIconComponent(tool.icon)} className="" />
                       )}
                     </div>
                     <div className="flex-1">
@@ -136,6 +116,18 @@ export default function DashboardFavorites() {
             </motion.div>
           ))}
 
+          {favorites.length === 0 && !loading && (
+            <motion.div
+              key="no-favorites"
+              variants={itemVariants}
+              className="col-span-2 text-center py-8"
+            >
+              <p className="text-muted-foreground">
+                You haven&apos;t added any favorites yet. Browse tools and click the star icon to add them to your favorites.
+              </p>
+            </motion.div>
+          )}
+
           {favorites.length > 0 && (
             <motion.div
               key="view-all"
@@ -150,4 +142,4 @@ export default function DashboardFavorites() {
       )}
     </AnimatePresence>
   );
-} 
+}
