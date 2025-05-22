@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TopSpacing } from "@/components/top-spacing";
 import { useAtom } from "jotai";
 import { userDataAtom } from "@/atoms/auth";
+import { motion } from "framer-motion";
 
 import {
   Breadcrumb,
@@ -31,6 +32,43 @@ import RecentActivities from "@/components/pages/dashboard/recent-activities";
 import MostUsed from "@/components/pages/dashboard/most-used";
 import DashboardFavorites from "@/components/pages/dashboard/favorites-section";
 import FeaturedSection from "@/components/pages/dashboard/featured-section";
+
+const pageVariants = {
+  initial: { opacity: 0 },
+  animate: { 
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const sectionVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.5,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const cardVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut"
+    }
+  }
+};
 
 export default function Dashboard() {
   const [userData] = useAtom(userDataAtom);
@@ -65,7 +103,12 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="h-full w-full">
+    <motion.div 
+      className="h-full w-full"
+      initial="initial"
+      animate="animate"
+      variants={pageVariants}
+    >
       <div className="relative size-0">
         <Breadcrumb className="absolute z-50 left-20 top-[22px] w-max">
           <BreadcrumbList>
@@ -82,46 +125,83 @@ export default function Dashboard() {
         <UserWelcome userData={userData} loading={loading} />
 
         {error && (
-          <div className="mb-6 md:mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 md:mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <ChartSection loading={loading} recentItems={recentItems} mostUsedItems={mostUsedItems} />
+        <motion.div
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+        >
+          <ChartSection loading={loading} recentItems={recentItems} mostUsedItems={mostUsedItems} />
+        </motion.div>
 
         {/* Recent Activity */}
-        <div className="mb-6 md:mb-8">
+        <motion.div 
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+          className="mb-6 md:mb-8"
+        >
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
             <Clock3 className="h-4 w-4 md:h-5 md:w-5" />
             Recent Activity
           </h2>
-          <RecentActivities loading={loading} recentItems={recentItems} />
-        </div>
+          <motion.div variants={cardVariants}>
+            <RecentActivities loading={loading} recentItems={recentItems} />
+          </motion.div>
+        </motion.div>
 
         {/* Most Used */}
-        <div className="mb-6 md:mb-8">
+        <motion.div 
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+          className="mb-6 md:mb-8"
+        >
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 md:h-5 md:w-5" />
             Most Used
           </h2>
-          <MostUsed loading={loading} mostUsedItems={mostUsedItems} />
-        </div>
+          <motion.div variants={cardVariants}>
+            <MostUsed loading={loading} mostUsedItems={mostUsedItems} />
+          </motion.div>
+        </motion.div>
 
         {/* Favorites section */}
-        <div className="mb-6 md:mb-8">
+        <motion.div 
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+          className="mb-6 md:mb-8"
+        >
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
             <Heart className="h-4 w-4 md:h-5 md:w-5" />
             Favorite Tools
           </h2>
-          <DashboardFavorites />
-        </div>
+          <motion.div variants={cardVariants}>
+            <DashboardFavorites />
+          </motion.div>
+        </motion.div>
 
         {/* Featured links */}
-        <div>
+        <motion.div
+          variants={sectionVariants}
+          initial="initial"
+          animate="animate"
+        >
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Quick Access</h2>
-          <FeaturedSection loading={loading} />
-        </div>
+          <motion.div variants={cardVariants}>
+            <FeaturedSection loading={loading} />
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

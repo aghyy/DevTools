@@ -11,6 +11,36 @@ import { MagicCard } from '@/components/ui/magic-card';
 import Icon from '@/components/icon';
 import { getIconComponent } from '@/utils/icons';
 import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 10,
+    scale: 0.98
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  }
+};
 
 export default function DashboardFavorites() {
   const [error] = useState<string | null>(null);
@@ -24,72 +54,100 @@ export default function DashboardFavorites() {
     router.push(path);
   };
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[1, 2, 3].map(i => (
-          <Skeleton key={i} className="h-24 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-500">
-        {error}
-      </div>
-    );
-  }
-
-  if (displayFavorites.length === 0) {
-    return (
-      <div className="px-4 py-10 text-center border rounded-lg bg-primary/5">
-        <Heart className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-        <p className="mb-3">No favorite tools yet.</p>
-        <Button
-          onClick={() => routeTo('/tools/base64')}
-          variant="outline"
-          size="sm"
-        >
-          Explore Tools
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {displayFavorites.map((tool) => (
-        <MagicCard
-          key={tool.id}
-          className="overflow-hidden cursor-pointer"
-          onClick={() => routeTo(tool.toolUrl)}
+    <AnimatePresence mode="wait">
+      {loading ? (
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <Card className="h-full border-0 bg-transparent">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="bg-primary/5 p-3 rounded-full">
-                {tool.icon && (
-                  <Icon icon={getIconComponent(tool.icon)} className='' />
-                )}
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium">{tool.toolName}</h3>
-                <div className="flex items-center text-xs text-primary/50 mt-1">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  <span>Click to open</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </MagicCard>
-      ))}
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+          ))}
+        </motion.div>
+      ) : error ? (
+        <motion.div
+          key="error"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-500"
+        >
+          {error}
+        </motion.div>
+      ) : displayFavorites.length === 0 ? (
+        <motion.div 
+          key="empty"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="px-4 py-10 text-center border rounded-lg bg-primary/5"
+        >
+          <Heart className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+          <p className="mb-3">No favorite tools yet.</p>
+          <Button
+            onClick={() => routeTo('/tools/base64')}
+            variant="outline"
+            size="sm"
+          >
+            Explore Tools
+          </Button>
+        </motion.div>
+      ) : (
+        <motion.div 
+          key="content"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {displayFavorites.map((tool) => (
+            <motion.div
+              key={tool.id}
+              variants={itemVariants}
+            >
+              <MagicCard
+                className="overflow-hidden cursor-pointer"
+                onClick={() => routeTo(tool.toolUrl)}
+              >
+                <Card className="h-full border-0 bg-transparent">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="bg-primary/5 p-3 rounded-full">
+                      {tool.icon && (
+                        <Icon icon={getIconComponent(tool.icon)} className='' />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{tool.toolName}</h3>
+                      <div className="flex items-center text-xs text-primary/50 mt-1">
+                        <ArrowUpRight className="h-3 w-3 mr-1" />
+                        <span>Click to open</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </MagicCard>
+            </motion.div>
+          ))}
 
-      {favorites.length > 0 && (
-        <Link href="/favorites" className="flex items-center justify-center p-4 text-sm text-primary hover:underline">
-          View all favorites
-        </Link>
+          {favorites.length > 0 && (
+            <motion.div
+              key="view-all"
+              variants={itemVariants}
+            >
+              <Link href="/favorites" className="flex items-center justify-center p-4 text-sm text-primary hover:underline">
+                View all favorites
+              </Link>
+            </motion.div>
+          )}
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 } 

@@ -6,9 +6,39 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { getIconComponent } from "@/utils/icons";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity as ActivityType,
 } from "@/services/activity";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 10,
+    scale: 0.98
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  }
+};
 
 export default function RecentActivities({ loading, recentItems }: { loading: boolean, recentItems: ActivityType[] }) {
   const { theme, systemTheme } = useTheme();
@@ -37,49 +67,73 @@ export default function RecentActivities({ loading, recentItems }: { loading: bo
   };
 
   return (
-   <>
+    <AnimatePresence mode="wait">
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
+        >
           {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
             <Skeleton key={i} className="h-20 md:h-24 w-full rounded-lg" />
           ))}
-        </div>
+        </motion.div>
       ) : recentItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <motion.div 
+          key="content"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {recentItems.slice(0, 8).map((item) => {
             const IconComponent = getIconComponent(item.icon);
             return (
-              <MagicCard
+              <motion.div
                 key={item.id}
-                className="overflow-hidden cursor-pointer"
-                onClick={() => routeTo(item.path)}
+                variants={itemVariants}
               >
-                <Card className="h-full border-0 bg-transparent">
-                  <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
-                    <div className={cn(
-                      "p-2 md:p-3 rounded-full",
-                      isDark ? "bg-primary/10" : "bg-primary/5"
-                    )}>
-                      <IconComponent className="h-4 w-4 md:h-5 md:w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-ellipsis overflow-hidden whitespace-nowrap">{item.name}</h3>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}
+                <MagicCard
+                  className="overflow-hidden cursor-pointer"
+                  onClick={() => routeTo(item.path)}
+                >
+                  <Card className="h-full border-0 bg-transparent">
+                    <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                      <div className={cn(
+                        "p-2 md:p-3 rounded-full",
+                        isDark ? "bg-primary/10" : "bg-primary/5"
+                      )}>
+                        <IconComponent className="h-4 w-4 md:h-5 md:w-5" />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MagicCard>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-ellipsis overflow-hidden whitespace-nowrap">{item.name}</h3>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {item.createdAt ? formatRelativeTime(item.createdAt) : 'Recently'}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </MagicCard>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       ) : (
-        <div className="p-6 md:p-8 text-center border rounded-lg bg-slate-50 dark:bg-slate-900/20">
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="p-6 md:p-8 text-center border rounded-lg bg-slate-50 dark:bg-slate-900/20"
+        >
           <p className="text-slate-500">No activity recorded yet. Start using tools and resources!</p>
-        </div>
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   );
 }
