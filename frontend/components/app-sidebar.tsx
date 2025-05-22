@@ -32,6 +32,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { updateFavoritePositions } from '@/services/favoriteToolService';
 import type { FavoriteTool } from '@/services/favoriteToolService';
+import { Skeleton } from "@/components/ui/skeleton"
 
 function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: favorite.id });
@@ -77,17 +78,19 @@ export function AppSidebar() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [openStates, setOpenStates] = useState({
-    codeSnippets: false,
+    codeSnippets: true,
     tools: true,
-    favorites: !isGuest,
+    favorites: true,
   });
 
   useEffect(() => {
-    setOpenStates(prev => ({
-      ...prev,
-      favorites: !isGuest
-    }));
-  }, [isGuest]);
+    if (!isLoading) {
+      setOpenStates(prev => ({
+        ...prev,
+        favorites: !isGuest
+      }));
+    }
+  }, [isGuest, isLoading]);
 
   const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
   const router = useRouter();
@@ -298,7 +301,14 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem suppressHydrationWarning>
             {isLoading ? (
-              <SidebarMenuSkeleton showIcon className="h-12" />
+              <div className="flex items-center gap-2 px-2 mb-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="ml-auto h-4 w-4" />
+              </div>
             ) : isGuest ? (
               <SidebarMenuButton
                 className="h-fit flex items-center justify-center"
