@@ -1,5 +1,6 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { trackActivity } from "@/services/activity";
+import { toast } from "sonner";
 
 // Define the FavoriteTool interface
 export interface FavoriteTool {
@@ -33,7 +34,7 @@ export const addToFavorites = async (
 ): Promise<FavoriteTool> => {
   try {
     const response = await api.post(API_URL, { toolUrl, toolName, icon });
-    
+
     // Track activity after adding to favorites
     await trackActivity({
       type: "favorite",
@@ -41,13 +42,11 @@ export const addToFavorites = async (
       path: toolUrl,
       icon: icon || "Heart",
     });
-    
+
     return response.data.favoriteTool;
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError<{ message: string }>;
-    throw new Error(
-      axiosError.response?.data?.message || "Failed to add tool to favorites"
-    );
+  } catch {
+    toast.error("Failed to add tool to favorites");
+    return {} as FavoriteTool;
   }
 };
 
@@ -58,11 +57,9 @@ export const getFavoriteTools = async (): Promise<FavoriteTool[]> => {
   try {
     const response = await api.get(API_URL);
     return response.data;
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError<{ message: string }>;
-    throw new Error(
-      axiosError.response?.data?.message || "Failed to fetch favorite tools"
-    );
+  } catch {
+    toast.error("Failed to fetch favorite tools");
+    return [];
   }
 };
 
@@ -73,10 +70,10 @@ export const removeFromFavorites = async (id: number): Promise<void> => {
   try {
     // Get the favorite info before deleting (to track activity)
     const favorites = await getFavoriteTools();
-    const favorite = favorites.find(f => f.id === id);
-    
+    const favorite = favorites.find((f) => f.id === id);
+
     await api.delete(`${API_URL}/${id}`);
-    
+
     // If we found the favorite, track the removal as activity
     if (favorite) {
       await trackActivity({
@@ -86,12 +83,8 @@ export const removeFromFavorites = async (id: number): Promise<void> => {
         icon: favorite.icon || "Heart",
       });
     }
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError<{ message: string }>;
-    throw new Error(
-      axiosError.response?.data?.message ||
-        "Failed to remove tool from favorites"
-    );
+  } catch {
+    toast.error("Failed to remove tool from favorites");
   }
 };
 
@@ -102,8 +95,8 @@ export const isToolInFavorites = async (toolUrl: string): Promise<boolean> => {
   try {
     const favorites = await getFavoriteTools();
     return favorites.some((tool) => tool.toolUrl === toolUrl);
-  } catch (error) {
-    console.error("Error checking if tool is in favorites:", error);
+  } catch {
+    toast.error("Failed to check if tool is in favorites.");
     return false;
   }
 };
@@ -111,14 +104,12 @@ export const isToolInFavorites = async (toolUrl: string): Promise<boolean> => {
 /**
  * Update the positions of favorite tools
  */
-export const updateFavoritePositions = async (positions: { id: number; position: number }[]): Promise<void> => {
+export const updateFavoritePositions = async (
+  positions: { id: number; position: number }[]
+): Promise<void> => {
   try {
     await api.put(`${API_URL}/positions`, { positions });
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError<{ message: string }>;
-    throw new Error(
-      axiosError.response?.data?.message ||
-        "Failed to update favorite positions"
-    );
+  } catch {
+    toast.error("Failed to update favorite positions");
   }
 };

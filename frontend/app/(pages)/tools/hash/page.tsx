@@ -25,6 +25,7 @@ import { handleCopy, handlePaste } from '@/utils/clipboard';
 import FavoriteButton from "@/components/favorite-button";
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { toast } from "sonner";
 
 export default function HashPage() {
   return (
@@ -37,7 +38,6 @@ export default function HashPage() {
 function HashTool() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
-  const [error, setError] = useState("");
   const [algorithm, setAlgorithm] = useState("md5");
   const [encoding, setEncoding] = useState("hex");
   
@@ -54,7 +54,6 @@ function HashTool() {
   const handleClear = () => {
     setDecodedText("");
     setEncodedText("");
-    setError("");
     
     // Clear any active trackers
     if (encryptTracker.current) {
@@ -67,7 +66,7 @@ function HashTool() {
 
   const fetchDecryptedText = async (hash: string) => {
     if (!checkIfHash(hash, algorithm)) {
-      setError("Invalid hash format.");
+      toast.error("Invalid hash format.");
       return;
     }
 
@@ -88,7 +87,7 @@ function HashTool() {
       if (response.data.decryptedText) {
         setDecodedText(response.data.decryptedText);
       } else {
-        setError("Hash not found in dictionary.");
+        toast.error("Hash not found in dictionary.");
       }
       
       // Complete tracking
@@ -97,7 +96,7 @@ function HashTool() {
         decryptTracker.current = null;
       }
     } catch {
-      setError("An error occurred while trying to decrypt the hash.");
+      toast.error("An error occurred while trying to decrypt the hash.");
       
       // Clear tracker on error
       if (decryptTracker.current) {
@@ -110,13 +109,13 @@ function HashTool() {
     try {
       await apiWithoutCredentials.post("/api/tools/add-to-wordlist", { word });
     } catch {
-      console.error("Failed to add word to dictionary.");
+      toast.error("Failed to add word to dictionary.");
     }
   }
 
   const encryptText = (text: string) => {
     if (!text) {
-      setError("Please enter text to encrypt.");
+      toast.error("Please enter text to encrypt.");
       return;
     }
 
@@ -190,9 +189,8 @@ function HashTool() {
         encryptTracker.current.complete();
         encryptTracker.current = null;
       }
-    } catch (error) {
-      console.error("Encryption error:", error);
-      setError("An error occurred during encryption.");
+    } catch {
+      toast.error("Encryption error.");
       
       // Clear tracker on error
       if (encryptTracker.current) {
@@ -204,7 +202,6 @@ function HashTool() {
   const handleChangeEncodedText = (text: string) => {
     setEncodedText(text);
     setDecodedText("");
-    setError("");
   }
 
   const handleChangeDecodedText = (text: string) => {
@@ -231,14 +228,14 @@ function HashTool() {
 
     const pattern = hashPatterns[algorithm.toLowerCase()];
     if (!pattern) {
-      throw new Error(`Unsupported algorithm: ${algorithm}`);
+      toast.error(`Unsupported algorithm: ${algorithm}`);
+      return false;
     }
 
     return pattern.test(value);
   };
 
   useEffect(() => {
-    setError("");
     setEncodedText("");
     setDecodedText("");
   }, [algorithm, encoding]);
@@ -352,9 +349,6 @@ function HashTool() {
             </Button>
           </Card>
         </div>
-
-        {/* Error Message */}
-        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
 
         {/* Clear Button */}
         <div className="flex gap-5 justify-start">

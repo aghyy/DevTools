@@ -22,6 +22,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
+import { toast } from "sonner";
 
 interface ApiError {
   response?: {
@@ -41,7 +42,6 @@ export default function URLShortener() {
   const [useCustomCode, setUseCustomCode] = useState(false);
   const [shortenedUrl, setShortenedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [codeConflict, setCodeConflict] = useState(false);
 
@@ -53,7 +53,6 @@ export default function URLShortener() {
     setUrl("");
     setCustomCode("");
     setShortenedUrl(null);
-    setError(null);
     setCodeConflict(false);
   };
 
@@ -61,7 +60,6 @@ export default function URLShortener() {
     e.preventDefault();
 
     // Reset states
-    setError(null);
     setShortenedUrl(null);
     setCodeConflict(false);
     setIsLoading(true);
@@ -71,7 +69,7 @@ export default function URLShortener() {
       try {
         new URL(url);
       } catch {
-        setError("Invalid URL format. Please enter a valid URL including the protocol (http:// or https://).");
+        toast.error("Invalid URL format. Please enter a valid URL including the protocol (http:// or https://).");
         setIsLoading(false);
         return;
       }
@@ -81,7 +79,7 @@ export default function URLShortener() {
         // Only alphanumeric and hyphens allowed, 3-20 characters
         const codeRegex = /^[a-zA-Z0-9-]{3,20}$/;
         if (!codeRegex.test(customCode)) {
-          setError("Custom URL code must be 3-20 characters and can only contain letters, numbers, and hyphens.");
+          toast.error("Custom URL code must be 3-20 characters and can only contain letters, numbers, and hyphens.");
           setIsLoading(false);
           return;
         }
@@ -98,7 +96,7 @@ export default function URLShortener() {
       if (response.data.shortUrl) {
         setShortenedUrl(response.data.shortUrl);
       } else {
-        setError("Failed to shorten URL. Please try again.");
+        toast.error("Failed to shorten URL. Please try again.");
       }
     } catch (error: unknown) {
       const apiError = error as ApiError;
@@ -106,9 +104,9 @@ export default function URLShortener() {
       // Handle code conflict error
       if (apiError.response && apiError.response.status === 409) {
         setCodeConflict(true);
-        setError("This custom URL code is already taken. Please choose another.");
+        toast.error("This custom URL code is already taken. Please choose another.");
       } else {
-        setError("An error occurred while shortening the URL. Please try again.");
+        toast.error("An error occurred while shortening the URL. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -257,15 +255,8 @@ export default function URLShortener() {
           </Card>
         )}
 
-        {/* Error Message */}
-        {error && (
-          <Card className="p-4 mt-4 border-destructive bg-destructive/10">
-            <p className="text-destructive">{error}</p>
-          </Card>
-        )}
-
         {/* Clear Button */}
-        {(shortenedUrl || error) && (
+        {shortenedUrl && (
           <Button
             onClick={handleClear}
             variant="destructive"

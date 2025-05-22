@@ -35,6 +35,7 @@ import { updateFavoritePositions } from '@/services/favoriteToolService';
 import type { FavoriteTool } from '@/services/favoriteToolService';
 import { Skeleton } from "@/components/ui/skeleton"
 import { restrictToParentElement } from '@dnd-kit/modifiers';
+import { toast } from "sonner";
 
 function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: favorite.id });
@@ -143,7 +144,7 @@ export function AppSidebar() {
         }, 500);
       }
     } catch {
-      console.log("Error logging out:");
+      toast.error("Error logging out.");
     }
   };
 

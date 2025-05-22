@@ -11,6 +11,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { trackActivity } from "@/services/activity";
+import { toast } from "sonner";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -57,7 +58,7 @@ export const BookmarkCard: React.FC<BookmarkCardProps> = ({
       name: `Opened: ${bookmark.title}`,
       path: bookmark.url,
       icon: bookmark.favicon ? "Link" : "Globe",
-    }).catch(err => console.error("Failed to track bookmark activity:", err));
+    }).catch(() => toast.error("Failed to track bookmark activity."));
     
     window.open(bookmark.url, "_blank");
   };

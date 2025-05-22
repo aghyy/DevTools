@@ -39,8 +39,6 @@ export default function ResetPassword() {
     try {
       await resetPassword(token || '', password, confirmPassword);
       router.push('/auth/login');
-    } catch (err) {
-      console.error('Password reset error:', err);
     } finally {
       setLoading(false);
     }

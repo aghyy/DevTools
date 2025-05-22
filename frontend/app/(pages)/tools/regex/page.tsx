@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FavoriteButton from "@/components/favorite-button";
+import { toast } from "sonner";
 
 // Regex cheat sheets by language
 const cheatSheets = {
@@ -152,7 +153,6 @@ export default function RegexTester() {
   const [testText, setTestText] = useState<string>('');
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [matchPositions, setMatchPositions] = useState<{ start: number, end: number }[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   const routeTo = (path: string) => {
     router.push(path);
@@ -160,7 +160,6 @@ export default function RegexTester() {
 
   // Test the regex pattern against the input text
   const testRegex = useCallback(() => {
-    setError(null);
     setMatches(null);
     setMatchPositions([]);
 
@@ -203,7 +202,7 @@ export default function RegexTester() {
       });
       setMatchPositions(positions);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }, [regexPattern, testText]);
 
@@ -245,7 +244,6 @@ export default function RegexTester() {
     setTestText('');
     setMatches(null);
     setMatchPositions([]);
-    setError(null);
   };
 
   return (
@@ -306,11 +304,6 @@ export default function RegexTester() {
                 </div>
               )}
             </div>
-            {error && (
-              <div className="text-red-500 text-sm p-2 rounded bg-red-50 dark:bg-red-900/20">
-                Error: {error}
-              </div>
-            )}
           </CardContent>
         </Card>
 

@@ -72,7 +72,6 @@ const getToolDescription = (toolPath: string) => {
 };
 
 export default function FavoritesPage() {
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { favorites, loading, refreshFavorites } = useFavoriteTools();
   const [localFavorites, setLocalFavorites] = useState<FavoriteTool[]>(favorites);
@@ -95,11 +94,8 @@ export default function FavoritesPage() {
       toast.success('Removed from favorites', {
         description: `${name} has been removed from your favorites.`,
       });
-    } catch (err) {
-      toast.error('Error removing favorite', {
-        description: 'Failed to remove from favorites. Please try again.',
-      });
-      console.error(err);
+    } catch {
+      toast.error('Failed to remove from favorites. Please try again.');
     }
   };
 
@@ -146,16 +142,6 @@ export default function FavoritesPage() {
               </Card>
             ))}
           </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              variant="outline"
-            >
-              Try Again
-            </Button>
-          </div>
         ) : localFavorites.length === 0 ? (
           <div className="text-center py-12">
             <div className="mb-4">
@@ -192,7 +178,7 @@ export default function FavoritesPage() {
                 refreshFavorites(true); // don't await, keeps UI smooth
                 setTimeout(() => setIsReordering(false), 500); // allow refresh to complete, then allow sync
               } catch {
-                setError('Failed to update order.');
+                toast.error('Failed to update order.');
                 setLocalFavorites(favorites); // revert to global state
                 setIsReordering(false);
               }

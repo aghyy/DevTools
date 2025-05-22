@@ -24,6 +24,7 @@ import { allExamples, ExampleOption } from ".";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { handleCopy } from "@/utils/clipboard";
 import FavoriteButton from "@/components/favorite-button";
+import { toast } from "sonner";
 
 export default function Proxy() {
   const router = useRouter();
@@ -55,9 +56,9 @@ export default function Proxy() {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(proxyUrl);
-      alert("Proxy URL copied to clipboard!");
+      toast.success("Proxy URL copied to clipboard!");
     } catch {
-      alert("Failed to copy the URL.");
+      toast.error("Failed to copy the URL.");
     }
   }
 

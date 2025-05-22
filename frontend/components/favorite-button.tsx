@@ -47,12 +47,8 @@ export default function FavoriteButton({ toolUrl, toolName, iconName, className 
           description: `${toolName} has been added to your favorites.`,
           duration: 3000,
         });
-      } catch (error) {
-        console.error('Error adding to favorites:', error);
-        toast.error('Error', {
-          description: 'Failed to add to favorites. Please try again.',
-          duration: 3000,
-        });
+      } catch {
+        toast.error('Failed to add to favorites. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -71,12 +67,8 @@ export default function FavoriteButton({ toolUrl, toolName, iconName, className 
             duration: 3000,
           });
         }
-      } catch (error) {
-        console.error('Error removing from favorites:', error);
-        toast.error('Error', {
-          description: 'Failed to remove from favorites. Please try again.',
-          duration: 3000,
-        });
+      } catch {
+        toast.error('Failed to remove from favorites. Please try again.');
       } finally {
         setIsLoading(false);
       }

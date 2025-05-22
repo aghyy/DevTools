@@ -34,6 +34,7 @@ import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { debounce } from '@/utils/debounce';
+import { toast } from "sonner";
 
 // UUID namespace constants
 const NAMESPACE_DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -101,12 +102,12 @@ function UuidGenerator() {
         generateTracker.current.complete();
         generateTracker.current = null;
       }
-    } catch (error) {
+    } catch {
       // Handle any errors and cleanup tracker
       if (generateTracker.current) {
         generateTracker.current = null;
       }
-      console.error("Error generating UUIDs:", error);
+      toast.error("Error generating UUIDs.");
     }
   };
 
@@ -166,12 +167,12 @@ function UuidGenerator() {
           generateTracker.current.complete();
           generateTracker.current = null;
         }
-      } catch (error) {
+      } catch {
         // Handle any errors and cleanup tracker
         if (generateTracker.current) {
           generateTracker.current = null;
         }
-        console.error("Error updating quantity:", error);
+        toast.error("Error updating quantity.");
       }
     };
     

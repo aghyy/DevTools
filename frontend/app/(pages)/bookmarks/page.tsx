@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { TopSpacing } from "@/components/top-spacing";
-import { useToast } from "@/hooks/use-toast";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -51,11 +50,10 @@ import {
   getUserTags,
   getAllPublicBookmarks
 } from "@/services/bookmarkService";
-import { getUserDetails } from "@/services/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { UserData } from "@/types/user";
 import { useAtom } from "jotai";
-import { isGuestAtom } from "@/atoms/auth";
+import { isGuestAtom, userDataAtom } from "@/atoms/auth";
+import { toast } from "sonner";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -65,8 +63,9 @@ interface UserPublicBookmarks {
 }
 
 export default function Bookmarks() {
-  const { toast } = useToast();
-  const [isGuest] = useAtom(isGuestAtom);
+  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
+  const [userData] = useAtom(userDataAtom);
+  const [isGuestLoading, setIsGuestLoading] = useState(true);
 
   // State
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -78,8 +77,7 @@ export default function Bookmarks() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(isGuest ? "public" : "personal");
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("personal");
   const [publicBookmarks, setPublicBookmarks] = useState<UserPublicBookmarks[]>([]);
 
   // Form and dialog state
@@ -90,24 +88,46 @@ export default function Bookmarks() {
   const [bookmarkToDelete, setBookmarkToDelete] = useState<Bookmark | null>(null);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
-  // Fetch data on component mount
+  // Initialize data
   useEffect(() => {
-    fetchUserData();
-    if (!isGuest) {
-      fetchPersonalBookmarks();
+    const initializeData = async () => {
+      try {
+        if (userData) {
+          setIsGuest(false);
+          setActiveTab("personal");
+        } else {
+          setIsGuest(true);
+          setActiveTab("public");
+        }
+      } catch {
+        toast.error("Failed to load bookmarks");
+        setIsGuest(true);
+        setActiveTab("public");
+      } finally {
+        setIsGuestLoading(false);
+      }
+    };
+
+    initializeData();
+  }, [userData]);
+
+  // Add effect to enforce public tab when guest
+  useEffect(() => {
+    if (!isGuestLoading && isGuest) {
+      setActiveTab("public");
     }
-    fetchPublicBookmarks();
-  }, []);
+  }, [isGuest, isGuestLoading]);
 
   useEffect(() => {
-    if (activeTab === "personal" && !isGuest) {
-      fetchPersonalBookmarks();
-      fetchCategories();
-      fetchTags();
-    } else {
+    if (!isGuestLoading) {
+      if (!isGuest) {
+        fetchPersonalBookmarks();
+        fetchCategories();
+        fetchTags();
+      }
       fetchPublicBookmarks();
     }
-  }, [activeTab, isGuest]);
+  }, [isGuestLoading, isGuest]);
 
   // Apply filters and search for personal bookmarks
   useEffect(() => {
@@ -156,15 +176,6 @@ export default function Bookmarks() {
   }, [bookmarks, publicBookmarks, searchTerm, selectedCategory, selectedTag, selectedUser, activeTab, isGuest]);
 
   // Fetch functions
-  const fetchUserData = async () => {
-    try {
-      const user = await getUserDetails();
-      setUserData(user);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-
   const fetchPersonalBookmarks = async () => {
     setIsLoading(true);
     try {
@@ -172,11 +183,7 @@ export default function Bookmarks() {
       setBookmarks(bookmarks);
       setFilteredBookmarks(bookmarks);
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load bookmarks",
-        variant: "destructive",
-      });
+      toast.error("Failed to load bookmarks");
     } finally {
       setIsLoading(false);
     }
@@ -219,13 +226,8 @@ export default function Bookmarks() {
       });
 
       setFilteredBookmarks(allBookmarks);
-    } catch (error) {
-      console.error("Error fetching public bookmarks:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load public bookmarks",
-        variant: "destructive",
-      });
+    } catch {
+      toast.error("Failed to load public bookmarks");
     } finally {
       setIsLoading(false);
     }
@@ -236,7 +238,7 @@ export default function Bookmarks() {
       const data = await getUserCategories();
       setCategories(data);
     } catch {
-      console.error("Error fetching categories");
+      toast.error("Failed to load categories");
     }
   };
 
@@ -245,7 +247,7 @@ export default function Bookmarks() {
       const data = await getUserTags();
       setTags(data);
     } catch {
-      console.error("Error fetching tags");
+      toast.error("Failed to load tags");
     }
   };
 
@@ -267,31 +269,21 @@ export default function Bookmarks() {
         // Update existing bookmark
         const updated = await updateBookmark(editingBookmark.id, data);
         setBookmarks(bookmarks.map(bookmark => bookmark.id === editingBookmark.id ? updated : bookmark));
-        toast({
-          title: "Success",
-          description: "Bookmark updated successfully",
-        });
+        toast.success("Bookmark updated successfully");
       } else {
         // Create new bookmark
         const created = await createBookmark(data);
         setBookmarks([created, ...bookmarks]);
-        toast({
-          title: "Success",
-          description: "Bookmark added successfully",
-        });
+        toast.success("Bookmark added successfully");
       }
       handleCloseForm();
       // Refresh data
       fetchCategories();
       fetchTags();
     } catch {
-      toast({
-        title: "Error",
-        description: editingBookmark
-          ? "Failed to update bookmark"
-          : "Failed to add bookmark",
-        variant: "destructive",
-      });
+      toast.error(editingBookmark
+        ? "Failed to update bookmark"
+        : "Failed to add bookmark");
     } finally {
       setIsProcessing(false);
     }
@@ -309,19 +301,12 @@ export default function Bookmarks() {
     try {
       await deleteBookmark(bookmarkToDelete.id);
       setBookmarks(bookmarks.filter(bookmark => bookmark.id !== bookmarkToDelete.id));
-      toast({
-        title: "Success",
-        description: "Bookmark deleted successfully",
-      });
+      toast.success("Bookmark deleted successfully");
       // Refresh data
       fetchCategories();
       fetchTags();
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete bookmark",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete bookmark");
     } finally {
       setDeleteDialogOpen(false);
       setBookmarkToDelete(null);
@@ -339,11 +324,13 @@ export default function Bookmarks() {
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSelectedCategory(null);
-    setSelectedTag(null);
-    setSelectedUser(null);
-    setSearchTerm("");
+    if (isGuestLoading) return;
+    // Force public tab if guest
+    if (isGuest) {
+      setActiveTab("public");
+    } else {
+      setActiveTab(value);
+    }
   };
 
   // Rendering
@@ -388,19 +375,21 @@ export default function Bookmarks() {
       <div className="w-full px-8 pt-8 pb-24 mx-auto">
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
-          <p className="text-muted-foreground">
-            {activeTab === "personal" && userData ? (
+          <div className="text-muted-foreground">
+            {isGuestLoading ? (
+              <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+            ) : activeTab === "personal" && userData ? (
               `${userData.firstName}'s bookmarks and favorite resources`
             ) : (
               "Public bookmarks shared by the community"
             )}
-          </p>
+          </div>
         </div>
 
         {/* Tabs - Only show for logged in users */}
-        {!isGuest && (
+        {!isGuestLoading && !isGuest && (
           <div className="flex justify-between items-center mb-4">
-            <Tabs defaultValue="personal" onValueChange={handleTabChange}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList>
                 <TabsTrigger value="personal" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
@@ -425,7 +414,19 @@ export default function Bookmarks() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Main content */}
           <div className="flex-1">
-            {isLoading ? (
+            {isGuestLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="w-full h-[250px] animate-pulse">
+                    <div className="h-32 bg-muted" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="w-full h-[250px] animate-pulse">
@@ -441,10 +442,10 @@ export default function Bookmarks() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredBookmarks.map((bookmark) => {
                   // Find the user who owns this bookmark
-                  const userBookmarks = publicBookmarks.find(ub => 
+                  const userBookmarks = publicBookmarks.find(ub =>
                     ub.bookmarks.some(b => b.id === bookmark.id)
                   );
-                  
+
                   return (
                     <BookmarkCard
                       key={bookmark.id}
@@ -604,7 +605,7 @@ export default function Bookmarks() {
       </div>
 
       {/* Form Sheet - Only show for logged in users */}
-      {!isGuest && (
+      {!isGuestLoading && !isGuest && (
         <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
           <SheetContent className="sm:max-w-xl overflow-y-auto">
             <SheetHeader>
@@ -628,7 +629,7 @@ export default function Bookmarks() {
       )}
 
       {/* Delete Confirmation Dialog - Only show for logged in users */}
-      {!isGuest && (
+      {!isGuestLoading && !isGuest && (
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -651,7 +652,7 @@ export default function Bookmarks() {
       )}
 
       {/* Mobile Filters Dialog - Only show for logged in users */}
-      {!isGuest && (
+      {!isGuestLoading && !isGuest && (
         <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
           <DialogContent>
             <DialogHeader>

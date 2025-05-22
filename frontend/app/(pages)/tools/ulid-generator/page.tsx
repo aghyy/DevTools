@@ -27,6 +27,7 @@ import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { debounce } from '@/utils/debounce';
+import { toast } from "sonner";
 
 export default function UlidGeneratorPage() {
   return (
@@ -41,7 +42,7 @@ function UlidGenerator() {
   const [quantity, setQuantity] = useState(1);
   const [format, setFormat] = useState("raw");
   const [isPending, setIsPending] = useState(false);
-  
+
   const { trackOperation } = useClientToolPerformance('ulid-generator');
   const generateTracker = useRef<{ complete: () => void } | null>(null);
   const debouncedUpdateRef = useRef<(newQuantity: number) => void>();
@@ -55,7 +56,7 @@ function UlidGenerator() {
   const generateUlids = () => {
     // Start tracking performance
     generateTracker.current = trackOperation(`generate-${quantity}`);
-    
+
     try {
       const newUlids: string[] = [];
 
@@ -64,18 +65,18 @@ function UlidGenerator() {
       }
 
       setUlids(newUlids);
-      
+
       // Complete tracking
       if (generateTracker.current) {
         generateTracker.current.complete();
         generateTracker.current = null;
       }
-    } catch (error) {
+    } catch {
       // Handle errors and clean up tracker
       if (generateTracker.current) {
         generateTracker.current = null;
       }
-      console.error("Error generating ULIDs:", error);
+      toast.error("Error generating ULIDs.");
     }
   };
 
@@ -89,7 +90,7 @@ function UlidGenerator() {
       // Start tracking for quantity change
       generateTracker.current = trackOperation(`quantity-change-${newQuantity}`);
       setIsPending(false);
-      
+
       try {
         if (newQuantity > ulids.length) {
           // Generate more ULIDs
@@ -102,21 +103,21 @@ function UlidGenerator() {
           // Reduce number of ULIDs
           setUlids(ulids.slice(0, newQuantity));
         }
-        
+
         // Complete tracking
         if (generateTracker.current) {
           generateTracker.current.complete();
           generateTracker.current = null;
         }
-      } catch (error) {
+      } catch {
         // Handle errors and clean up tracker
         if (generateTracker.current) {
           generateTracker.current = null;
         }
-        console.error("Error updating ULID quantity:", error);
+        toast.error("Error updating ULID quantity.");
       }
     };
-    
+
     debouncedUpdateRef.current = debounce(updateQuantity, 500);
   }, [ulids, trackOperation]);
 
@@ -124,7 +125,7 @@ function UlidGenerator() {
     const newQuantity = Math.max(1, Math.min(100, value));
     setQuantity(newQuantity);
     setIsPending(true);
-    
+
     if (debouncedUpdateRef.current) {
       debouncedUpdateRef.current(newQuantity);
     }
@@ -148,8 +149,8 @@ function UlidGenerator() {
         return JSON.stringify({ id: ulids[0] }, null, 2);
       } else {
         return JSON.stringify(
-          ulids.map(id => ({ id })), 
-          null, 
+          ulids.map(id => ({ id })),
+          null,
           2
         );
       }

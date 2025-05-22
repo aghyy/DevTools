@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import api from '../utils/axios';
 
 export interface SystemHealth {
@@ -29,8 +30,8 @@ export const getSystemHealth = async (): Promise<SystemHealth> => {
   try {
     const response = await api.get('/api/health/system');
     return response.data;
-  } catch (error) {
-    console.error('Error fetching system health:', error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch system health.");
+    return {} as SystemHealth;
   }
 }; 

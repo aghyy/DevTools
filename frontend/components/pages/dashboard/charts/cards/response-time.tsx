@@ -4,10 +4,11 @@ import StatCard from "../stat-card";
 import { useTheme } from "next-themes";
 import CustomTooltip from "../tooltip";
 import { useThemeColors } from "@/hooks/charts";
-import { AlertTriangle, Hammer } from "lucide-react";
+import { Hammer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PerformanceStats } from "@/types/charts";
 import api from "@/utils/axios";
+import { toast } from "sonner";
 
 // Extended PerformanceStats type that includes tool names
 interface DetailedPerformanceStats extends PerformanceStats {
@@ -37,7 +38,6 @@ export default function ResponseTimeCard({ loading, description }: {
     topTools: [],
     weeklyAvg: 0 
   });
-  const [error, setError] = useState<string | null>(null);
 
   const renderYAxis = (chart: string) => (
     <YAxis
@@ -73,11 +73,8 @@ export default function ResponseTimeCard({ loading, description }: {
         };
         
         setPerformanceStats(combinedData);
-        console.log(combinedData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching performance stats:', err);
-        setError('Failed to load performance data');
+      } catch {
+        toast.error("Failed to load performance data");
       }
     };
 
@@ -86,8 +83,6 @@ export default function ResponseTimeCard({ loading, description }: {
 
   // Format the description to include tool information
   const getEnhancedDescription = () => {
-    if (error) return `${description} (Using fallback data)`;
-    
     if (performanceStats.tools.length > 0) {
       const toolCount = performanceStats.tools.length;
       const toolsText = toolCount === 1 
@@ -110,7 +105,7 @@ export default function ResponseTimeCard({ loading, description }: {
           value={performanceStats.weeklyAvg || 0}
           suffix="ms"
           change={performanceStats.change}
-          icon={error ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <Hammer className="h-4 w-4 text-indigo-500" />}
+          icon={<Hammer className="h-4 w-4 text-indigo-500" />}
           description={getEnhancedDescription()}
         >
           <ResponsiveContainer width="100%" height="100%">

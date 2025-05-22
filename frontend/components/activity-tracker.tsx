@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackActivity } from '@/services/activity';
+import { toast } from 'sonner';
 
 // Activity tracking component that should be used in tool and bookmark pages
 interface ActivityTrackerProps {
@@ -30,9 +31,9 @@ export const ActivityTracker: React.FC<ActivityTrackerProps> = ({
           path: pathname,
           icon
         });
-      } catch (error) {
+      } catch {
         // Just log the error but don't stop the page from rendering
-        console.error('Failed to track activity:', error);
+        toast.error('Failed to track activity.');
       }
     };
 

@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import FavoriteButton from '@/components/favorite-button';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { toast } from 'sonner';
 
 // F5 Algorithm Implementation
 class F5Steganography {
@@ -142,9 +143,9 @@ class F5Steganography {
         coverImage.width,
         coverImage.height
       );
-    } catch (error) {
-      console.error('Encoding Error:', error);
-      throw new Error('Failed to encode the image.');
+    } catch {
+      toast.error("Failed to encode the image.");
+      return new ImageData(new Uint8ClampedArray(0), 0, 0);
     }
   }
 
@@ -162,7 +163,10 @@ class F5Steganography {
       const fullMessage = this.bytesToString(decodedBytes.slice(4));
 
       const delimiterIndex = fullMessage.lastIndexOf('|');
-      if (delimiterIndex === -1) throw new Error('Message delimiter not found.');
+      if (delimiterIndex === -1) {
+        toast.error("Message delimiter not found.");
+        return null;
+      }
 
       const message = fullMessage.slice(0, delimiterIndex);
       const storedPassword = fullMessage.slice(delimiterIndex + 1);
@@ -173,8 +177,8 @@ class F5Steganography {
       }
 
       return message;
-    } catch (error) {
-      console.error('Decoding Error:', error);
+    } catch {
+      toast.error("Failed to decode the image.");
       return null;
     }
   }
@@ -228,12 +232,12 @@ const Steganography: React.FC = () => {
   // Encode process
   const handleEncode = () => {
     if (message.length > 1000) {
-      alert('Message exceeds 1000 characters');
+      toast.error("Message exceeds 1000 characters");
       return;
     }
 
     if (!baseImage) {
-      alert('Please select a base image to encode your message');
+      toast.error("Please select a base image to encode your message");
       return;
     }
     
@@ -278,9 +282,8 @@ const Steganography: React.FC = () => {
           encodeTracker.current.complete();
           encodeTracker.current = null;
         }
-      } catch (error) {
-        console.error('Error during encoding:', error);
-        alert('Failed to encode the message into the image.');
+      } catch {
+        toast.error('Failed to encode the message into the image.');
         
         // Clear tracker on error
         if (encodeTracker.current) {
@@ -290,7 +293,7 @@ const Steganography: React.FC = () => {
     };
 
     img.onerror = () => {
-      alert('Failed to load the image for encoding.');
+      toast.error('Failed to load the image for encoding.');
       // Clear tracker on error
       if (encodeTracker.current) {
         encodeTracker.current = null;
@@ -303,7 +306,7 @@ const Steganography: React.FC = () => {
   // Decode process
   const handleDecode = () => {
     if (!decodeFiles || decodeFiles.length === 0) {
-      alert('Please select an image to decode');
+      toast.error("Please select an image to decode");
       return;
     }
 
@@ -320,7 +323,7 @@ const Steganography: React.FC = () => {
         const ctx = canvas.getContext('2d');
 
         if (!ctx) {
-          alert('Failed to create canvas context');
+          toast.error("Failed to create canvas context");
           // Clear tracker on error
           if (decodeTracker.current) {
             decodeTracker.current = null;
@@ -341,7 +344,7 @@ const Steganography: React.FC = () => {
           if (message) {
             setDecodedMessage(message);
           } else {
-            alert('No message found or incorrect password');
+            toast.error("No message found or incorrect password");
             setDecodedMessage('');
           }
           
@@ -350,9 +353,8 @@ const Steganography: React.FC = () => {
             decodeTracker.current.complete();
             decodeTracker.current = null;
           }
-        } catch (error) {
-          console.error('Error during decoding:', error);
-          alert('Failed to decode the image.');
+        } catch {
+          toast.error('Failed to decode the image.');
           setDecodedMessage('');
           
           // Clear tracker on error
@@ -363,7 +365,7 @@ const Steganography: React.FC = () => {
       };
 
       img.onerror = () => {
-        alert('Failed to load the image for decoding.');
+        toast.error("Failed to load the image for decoding.");
         // Clear tracker on error
         if (decodeTracker.current) {
           decodeTracker.current = null;
@@ -374,7 +376,7 @@ const Steganography: React.FC = () => {
     };
 
     reader.onerror = () => {
-      alert('Error reading the file');
+      toast.error("Error reading the file");
       // Clear tracker on error
       if (decodeTracker.current) {
         decodeTracker.current = null;

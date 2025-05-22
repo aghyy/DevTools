@@ -2,6 +2,7 @@
 
 import api from "@/utils/axios";
 import { Bookmark, BookmarkFormData, BookmarkTag, PublicBookmarks } from "@/types/bookmarks";
+import { toast } from "sonner";
 
 // Get all bookmarks for the current user
 export const getUserBookmarks = async (
@@ -23,9 +24,9 @@ export const getUserBookmarks = async (
     
     const response = await api.get(url);
     return response.data;
-  } catch (error) {
-    console.error("Error fetching bookmarks:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch bookmarks.");
+    return [];
   }
 };
 
@@ -34,9 +35,9 @@ export const getBookmarkById = async (id: number): Promise<Bookmark> => {
   try {
     const response = await api.get(`/api/bookmarks/${id}`);
     return response.data;
-  } catch (error) {
-    console.error(`Error fetching bookmark ${id}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to fetch bookmark ${id}.`);
+    return {} as Bookmark;
   }
 };
 
@@ -45,9 +46,9 @@ export const createBookmark = async (data: BookmarkFormData): Promise<Bookmark> 
   try {
     const response = await api.post("/api/bookmarks", data);
     return response.data.bookmark;
-  } catch (error) {
-    console.error("Error creating bookmark:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to create bookmark.");
+    return {} as Bookmark;
   }
 };
 
@@ -56,9 +57,9 @@ export const updateBookmark = async (id: number, data: BookmarkFormData): Promis
   try {
     const response = await api.put(`/api/bookmarks/${id}`, data);
     return response.data.bookmark;
-  } catch (error) {
-    console.error(`Error updating bookmark ${id}:`, error);
-    throw error;
+    } catch {
+    toast.error(`Failed to update bookmark ${id}.`);
+    return {} as Bookmark;
   }
 };
 
@@ -66,9 +67,8 @@ export const updateBookmark = async (id: number, data: BookmarkFormData): Promis
 export const deleteBookmark = async (id: number): Promise<void> => {
   try {
     await api.delete(`/api/bookmarks/${id}`);
-  } catch (error) {
-    console.error(`Error deleting bookmark ${id}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to delete bookmark ${id}.`);
   }
 };
 
@@ -77,9 +77,9 @@ export const getUserCategories = async (): Promise<string[]> => {
   try {
     const response = await api.get("/api/bookmarks/categories");
     return response.data;
-  } catch (error) {
-    console.error("Error fetching user categories:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch user categories.");
+    return [];
   }
 };
 
@@ -88,9 +88,9 @@ export const getUserTags = async (): Promise<BookmarkTag[]> => {
   try {
     const response = await api.get("/api/bookmarks/tags");
     return response.data;
-  } catch (error) {
-    console.error("Error fetching user tags:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch user tags.");
+    return [];
   }
 };
 
@@ -99,9 +99,9 @@ export const getPublicBookmarks = async (username: string): Promise<PublicBookma
   try {
     const response = await api.get(`/api/bookmarks/public/${username}`);
     return response.data;
-  } catch (error) {
-    console.error(`Error fetching public bookmarks for user ${username}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to fetch public bookmarks for user ${username}.`);
+    return {} as PublicBookmarks;
   }
 };
 
@@ -110,8 +110,8 @@ export const getAllPublicBookmarks = async (): Promise<{ user: string; username:
   try {
     const response = await api.get('/api/bookmarks/public');
     return response.data;
-  } catch (error) {
-    console.error('Error fetching all public bookmarks:', error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch all public bookmarks.");
+    return [];
   }
 }; 

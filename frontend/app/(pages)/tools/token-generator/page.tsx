@@ -23,6 +23,7 @@ import { handleCopy } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { debounce } from '@/utils/debounce';
+import { toast } from "sonner";
 
 export default function TokenGeneratorPage() {
   return (
@@ -99,8 +100,8 @@ function TokenGenerator() {
         generateTracker.current.complete();
         generateTracker.current = null;
       }
-    } catch (error) {
-      console.error("Token generation error:", error);
+    } catch {
+      toast.error("Token generation error.");
       
       // Clear tracker on error
       if (generateTracker.current) {

@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { CodeHighlighter } from "./code-highlighter";
 import { Badge } from "@/components/ui/badge";
 import { handleCopy } from "@/utils/clipboard";
-import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { trackActivity } from "@/services/activity";
+import { toast } from "sonner";
 
 interface CodeSnippetCardProps {
   snippet: CodeSnippet;
@@ -34,7 +34,6 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
   isPublicView = false,
   userInfo,
 }) => {
-  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [needsCollapse, setNeedsCollapse] = useState(false);
   const codeContainerRef = useRef<HTMLDivElement>(null);
@@ -70,12 +69,9 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
       name: `Copied: ${snippet.title}`,
       path: `/code-snippets/${snippet.id}`,
       icon: "Copy",
-    }).catch(err => console.error("Failed to track copy activity:", err));
+    }).catch(() => toast.error("Failed to track copy activity."));
     
-    toast({
-      title: "Code copied to clipboard",
-      duration: 2000,
-    });
+    toast.success("Code copied to clipboard");
   };
   
   const handleEdit = async () => {
@@ -86,7 +82,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
         name: `Editing: ${snippet.title}`,
         path: `/code-snippets/${snippet.id}`,
         icon: "Edit",
-      }).catch(err => console.error("Failed to track edit activity:", err));
+      }).catch(() => toast.error("Failed to track edit activity."));
       
       onEdit(snippet);
     }
@@ -100,7 +96,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
         name: `Deleting: ${snippet.title}`,
         path: `/code-snippets/${snippet.id}`,
         icon: "Trash",
-      }).catch(err => console.error("Failed to track delete activity:", err));
+      }).catch(() => toast.error("Failed to track delete activity."));
       
       onDelete(snippet);
     }
@@ -114,7 +110,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
         name: `Viewed: ${snippet.title}`,
         path: `/code-snippets/${snippet.id}`,
         icon: "Code",
-      }).catch(err => console.error("Failed to track view activity:", err));
+      }).catch(() => toast.error("Failed to track view activity."));
       
       onView(snippet);
     }

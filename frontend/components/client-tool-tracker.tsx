@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackActivity } from '@/services/activity';
 import { trackClientToolPerformance } from '@/utils/performanceTracker';
+import { toast } from 'sonner';
 
 // This component wraps client-side tools to track both activity and performance
 interface ClientToolTrackerProps {
@@ -41,9 +42,9 @@ export const ClientToolTracker: React.FC<ClientToolTrackerProps> = ({
         if (trackInitialLoad) {
           trackClientToolPerformance(toolName, 'initial-load', startTime);
         }
-      } catch (error) {
+      } catch {
         // Just log the error but don't stop the page from rendering
-        console.error('Failed to track activity:', error);
+        toast.error('Failed to track activity.');
       }
     };
 

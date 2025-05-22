@@ -9,6 +9,7 @@ import { Activity, Cpu, HardDrive } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { getSystemHealth, SystemHealth } from "@/services/healthService";
+import { toast } from "sonner";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,7 +46,6 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
   const isDark = resolvedTheme === 'dark';
   const [healthData, setHealthData] = useState<SystemHealth | null>(null);
   const [healthLoading, setHealthLoading] = useState(true);
-  const [healthError, setHealthError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHealthData = async () => {
@@ -53,10 +53,8 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
         setHealthLoading(true);
         const data = await getSystemHealth();
         setHealthData(data);
-        setHealthError(null);
-      } catch (error) {
-        console.error('Error fetching health data:', error);
-        setHealthError('Failed to load system health');
+      } catch {
+        toast.error('Failed to load system health');
       } finally {
         setHealthLoading(false);
       }
@@ -153,7 +151,7 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
                 >
                   <Skeleton className="h-8 w-48" />
                 </motion.div>
-              ) : healthError ? (
+              ) : healthData?.services.system.status === 'unhealthy' ? (
                 <motion.div
                   key="error-health"
                   variants={itemVariants}

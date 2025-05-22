@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 
 const mainVariant = {
   initial: {
@@ -60,7 +61,7 @@ export const FileUpload = ({
     });
 
     if (validFiles.length === 0) {
-      console.log('Invalid file type');
+      toast.error("Invalid file type");
       return;
     }
 
@@ -78,8 +79,8 @@ export const FileUpload = ({
     multiple: false,
     noClick: true,
     onDrop: handleFileChange,
-    onDropRejected: (error) => {
-      console.log(error);
+    onDropRejected: () => {
+      toast.error("Invalid file type");
     },
     accept,
   });

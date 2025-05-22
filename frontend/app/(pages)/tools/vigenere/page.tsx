@@ -4,7 +4,6 @@ import { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
 import {
   Trash,
-  CircleAlertIcon,
   RefreshCw
 } from "lucide-react";
 
@@ -24,7 +23,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 import { encrypt, decrypt } from '@/utils/vigenere';
@@ -32,6 +30,7 @@ import { VigenereVariant, VigenereOperation } from '@/types/vigenere';
 import FavoriteButton from '@/components/favorite-button';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { toast } from 'sonner';
 
 export default function Vigenere() {
   return (
@@ -48,7 +47,6 @@ function VigenereTool() {
   const [alphabet, setAlphabet] = useState('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
   const [operation, setOperation] = useState<VigenereOperation>('encrypt');
   const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   
   const { trackOperation } = useClientToolPerformance('vigenere');
@@ -72,7 +70,7 @@ function VigenereTool() {
 
   const handleProcess = () => {
     if (!message || !key) {
-      setError('Message and key are required');
+      toast.error('Message and key are required');
       return;
     }
 
@@ -89,11 +87,10 @@ function VigenereTool() {
         errorMessage += `Key contains invalid characters: ${invalidKeyChars.join(', ')}. `;
       }
       errorMessage += `Only characters from the specified alphabet are allowed.`;
-      setError(errorMessage);
+      toast.error(errorMessage);
       return;
     }
 
-    setError(null);
     setIsProcessing(true);
     
     // Start performance tracking
@@ -114,7 +111,7 @@ function VigenereTool() {
         operationTracker.current = null;
       }
     } catch (err) {
-      setError(`Error processing: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Error processing: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setResult(null);
       
       // Still clear tracker on error
@@ -130,7 +127,6 @@ function VigenereTool() {
     setMessage('');
     setKey('');
     setResult(null);
-    setError(null);
     
     // Clear any active tracker
     if (operationTracker.current) {
@@ -268,15 +264,7 @@ function VigenereTool() {
           </div>
         </Card>
 
-        {error && (
-          <Alert variant="destructive">
-            <CircleAlertIcon className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {result !== null && !error && (
+        {result !== null && (
           <Card className="p-6">
             <div className="mb-3">
               <h2 className="text-lg font-semibold">Result:</h2>

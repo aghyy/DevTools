@@ -75,8 +75,7 @@ function BcryptTool() {
         hashTracker.current.complete();
         hashTracker.current = null;
       }
-    } catch (error) {
-      console.error("Hashing error:", error);
+    } catch {
       toast.error("Error generating hash");
       
       // Clear tracker on error
@@ -106,8 +105,7 @@ function BcryptTool() {
         compareTracker.current.complete();
         compareTracker.current = null;
       }
-    } catch (error) {
-      console.error("Comparison error:", error);
+    } catch {
       toast.error("Invalid hash format");
       setMatchResult(false);
       

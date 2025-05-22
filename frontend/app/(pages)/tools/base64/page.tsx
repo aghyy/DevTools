@@ -19,6 +19,7 @@ import FavoriteButton from "@/components/favorite-button";
 import { handleCopy, handlePaste } from '@/utils/clipboard';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
+import { toast } from "sonner";
 
 export default function Base64() {
   return (
@@ -96,9 +97,8 @@ function Base64Tool() {
           encodingTracker.current.complete();
           encodingTracker.current = null;
         }
-      } catch (error) {
-        console.error("Encoding error:", error);
-        setEncodedText("Error encoding text. Please check your input.");
+      } catch {
+        toast.error("Error encoding text. Please check your input.");
         
         // Still clear tracker on error
         if (encodingTracker.current) {
@@ -132,9 +132,8 @@ function Base64Tool() {
           decodingTracker.current.complete();
           decodingTracker.current = null;
         }
-      } catch (error) {
-        console.error("Decoding error:", error);
-        setDecodedText("Error decoding text. Please check your input.");
+      } catch {
+        toast.error("Error decoding text. Please check your input.");
         
         // Still clear tracker on error
         if (decodingTracker.current) {

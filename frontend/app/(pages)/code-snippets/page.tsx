@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { TopSpacing } from "@/components/top-spacing";
-import { useToast } from "@/hooks/use-toast";
 import { useAtom } from "jotai";
 import { isGuestAtom, userDataAtom } from "@/atoms/auth";
 
@@ -71,11 +70,12 @@ import {
 } from "@/services/codeSnippetService";
 
 import { CodeHighlighter } from "@/components/code-snippets/code-highlighter";
+import { toast } from "sonner";
 
 export default function CodeSnippets() {
-  const { toast } = useToast();
-  const [isGuest] = useAtom(isGuestAtom);
+  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
   const [userData] = useAtom(userDataAtom);
+  const [isGuestLoading, setIsGuestLoading] = useState(true);
 
   // State for managing code snippets
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
@@ -83,7 +83,7 @@ export default function CodeSnippets() {
   const [publicSnippets, setPublicSnippets] = useState<PublicCodeSnippets[]>([]);
   const [languages, setLanguages] = useState<CodeSnippetLanguage[]>([]);
   const [tags, setTags] = useState<CodeSnippetTag[]>([]);
-  
+
   // State for detailed snippet view
   const [detailSnippet, setDetailSnippet] = useState<CodeSnippet | null>(null);
   const [detailUserInfo, setDetailUserInfo] = useState<{
@@ -98,7 +98,7 @@ export default function CodeSnippets() {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(isGuest ? "public" : "personal");
+  const [activeTab, setActiveTab] = useState<string>("personal");
 
   // State for editing
   const [editingSnippet, setEditingSnippet] = useState<CodeSnippet | undefined>(undefined);
@@ -115,7 +115,7 @@ export default function CodeSnippets() {
     let filtered;
 
     // Use different source data depending on the active tab
-    if (activeTab === "personal") {
+    if (activeTab === "personal" && !isGuest) {
       filtered = [...codeSnippets];
     } else {
       // For public snippets, use the flattened list
@@ -157,7 +157,7 @@ export default function CodeSnippets() {
     }
 
     setFilteredSnippets(filtered);
-  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab]);
+  }, [codeSnippets, publicSnippets, searchQuery, selectedLanguage, selectedTag, selectedUser, activeTab, isGuest]);
 
   // Fetch functions
   const fetchPersonalSnippets = useCallback(async () => {
@@ -167,15 +167,11 @@ export default function CodeSnippets() {
       setCodeSnippets(snippets);
       setFilteredSnippets(snippets);
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load code snippets",
-        variant: "destructive",
-      });
+      toast.error("Failed to load code snippets");
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   const fetchPublicSnippets = useCallback(async () => {
     setIsLoading(true);
@@ -215,24 +211,19 @@ export default function CodeSnippets() {
 
       // The filters will automatically be applied via the useEffect hook
       // that depends on publicSnippets
-    } catch (error) {
-      console.error("Error fetching public code snippets:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load public code snippets",
-        variant: "destructive",
-      });
+    } catch {
+      toast.error("Failed to load public code snippets");
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   const fetchLanguages = useCallback(async () => {
     try {
       const data = await getUserLanguages();
       setLanguages(data);
     } catch {
-      console.error("Error fetching languages");
+      toast.error("Failed to load languages");
     }
   }, []);
 
@@ -241,33 +232,57 @@ export default function CodeSnippets() {
       const data = await getUserTags();
       setTags(data);
     } catch {
-      console.error("Error fetching tags");
+      toast.error("Failed to load tags");
     }
   }, []);
 
   // Initialize data
   useEffect(() => {
-    if (activeTab === "personal" && !isGuest) {
-      fetchPersonalSnippets();
-      fetchLanguages();
-      fetchTags();
-    } else {
+    const initializeData = async () => {
+      try {
+        if (userData) {
+          setIsGuest(false);
+          setActiveTab("personal");
+        } else {
+          setIsGuest(true);
+          setActiveTab("public");
+        }
+      } catch {
+        toast.error("Failed to load code snippets");
+        setIsGuest(true);
+        setActiveTab("public");
+      } finally {
+        setIsGuestLoading(false);
+      }
+    };
+
+    initializeData();
+  }, [userData]);
+
+  // Add effect to enforce public tab when guest
+  useEffect(() => {
+    if (!isGuestLoading && isGuest) {
+      setActiveTab("public");
+    }
+  }, [isGuest, isGuestLoading]);
+
+  useEffect(() => {
+    if (!isGuestLoading) {
+      if (!isGuest) {
+        fetchPersonalSnippets();
+        fetchLanguages();
+        fetchTags();
+      }
       fetchPublicSnippets();
     }
-  }, [activeTab, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags, isGuest]);
+  }, [isGuestLoading, isGuest, fetchPersonalSnippets, fetchPublicSnippets, fetchLanguages, fetchTags]);
 
   // Apply filters when they change
   useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
-
-  // Handle guest state changes
-  useEffect(() => {
-    if (isGuest) {
-      setActiveTab("public");
-      clearFilters();
+    if (!isGuestLoading) {
+      applyFilters();
     }
-  }, [isGuest]);
+  }, [applyFilters, isGuestLoading]);
 
   // Form handling
   const handleOpenForm = (snippet?: CodeSnippet) => {
@@ -286,17 +301,11 @@ export default function CodeSnippets() {
       if (editingSnippet) {
         // Update existing snippet
         await updateCodeSnippet(editingSnippet.id, data);
-        toast({
-          title: "Success",
-          description: "Code snippet updated successfully",
-        });
+        toast.success("Code snippet updated successfully");
       } else {
         // Create new snippet
         await createCodeSnippet(data);
-        toast({
-          title: "Success",
-          description: "Code snippet created successfully",
-        });
+        toast.success("Code snippet created successfully");
       }
 
       // Refresh snippets
@@ -306,13 +315,8 @@ export default function CodeSnippets() {
 
       // Close form
       handleCloseForm();
-    } catch (error) {
-      console.error("Error saving code snippet:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save code snippet",
-        variant: "destructive",
-      });
+    } catch {
+      toast.error("Failed to save code snippet");
     } finally {
       setIsProcessing(false);
     }
@@ -330,22 +334,14 @@ export default function CodeSnippets() {
     try {
       await deleteCodeSnippet(snippetToDelete.id);
 
-      toast({
-        title: "Success",
-        description: "Code snippet deleted successfully",
-      });
+      toast.success("Code snippet deleted successfully");
 
       // Refresh snippets
       fetchPersonalSnippets();
       fetchLanguages();
       fetchTags();
-    } catch (error) {
-      console.error("Error deleting code snippet:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete code snippet",
-        variant: "destructive",
-      });
+    } catch {
+      toast.error("Failed to delete code snippet");
     } finally {
       setDeleteDialogOpen(false);
       setSnippetToDelete(null);
@@ -354,8 +350,14 @@ export default function CodeSnippets() {
 
   // Tab change
   const handleTabChange = (value: string) => {
+    if (isGuestLoading) return;
+    // Force public tab if guest
+    if (isGuest) {
+      setActiveTab("public");
+    } else {
+      setActiveTab(value);
+    }
     clearFilters();
-    setActiveTab(value);
   };
 
   // Filter selections
@@ -378,13 +380,13 @@ export default function CodeSnippets() {
   // Handle opening a snippet in detail view
   const handleViewSnippet = (snippet: CodeSnippet) => {
     setDetailSnippet(snippet);
-    
+
     // Find user info for public snippets
     if (activeTab === "public") {
-      const userSnippets = publicSnippets.find(us => 
+      const userSnippets = publicSnippets.find(us =>
         us.codeSnippets.some(s => s.id === snippet.id)
       );
-      
+
       if (userSnippets) {
         setDetailUserInfo({
           firstName: userSnippets.firstName,
@@ -397,7 +399,7 @@ export default function CodeSnippets() {
     } else {
       setDetailUserInfo(null);
     }
-    
+
     setIsDetailOpen(true);
   };
 
@@ -430,17 +432,19 @@ export default function CodeSnippets() {
       <div className="w-full px-8 pt-8 pb-24 mx-auto">
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold mb-2">Code Snippets</h1>
-          <p className="text-muted-foreground">
-            {activeTab === "personal" && userData ? (
+          <div className="text-muted-foreground">
+            {isGuestLoading ? (
+              <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+            ) : activeTab === "personal" && userData ? (
               `${userData.firstName}'s code snippets`
             ) : (
               "Public code snippets shared by the community"
             )}
-          </p>
+          </div>
         </div>
 
         {/* Tabs - Only show for logged in users */}
-        {!isGuest && (
+        {!isGuestLoading && !isGuest && (
           <div className="flex justify-between items-center mb-4">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList>
@@ -467,7 +471,19 @@ export default function CodeSnippets() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Main content */}
           <div className="flex-1">
-            {isLoading ? (
+            {isGuestLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="w-full h-[250px] animate-pulse">
+                    <div className="h-32 bg-muted" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="w-full h-[250px] animate-pulse">
@@ -485,10 +501,10 @@ export default function CodeSnippets() {
                   // Display public snippets in a grid without user grouping
                   filteredSnippets.map((snippet) => {
                     // Find the user who owns this snippet
-                    const userSnippets = publicSnippets.find(us => 
+                    const userSnippets = publicSnippets.find(us =>
                       us.codeSnippets.some(s => s.id === snippet.id)
                     );
-                    
+
                     return (
                       <CodeSnippetCard
                         key={snippet.id}
@@ -643,7 +659,7 @@ export default function CodeSnippets() {
       </div>
 
       {/* Code Snippet Form Sheet - Only show for logged in users */}
-      {!isGuest && (
+      {!isGuestLoading && !isGuest && (
         <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
           <SheetContent className="sm:max-w-xl overflow-y-auto">
             <SheetHeader>
@@ -667,7 +683,7 @@ export default function CodeSnippets() {
       )}
 
       {/* Delete Confirmation Dialog - Only show for logged in users */}
-      {!isGuest && (
+      {!isGuestLoading && !isGuest && (
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -698,7 +714,7 @@ export default function CodeSnippets() {
               {detailSnippet?.description}
             </SheetDescription>
           </SheetHeader>
-          
+
           <div className="mt-6">
             {detailSnippet && (
               <>
@@ -709,7 +725,7 @@ export default function CodeSnippets() {
                       Created {new Date(detailSnippet.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   {detailUserInfo && (
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
@@ -722,7 +738,7 @@ export default function CodeSnippets() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mb-4">
                   {detailSnippet.tags && detailSnippet.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -734,30 +750,27 @@ export default function CodeSnippets() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="rounded-md border mb-6 overflow-hidden">
-                  <CodeHighlighter 
-                    code={detailSnippet.code} 
+                  <CodeHighlighter
+                    code={detailSnippet.code}
                     language={detailSnippet.language}
                     className="w-full"
                   />
                 </div>
-                
+
                 <div className="flex justify-between">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       handleCopy(detailSnippet.code);
-                      toast({
-                        title: "Code copied to clipboard",
-                        duration: 2000,
-                      });
+                      toast.success("Code copied to clipboard");
                     }}
                   >
                     <Copy className="mr-2 h-4 w-4" />
                     Copy Code
                   </Button>
-                  
+
                   <Button onClick={closeDetailView}>
                     Close
                   </Button>

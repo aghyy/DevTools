@@ -7,6 +7,7 @@ import {
   CodeSnippetTag, 
   PublicCodeSnippets 
 } from "@/types/codeSnippets";
+import { toast } from "sonner";
 
 // Get all code snippets for current user
 export const getUserCodeSnippets = async (
@@ -27,9 +28,9 @@ export const getUserCodeSnippets = async (
     
     const response = await api.get(url);
     return response.data;
-  } catch (error) {
-    console.error("Error fetching code snippets:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch code snippets.");
+    return [];
   }
 };
 
@@ -47,9 +48,9 @@ export const getCodeSnippetById = async (id: number): Promise<CodeSnippet> => {
     });
     
     return response.data;
-  } catch (error) {
-    console.error(`Error fetching code snippet with ID ${id}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to fetch code snippet with ID ${id}.`);
+    return {} as CodeSnippet;
   }
 };
 
@@ -67,9 +68,9 @@ export const createCodeSnippet = async (data: CodeSnippetFormData): Promise<Code
     });
     
     return response.data.codeSnippet;
-  } catch (error) {
-    console.error("Error creating code snippet:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to create code snippet.");
+    return {} as CodeSnippet;
   }
 };
 
@@ -90,9 +91,9 @@ export const updateCodeSnippet = async (
     });
     
     return response.data.codeSnippet;
-  } catch (error) {
-    console.error(`Error updating code snippet with ID ${id}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to update code snippet with ID ${id}.`);
+    return {} as CodeSnippet;
   }
 };
 
@@ -111,9 +112,8 @@ export const deleteCodeSnippet = async (id: number): Promise<void> => {
       path: `/code-snippets`,
       icon: "Trash",
     });
-  } catch (error) {
-    console.error(`Error deleting code snippet with ID ${id}:`, error);
-    throw error;
+  } catch {
+    toast.error(`Failed to delete code snippet with ID ${id}.`);
   }
 };
 
@@ -122,9 +122,9 @@ export const getUserLanguages = async (): Promise<CodeSnippetLanguage[]> => {
   try {
     const response = await api.get("/api/code-snippets/languages");
     return response.data;
-  } catch (error) {
-    console.error("Error fetching languages:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch languages.");
+    return [];
   }
 };
 
@@ -133,9 +133,9 @@ export const getUserTags = async (): Promise<CodeSnippetTag[]> => {
   try {
     const response = await api.get("/api/code-snippets/tags");
     return response.data;
-  } catch (error) {
-    console.error("Error fetching tags:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch tags.");
+    return [];
   }
 };
 
@@ -146,9 +146,9 @@ export const getPublicCodeSnippets = async (
   try {
     const response = await api.get(`/api/code-snippets/public/${username}`);
     return response.data;
-  } catch (error) {
-    console.error("Error fetching public code snippets:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch public code snippets.");
+    return {} as PublicCodeSnippets;
   }
 };
 
@@ -157,8 +157,8 @@ export const getAllPublicCodeSnippets = async (): Promise<PublicCodeSnippets[]> 
   try {
     const response = await api.get("/api/code-snippets/public");
     return response.data;
-  } catch (error) {
-    console.error("Error fetching all public code snippets:", error);
-    throw error;
+  } catch {
+    toast.error("Failed to fetch all public code snippets.");
+    return [];
   }
 }; 
