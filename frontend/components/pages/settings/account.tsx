@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { uploadAvatar, removeAvatar, updateProfile, changePassword } from "@/services/auth";
 import { useAtom } from "jotai";
 import { userDataAtom, updateUserDataAtom } from "@/atoms/auth";
+import debounce from "lodash/debounce";
+import api from "@/utils/axios";
 
 import { TopSpacing } from "@/components/top-spacing";
 import {
@@ -30,6 +32,7 @@ export default function AccountPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<{ loading: boolean; available?: boolean }>({ loading: false });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -105,15 +108,74 @@ export default function AccountPage() {
     }
   };
 
+  const checkUsernameAvailability = useCallback(
+    debounce(async (username: string) => {
+      if (!username || username === userData?.username) {
+        setUsernameStatus({ loading: false });
+        return;
+      }
+
+      setUsernameStatus({ loading: true });
+      try {
+        const { data } = await api.get(`/api/auth/check-username`, {
+          params: { username }
+        });
+        setUsernameStatus({ loading: false, available: data.available });
+      } catch {
+        setUsernameStatus({ loading: false });
+        toast.error("Failed to check username availability");
+      }
+    }, 500),
+    [userData?.username]
+  );
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    if (name === 'username') {
+      checkUsernameAvailability(value);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      action();
+    }
   };
 
   const handleSaveProfile = async () => {
+    // Check if there are any changes
+    const hasChanges = 
+      formData.firstName !== userData?.firstName ||
+      formData.lastName !== userData?.lastName ||
+      formData.username !== userData?.username ||
+      formData.email !== userData?.email;
+
+    if (!hasChanges) {
+      return; // Silently return if no changes
+    }
+
+    // If username was changed, ensure availability check is completed
+    if (formData.username !== userData?.username) {
+      if (usernameStatus.loading) {
+        toast.error("Please wait while checking username availability");
+        return;
+      }
+      if (usernameStatus.available === false) {
+        toast.error("Username is already taken");
+        return;
+      }
+      if (usernameStatus.available === undefined) {
+        toast.error("Please wait for username check to complete");
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const updatedUser = await updateProfile({
@@ -123,6 +185,7 @@ export default function AccountPage() {
         email: formData.email,
       });
       updateUserData(updatedUser);
+      setUsernameStatus({ loading: false });
       toast.success("Profile updated successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update profile");
@@ -193,8 +256,8 @@ export default function AccountPage() {
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-primary/20 hover:border-primary/40 transition-all duration-200">
-                  <AvatarImage 
-                    src={userData?.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined} 
+                  <AvatarImage
+                    src={userData?.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined}
                     alt={`${userData?.firstName} ${userData?.lastName}'s profile picture`}
                   />
                   <AvatarFallback className="text-4xl">
@@ -214,9 +277,9 @@ export default function AccountPage() {
                 )}
               </div>
               <div className="flex flex-col items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  className="gap-2" 
+                <Button
+                  variant="outline"
+                  className="gap-2"
                   disabled={isUploading}
                   onClick={handleUploadClick}
                 >
@@ -256,6 +319,7 @@ export default function AccountPage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
+                  onKeyPress={(e) => handleKeyPress(e, handleSaveProfile)}
                   placeholder="Enter your first name"
                 />
               </div>
@@ -266,19 +330,26 @@ export default function AccountPage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
+                  onKeyPress={(e) => handleKeyPress(e, handleSaveProfile)}
                   placeholder="Enter your last name"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username" className="flex items-center gap-1"><User className="h-4 w-4" /> Username</Label>
+              <Label htmlFor="username" className="flex items-center gap-1">
+                <User className="h-4 w-4" /> Username
+              </Label>
               <Input
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
+                onKeyPress={(e) => handleKeyPress(e, handleSaveProfile)}
                 placeholder="Choose a username"
               />
+              {usernameStatus.loading && <span className="text-sm font-light italic text-muted-foreground">checking username...</span>}
+              {usernameStatus.available === false && <span className="text-sm font-light italic text-red-500">username taken</span>}
+              {usernameStatus.available === true && <span className="text-sm font-light italic text-green-500">username available</span>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-1"><Mail className="h-4 w-4" /> Email Address</Label>
@@ -288,10 +359,18 @@ export default function AccountPage() {
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
+                onKeyPress={(e) => handleKeyPress(e, handleSaveProfile)}
                 placeholder="Enter your email"
               />
             </div>
-            <Button onClick={handleSaveProfile} disabled={isLoading}>
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={isLoading || usernameStatus.loading || 
+                (formData.firstName === userData?.firstName &&
+                 formData.lastName === userData?.lastName &&
+                 formData.username === userData?.username &&
+                 formData.email === userData?.email)}
+            >
               Save Changes
             </Button>
           </CardContent>
@@ -314,6 +393,7 @@ export default function AccountPage() {
                 type="password"
                 value={formData.currentPassword}
                 onChange={handleInputChange}
+                onKeyPress={(e) => handleKeyPress(e, handleChangePassword)}
                 placeholder="Enter current password"
               />
             </div>
@@ -325,6 +405,7 @@ export default function AccountPage() {
                 type="password"
                 value={formData.newPassword}
                 onChange={handleInputChange}
+                onKeyPress={(e) => handleKeyPress(e, handleChangePassword)}
                 placeholder="Enter new password"
               />
             </div>
@@ -336,6 +417,7 @@ export default function AccountPage() {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
+                onKeyPress={(e) => handleKeyPress(e, handleChangePassword)}
                 placeholder="Confirm new password"
               />
             </div>

@@ -448,6 +448,25 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const checkUsernameAvailability = async (req, res) => {
+  try {
+    const { username } = req.query;
+
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    const existingUser = await User.findOne({
+      where: { username }
+    });
+
+    return res.status(200).json({ available: !existingUser });
+  } catch (error) {
+    console.error("Error checking username availability:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -461,4 +480,5 @@ module.exports = {
   changePassword,
   updateNotificationPreferences,
   updatePrivacySettings,
+  checkUsernameAvailability
 };
