@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { signup as signupService } from '@/services/auth';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import debounce from 'lodash/debounce';
+import api from '@/utils/axios';
 
 type FieldName = 'firstName' | 'lastName' | 'username' | 'email' | 'password' | 'confirmPassword';
 
@@ -16,6 +19,7 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<{ loading: boolean; available?: boolean }>({ loading: false });
   const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>({
     firstName: false,
     lastName: false,
@@ -33,7 +37,36 @@ export default function Signup() {
   const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
   const validatePassword = () => password && confirmPassword && password === confirmPassword;
   const isFormValid = () =>
-    firstName && lastName && username && email && password && confirmPassword && validatePassword() && validateEmail(email);
+    firstName && 
+    lastName && 
+    username && 
+    email && 
+    password && 
+    confirmPassword && 
+    validatePassword() && 
+    validateEmail(email) &&
+    usernameStatus.available !== false;
+
+  const checkUsernameAvailability = useCallback(
+    debounce(async (username: string) => {
+      if (!username) {
+        setUsernameStatus({ loading: false });
+        return;
+      }
+
+      setUsernameStatus({ loading: true });
+      try {
+        const { data } = await api.get(`/api/auth/check-username`, {
+          params: { username }
+        });
+        setUsernameStatus({ loading: false, available: data.available });
+      } catch {
+        setUsernameStatus({ loading: false });
+        toast.error("Failed to check username availability");
+      }
+    }, 500),
+    []
+  );
 
   const handleBlur = (field: FieldName) => {
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -48,10 +81,38 @@ export default function Signup() {
     setLoading(true);
 
     try {
+      // Check email availability before proceeding
+      const { data: emailData } = await api.get(`/api/auth/check-email`, {
+        params: { email }
+      });
+      if (!emailData.available) {
+        toast.error("Email is already in use");
+        setLoading(false);
+        return;
+      }
+
+      // Check username availability if not already checked
+      if (usernameStatus.available === undefined) {
+        const { data: usernameData } = await api.get(`/api/auth/check-username`, {
+          params: { username }
+        });
+        if (!usernameData.available) {
+          toast.error("Username is already taken");
+          setLoading(false);
+          return;
+        }
+      } else if (usernameStatus.available === false) {
+        toast.error("Username is already taken");
+        setLoading(false);
+        return;
+      }
+
       const response = await signupService(firstName, lastName, username, email, password);
       if (response) {
         router.push('/auth/login');
       }
+    } catch {
+      toast.error("Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -93,17 +154,25 @@ export default function Signup() {
             />
           </div>
 
-          <input
-            type="text"
-            id="signup-username"
-            value={username}
-            placeholder='Username'
-            onChange={(e) => setUsername(e.target.value)}
-            onBlur={() => handleBlur('username')}
-            onFocus={() => handleFocus('username')}
-            required
-            className={`w-full p-3 border bg-login-card-background ${touchedFields.username && !username ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
-          />
+          <div className="space-y-1">
+            <input
+              type="text"
+              id="signup-username"
+              value={username}
+              placeholder='Username'
+              onChange={(e) => {
+                setUsername(e.target.value);
+                checkUsernameAvailability(e.target.value);
+              }}
+              onBlur={() => handleBlur('username')}
+              onFocus={() => handleFocus('username')}
+              required
+              className={`w-full p-3 border bg-login-card-background ${touchedFields.username && !username ? 'border-login-error-foreground' : 'border-login-border'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-login-focus`}
+            />
+            {usernameStatus.loading && <span className="text-sm font-light italic text-muted-foreground">checking username...</span>}
+            {usernameStatus.available === false && <span className="text-sm font-light italic text-red-500">username taken</span>}
+            {usernameStatus.available === true && <span className="text-sm font-light italic text-green-500">username available</span>}
+          </div>
 
           <input
             type="email"
@@ -165,7 +234,7 @@ export default function Signup() {
 
           <button
             type="submit"
-            disabled={loading || !isFormValid()}
+            disabled={loading || !isFormValid() || usernameStatus.loading}
             className="w-full py-3 bg-blue-accent text-white rounded-md font-medium hover:bg-blue-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
             {loading ? 'Signing up...' : 'Sign up'}
