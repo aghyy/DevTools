@@ -76,6 +76,7 @@ export function AppSidebar() {
   const [isGuest, setIsGuest] = useAtom(isGuestAtom);
   const [userData] = useAtom(userDataAtom);
   const [isLoading, setIsLoading] = useState(true);
+  const { favorites, loading: favoritesLoading, refreshFavorites } = useFavoriteTools();
 
   const [openStates, setOpenStates] = useState({
     codeSnippets: true,
@@ -83,18 +84,20 @@ export function AppSidebar() {
     favorites: true,
   });
 
+  // Combine loading states
+  const isLoadingState = isLoading || favoritesLoading;
+
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoadingState) {
       setOpenStates(prev => ({
         ...prev,
-        favorites: !isGuest
+        favorites: !isGuest && favorites.length > 0
       }));
     }
-  }, [isGuest, isLoading]);
+  }, [isGuest, isLoadingState, favorites]);
 
   const [, initializeGuestState] = useAtom(initializeGuestStateAtom);
   const router = useRouter();
-  const { favorites, loading, refreshFavorites } = useFavoriteTools();
   const [sidebarFavorites, setSidebarFavorites] = useState<FavoriteTool[]>(favorites);
   const [isReordering, setIsReordering] = useState(false);
 
@@ -166,38 +169,39 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {/* Favorites Dropdown */}
-              <SidebarMenu>
-                <Collapsible open={openStates.favorites} onOpenChange={() => toggleCollapse('favorites')} className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton asChild>
-                        <div className="cursor-default">
-                          <Heart className={`h-4 w-4 mr-2`} />
-                          <span>Favorites</span>
-                          {openStates.favorites ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
-                        </div>
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {loading ? (
-                          <>
-                            {[1, 2, 3].map((i) => (
-                              <SidebarMenuSubItem key={i}>
-                                <SidebarMenuSkeleton showIcon />
-                              </SidebarMenuSubItem>
-                            ))}
-                          </>
-                        ) : favorites.length === 0 ? (
-                          <SidebarMenuSubItem>
-                            <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
-                              <div className="cursor-default opacity-50">
-                                <span>{isGuest ? "Log in to add favorites" : "No favorites yet"}</span>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuSubItem>
-                        ) : (
+              {/* Favorites Dropdown - Only show when logged in */}
+              {!isGuest && (
+                <SidebarMenu>
+                  <Collapsible open={openStates.favorites} onOpenChange={() => toggleCollapse('favorites')} className="group/collapsible">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton asChild>
+                          <div className="cursor-default">
+                            <Heart className={`h-4 w-4 mr-2`} />
+                            <span>Favorites</span>
+                            {openStates.favorites ? <ChevronDown className="ml-auto" /> : <ChevronRight className="ml-auto" />}
+                          </div>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {isLoadingState ? (
+                            <>
+                              {[1, 2, 3].map((i) => (
+                                <SidebarMenuSubItem key={i}>
+                                  <SidebarMenuSkeleton showIcon />
+                                </SidebarMenuSubItem>
+                              ))}
+                            </>
+                          ) : favorites.length === 0 ? (
+                            <SidebarMenuSubItem>
+                              <SidebarMenuButton asChild className="hover:bg-inherit active:bg-inherit">
+                                <div className="cursor-default opacity-50">
+                                  <span>No favorites yet</span>
+                                </div>
+                              </SidebarMenuButton>
+                            </SidebarMenuSubItem>
+                          ) : (
                           <DndContext
                             sensors={sensors}
                             collisionDetection={closestCenter}
@@ -236,22 +240,23 @@ export function AppSidebar() {
                               ))}
                             </SortableContext>
                           </DndContext>
-                        )}
-                        {!isGuest && (
-                          <SidebarMenuSubItem>
-                            <SidebarMenuButton asChild>
-                              <div className="cursor-default" onClick={() => routeTo('/favorites')}>
-                                <IoPencil className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <span className="text-muted-foreground">Manage Favorites</span>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuSubItem>
-                        )}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              </SidebarMenu>
+                          )}
+                          {!isGuest && (
+                            <SidebarMenuSubItem>
+                              <SidebarMenuButton asChild>
+                                <div className="cursor-default" onClick={() => routeTo('/favorites')}>
+                                  <IoPencil className="h-4 w-4 mr-2 text-muted-foreground" />
+                                  <span className="text-muted-foreground">Manage Favorites</span>
+                                </div>
+                              </SidebarMenuButton>
+                            </SidebarMenuSubItem>
+                          )}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                </SidebarMenu>
+              )}
 
               {/* Tools Dropdown */}
               {Object.entries({ tools: sidebarItems.tools }).map(([key, { title, icon, items }]) => (

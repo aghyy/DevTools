@@ -31,7 +31,12 @@ const ThemeSwitcher = ({ fixed = false }: { fixed?: boolean }) => {
 
   return (
     <>
-      <Button onClick={toggleTheme} className={`z-50 top-3 right-3 size-10 ${fixed ? 'fixed' : 'absolute'}`} aria-label="Toggle theme" variant="outline">
+      <Button
+        variant="outline"
+        className={`z-50 top-3 right-3 size-10 ${fixed ? 'fixed' : 'absolute'}`}
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+      >
         <ThemeIcon />
       </Button>
     </>
