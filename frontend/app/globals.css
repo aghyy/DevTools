@@ -146,3 +146,11 @@ input.login::-webkit-contacts-auto-fill-button {
     /* Firefox */
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  @apply no-scrollbar;
+}
