@@ -10,7 +10,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage =
     pathname === "/auth/login" ||
-    pathname === "/auth/signup" ||
+    pathname === "/auth/create-account" ||
     pathname === "/auth/forgot-password" ||
     pathname === "/auth/reset-password";
 

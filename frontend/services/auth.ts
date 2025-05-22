@@ -16,7 +16,7 @@ export const login = async (identifier: string, password: string) => {
   }
 };
 
-export const signup = async (
+export const createAccount = async (
   firstName: string,
   lastName: string,
   username: string,
@@ -24,7 +24,7 @@ export const signup = async (
   password: string
 ) => {
   try {
-    const response = await api.post("/api/auth/signup", {
+    const response = await api.post("/api/auth/create-account", {
       firstName,
       lastName,
       username,

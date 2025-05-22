@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { signup as signupService } from '@/services/auth';
+import { createAccount as createAccountService } from '@/services/auth';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import debounce from 'lodash/debounce';
@@ -11,7 +11,7 @@ import api from '@/utils/axios';
 
 type FieldName = 'firstName' | 'lastName' | 'username' | 'email' | 'password' | 'confirmPassword';
 
-export default function Signup() {
+export default function CreateAccount() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -107,7 +107,7 @@ export default function Signup() {
         return;
       }
 
-      const response = await signupService(firstName, lastName, username, email, password);
+      const response = await createAccountService(firstName, lastName, username, email, password);
       if (response) {
         router.push('/auth/login');
       }
@@ -131,7 +131,7 @@ export default function Signup() {
           <div className="flex gap-3">
             <input
               type="text"
-              id="signup-first-name"
+              id="create-account-first-name"
               value={firstName}
               placeholder='First Name'
               onChange={(e) => setFirstName(e.target.value)}
@@ -143,7 +143,7 @@ export default function Signup() {
 
             <input
               type="text"
-              id="signup-last-name"
+              id="create-account-last-name"
               value={lastName}
               placeholder='Last Name'
               onChange={(e) => setLastName(e.target.value)}
@@ -157,7 +157,7 @@ export default function Signup() {
           <div className="space-y-1">
             <input
               type="text"
-              id="signup-username"
+              id="create-account-username"
               value={username}
               placeholder='Username'
               onChange={(e) => {
@@ -176,7 +176,7 @@ export default function Signup() {
 
           <input
             type="email"
-            id="signup-email"
+            id="create-account-email"
             value={email}
             placeholder='Email'
             onChange={(e) => setEmail(e.target.value)}
@@ -189,7 +189,7 @@ export default function Signup() {
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
-              id="signup-password"
+              id="create-account-password"
               value={password}
               placeholder='Password'
               onChange={(e) => setPassword(e.target.value)}
@@ -210,7 +210,7 @@ export default function Signup() {
           <div className="relative">
             <input
               type={showConfirmPassword ? 'text' : 'password'}
-              id="signup-confirm-password"
+              id="create-account-confirm-password"
               value={confirmPassword}
               placeholder='Confirm Password'
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -237,7 +237,7 @@ export default function Signup() {
             disabled={loading || !isFormValid() || usernameStatus.loading}
             className="w-full py-3 bg-blue-accent text-white rounded-md font-medium hover:bg-blue-accent-hover focus:outline-none focus:ring-2 focus:ring-login-focus disabled:bg-login-disabled"
           >
-            {loading ? 'Signing up...' : 'Sign up'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 

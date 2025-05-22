@@ -1,7 +1,7 @@
 const express = require("express");
 const userController = require("../controllers/userController");
 const { 
-  signup, 
+  createAccount, 
   login, 
   logout, 
   getUser, 
@@ -52,7 +52,7 @@ const upload = multer({
 });
 
 // Auth routes
-router.post("/signup", userAuth.saveUser, signup);
+router.post("/create-account", userAuth.saveUser, createAccount);
 router.post("/login", login);
 router.get("/check-username", checkUsernameAvailability);
 router.get("/check-email", checkEmailAvailability);

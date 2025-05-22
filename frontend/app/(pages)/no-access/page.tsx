@@ -137,9 +137,9 @@ export default function NoAccess() {
       </div>
 
       <div className="mt-8 text-center">
-        <Button asChild size="lg">
+        <Button variant="primary" asChild size="lg">
           <Link href="/auth/login">
-            Sign in to Access all Features
+            Log in to access all features
           </Link>
         </Button>
       </div>

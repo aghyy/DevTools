@@ -10,7 +10,7 @@ const { Op } = require("sequelize");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
-const signup = async (req, res) => {
+const createAccount = async (req, res) => {
   try {
     const { firstName, lastName, username, email, password } = req.body;
 
@@ -48,9 +48,9 @@ const signup = async (req, res) => {
       sameSite: "lax",
     });
 
-    return res.status(201).json({ message: "User created successfully" });
+    return res.status(201).json({ message: "Account created successfully" });
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Create account error:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -487,7 +487,7 @@ const checkEmailAvailability = async (req, res) => {
 };
 
 module.exports = {
-  signup,
+  createAccount,
   login,
   logout,
   getUser,

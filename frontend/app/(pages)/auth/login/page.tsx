@@ -90,8 +90,8 @@ export default function Login() {
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">
             Don&apos;t have an account?{' '}
-            <a href="/auth/signup" className="text-blue-accent hover:underline">
-              Sign up here
+            <a href="/auth/create-account" className="text-blue-accent hover:underline">
+              Create account
             </a>
           </p>
         </div>
