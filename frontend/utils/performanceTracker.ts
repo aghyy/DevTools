@@ -41,7 +41,6 @@ const extractToolName = (url: string): string => {
     const toolsIndex = urlParts.findIndex(part => part === 'tools');
     if (toolsIndex >= 0 && toolsIndex + 1 < urlParts.length) {
       const toolName = urlParts[toolsIndex + 1];
-      
       return toolName;
     }
   }
@@ -59,9 +58,7 @@ export const trackClientToolPerformance = async (toolName: string, operation: st
       toolName,
       responseTime,
       success: true,
-      endpoint: `/tools/${toolName}/${operation}`,
-      method: 'CLIENT',
-      source: 'frontend'
+      endpoint: `/tools/${toolName}/${operation}`
     });
   } catch (err) {
     console.error('Failed to record client-side performance metric:', err);
@@ -113,9 +110,7 @@ export const setupPerformanceTracking = () => {
           toolName,
           responseTime,
           success: response.status >= 200 && response.status < 300,
-          endpoint: url,
-          method: response.config.method?.toUpperCase() || 'GET',
-          source: 'frontend'
+          endpoint: url
         }).catch(err => {
           console.error('Failed to record performance metric:', err);
         });
@@ -141,9 +136,7 @@ export const setupPerformanceTracking = () => {
           toolName,
           responseTime,
           success: false,
-          endpoint: url,
-          method: error.config.method?.toUpperCase() || 'GET',
-          source: 'frontend'
+          endpoint: url
         }).catch(err => {
           console.error('Failed to record performance metric:', err);
         });
@@ -160,8 +153,6 @@ interface PerformanceMetricData {
   responseTime: number;
   success: boolean;
   endpoint: string;
-  method: string;
-  source: 'frontend' | 'backend';
 }
 
 export const recordPerformanceMetric = async (data: PerformanceMetricData) => {

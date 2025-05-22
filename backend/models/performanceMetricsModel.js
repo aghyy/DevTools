@@ -24,14 +24,6 @@ module.exports = (sequelize, DataTypes) => {
     endpoint: {
       type: DataTypes.STRING,
       allowNull: false
-    },
-    method: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    source: {
-      type: DataTypes.ENUM('frontend', 'backend'),
-      allowNull: false
     }
   }, { 
     timestamps: true,

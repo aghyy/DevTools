@@ -6,13 +6,13 @@ const Sequelize = require("sequelize");
 // Record a performance metric
 const recordPerformance = async (req, res) => {
   try {
-    const { toolName, responseTime, success, endpoint, method, source } = req.body;
+    const { toolName, responseTime, success, endpoint } = req.body;
     const userId = req.user?.id; // Optional - may be anonymous
 
     // Validate required fields
-    if (!toolName || responseTime === undefined || !endpoint || !method || !source) {
+    if (!toolName || responseTime === undefined || !endpoint) {
       return res.status(400).json({ 
-        error: "Missing required fields. Required: toolName, responseTime, endpoint, method, source" 
+        error: "Missing required fields. Required: toolName, responseTime, endpoint" 
       });
     }
 
@@ -22,9 +22,7 @@ const recordPerformance = async (req, res) => {
       toolName,
       responseTime,
       success,
-      endpoint,
-      method,
-      source
+      endpoint
     });
 
     return res.status(201).json({ 
