@@ -60,9 +60,36 @@ function VigenereTool() {
     router.push(path);
   };
 
+  const validateInput = (text: string, alphabet: string): string[] => {
+    const invalidChars = new Set<string>();
+    for (const char of text) {
+      if (!alphabet.includes(char)) {
+        invalidChars.add(char);
+      }
+    }
+    return Array.from(invalidChars);
+  };
+
   const handleProcess = () => {
     if (!message || !key) {
       setError('Message and key are required');
+      return;
+    }
+
+    // Validate message and key against alphabet
+    const invalidMessageChars = validateInput(message, alphabet);
+    const invalidKeyChars = validateInput(key, alphabet);
+
+    if (invalidMessageChars.length > 0 || invalidKeyChars.length > 0) {
+      let errorMessage = '';
+      if (invalidMessageChars.length > 0) {
+        errorMessage += `Message contains invalid characters: ${invalidMessageChars.join(', ')}. `;
+      }
+      if (invalidKeyChars.length > 0) {
+        errorMessage += `Key contains invalid characters: ${invalidKeyChars.join(', ')}. `;
+      }
+      errorMessage += `Only characters from the specified alphabet are allowed.`;
+      setError(errorMessage);
       return;
     }
 
