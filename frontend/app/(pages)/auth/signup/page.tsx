@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { signup as signupService } from '@/services/auth';
 import Image from 'next/image';
+
 type FieldName = 'firstName' | 'lastName' | 'username' | 'email' | 'password' | 'confirmPassword';
 
 export default function Signup() {
@@ -14,7 +15,6 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>({
     firstName: false,
@@ -48,10 +48,10 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await signupService(firstName, lastName, username, email, password);
-      router.push('/dashboard');
-    } catch {
-      setError('Error signing up. Please try again.');
+      const response = await signupService(firstName, lastName, username, email, password);
+      if (response) {
+        router.push('/auth/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -171,8 +171,6 @@ export default function Signup() {
             {loading ? 'Signing up...' : 'Sign up'}
           </button>
         </form>
-
-        {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
 
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">

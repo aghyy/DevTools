@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { sendResetLink } from '@/services/auth';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,38 +17,13 @@ export default function ForgotPassword() {
 
     try {
       await sendResetLink(email);
-      setIsSubmitted(true);
-    } catch (error) {
-      // Error is already handled in the service with toast
-      console.error('Password reset error:', error);
+      router.push('/auth/login');
+    } catch {
+      toast.error('Error sending reset link. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  if (isSubmitted) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-login-background">
-        <div className="w-full max-w-md bg-login-card-background p-8 rounded-lg shadow-lg">
-          <div className="w-full flex flex-col gap-3 items-center justify-center pointer-events-none mb-4">
-            <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
-            <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
-          </div>
-          
-          <div className="text-center space-y-4">
-            <p className="text-login-success-foreground">
-              If this email is registered, you will receive a reset link.
-            </p>
-            <p className="text-sm text-login-foreground">
-              <a href="/auth/login" className="text-blue-accent hover:underline">
-                Return to login
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-login-background">

@@ -121,13 +121,15 @@ export function AppSidebar() {
 
   const signout = async () => {
     try {
-      await authLogout();
-      router.push(pathname);
-      setTimeout(() => {
-        setIsGuest(true);
-      }, 500);
-    } catch (error) {
-      console.log("Error signing out:", error);
+      const response = await authLogout();
+      if (response) {
+        router.push(pathname);
+        setTimeout(() => {
+          setIsGuest(true);
+        }, 500);
+      }
+    } catch {
+      console.log("Error signing out:");
     }
   };
 
@@ -203,44 +205,44 @@ export function AppSidebar() {
                               </SidebarMenuButton>
                             </SidebarMenuSubItem>
                           ) : (
-                          <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={async (event) => {
-                              const { active, over } = event;
-                              if (!over || active.id === over.id) return;
-                              const oldIndex = sidebarFavorites.findIndex(f => f.id === active.id);
-                              const newIndex = sidebarFavorites.findIndex(f => f.id === over.id);
-                              if (oldIndex === -1 || newIndex === -1) return;
-                              const newOrder = arrayMove(sidebarFavorites, oldIndex, newIndex);
-                              setSidebarFavorites(newOrder);
-                              setIsReordering(true);
-                              // Persist new order
-                              const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
-                              try {
-                                await updateFavoritePositions(positions);
-                                refreshFavorites(true);
-                                setTimeout(() => setIsReordering(false), 500);
-                              } catch {
-                                setSidebarFavorites(favorites);
-                                setIsReordering(false);
-                              }
-                            }}
-                          >
-                            <SortableContext
-                              key={sidebarFavorites.map(f => f.id).join('-')}
-                              items={sidebarFavorites.map(f => f.id)}
-                              strategy={verticalListSortingStrategy}
+                            <DndContext
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={async (event) => {
+                                const { active, over } = event;
+                                if (!over || active.id === over.id) return;
+                                const oldIndex = sidebarFavorites.findIndex(f => f.id === active.id);
+                                const newIndex = sidebarFavorites.findIndex(f => f.id === over.id);
+                                if (oldIndex === -1 || newIndex === -1) return;
+                                const newOrder = arrayMove(sidebarFavorites, oldIndex, newIndex);
+                                setSidebarFavorites(newOrder);
+                                setIsReordering(true);
+                                // Persist new order
+                                const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
+                                try {
+                                  await updateFavoritePositions(positions);
+                                  refreshFavorites(true);
+                                  setTimeout(() => setIsReordering(false), 500);
+                                } catch {
+                                  setSidebarFavorites(favorites);
+                                  setIsReordering(false);
+                                }
+                              }}
                             >
-                              {sidebarFavorites.map((favorite) => (
-                                <SortableFavorite
-                                  key={favorite.id}
-                                  favorite={favorite}
-                                  onClick={() => routeTo(favorite.toolUrl)}
-                                />
-                              ))}
-                            </SortableContext>
-                          </DndContext>
+                              <SortableContext
+                                key={sidebarFavorites.map(f => f.id).join('-')}
+                                items={sidebarFavorites.map(f => f.id)}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                {sidebarFavorites.map((favorite) => (
+                                  <SortableFavorite
+                                    key={favorite.id}
+                                    favorite={favorite}
+                                    onClick={() => routeTo(favorite.toolUrl)}
+                                  />
+                                ))}
+                              </SortableContext>
+                            </DndContext>
                           )}
                           {!isGuest && (
                             <SidebarMenuSubItem>

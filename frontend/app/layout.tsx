@@ -5,12 +5,14 @@ import { AppLayout } from "./app-layout";
 import { Provider as JotaiProvider } from "jotai";
 import { ThemeProvider } from "@/components/wrappers/themes/theme-provider";
 import { PerformanceTracker } from "@/components/performance-tracker";
+import { Toaster } from "sonner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -52,6 +54,7 @@ export default function RootLayout({
             </AppLayout>
           </JotaiProvider>
         </ThemeProvider>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );

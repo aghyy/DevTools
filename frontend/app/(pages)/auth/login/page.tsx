@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { login as loginService } from '@/services/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
+
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -18,10 +19,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await loginService(identifier, password);
-      router.push('/dashboard');
+      const response = await loginService(identifier, password);
+      if (response) {
+        router.push('/dashboard');
+      }
     } catch {
-      setError('Error logging in. Please try again.');
+      toast.error('Error logging in. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -34,7 +37,7 @@ export default function Login() {
           <Image src="/images/icons/devtools-dark.png" alt="DevTools Logo" width={64} height={64} />
           <h1 className='text-2xl font-semibold text-center text-login-title-foreground my-2'>DevTools</h1>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div>
             <input
@@ -84,7 +87,6 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Log in'}
           </button>
         </form>
-        {error && <p className="mt-4 text-login-error-foreground text-sm text-center">{error}</p>}
         <div className="mt-6 text-center">
           <p className="text-sm text-login-foreground">
             Don&apos;t have an account?{' '}

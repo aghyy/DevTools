@@ -7,17 +7,12 @@ export const login = async (identifier: string, password: string) => {
       identifier,
       password,
     });
-    if (response.status !== 200) {
-      console.error("Login failed:", response);
-      const error = "Invalid username or password.";
-      toast.error(error);
-      throw new Error(error);
+    if (response.status === 200) {
+      toast.success("Logged in successfully");
     }
     return response.data;
   } catch {
-    const error = "Invalid username or password.";
-    toast.error(error);
-    throw new Error(error);
+    return null;
   }
 };
 
@@ -37,16 +32,11 @@ export const signup = async (
       password,
     });
     if (response.status === 201) {
-      toast.success("Signed up successfully.");
-    } else {
-      const error = "Failed to sign up. Please try again.";
-      toast.error(error);
-      throw new Error(error);
+      toast.success("Account created successfully");
     }
+    return response.data;
   } catch {
-    const error = "Failed to sign up. Please try again.";
-    toast.error(error);
-    throw new Error(error);
+    return null;
   }
 };
 
@@ -54,37 +44,27 @@ export const logout = async () => {
   try {
     const response = await api.post("/api/auth/logout");
     if (response.status === 200) {
-      toast.success("Logged out successfully.");
-    } else {
-      const error = "Failed to log out. Please try again.";
-      toast.error(error);
-      throw new Error(error);
+      toast.success("Logged out successfully");
     }
+    return response.data;
   } catch {
-    const error = "Failed to log out. Please try again.";
-    toast.error(error);
-    throw new Error(error);
+    return null;
   }
 };
 
 export const sendResetLink = async (email: string) => {
   try {
     if (!email) {
-      const error = "Email field is required";
-      toast.error(error);
-      throw new Error(error);
+      toast.error("Email field is required");
+      return;
     }
 
-    const response = await api.post("/api/auth/forgot-password", { email });
-    
+    await api.post("/api/auth/forgot-password", { email });
     // Always show success message regardless of whether the email exists
     // This is a security best practice to prevent email enumeration
-    toast.success("If this email is registered, you will receive a reset link.");
-    return response.data;
-  } catch (error) {
-    // If there's an error, still show the same message for security
-    toast.success("If this email is registered, you will receive a reset link.");
-    throw error;
+    toast.success("If this email is registered, you will receive a reset link");
+  } catch {
+    // Error is handled by axios interceptor
   }
 };
 
@@ -99,20 +79,13 @@ export const resetPassword = async (
       new_password: newPassword,
       confirm_password: confirmPassword,
     });
-    
+
     if (response.status === 200) {
       toast.success("Password has been reset successfully");
-    } else {
-      const error = response.data.message || "Failed to reset password. Please try again.";
-      toast.error(error);
-      throw new Error(error);
     }
-    
     return response.data;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to reset password. Please try again.";
-    toast.error(errorMessage);
-    throw error;
+  } catch {
+    return null;
   }
 };
 
@@ -127,20 +100,27 @@ export const getUserDetails = async () => {
 
 export const uploadAvatar = async (file: File) => {
   const formData = new FormData();
-  formData.append('avatar', file);
+  formData.append("avatar", file);
 
-  const response = await api.post('/api/auth/avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+  try {
+    const response = await api.post("/api/auth/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const removeAvatar = async () => {
-  const response = await api.delete('/api/auth/avatar');
-  return response.data;
+  try {
+    const response = await api.delete("/api/auth/avatar");
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const updateProfile = async (data: {
@@ -153,7 +133,7 @@ export const updateProfile = async (data: {
     const response = await api.put("/api/auth/profile", data);
     return response.data;
   } catch {
-    throw new Error('Failed to update profile');
+    return null;
   }
 };
 
@@ -165,7 +145,7 @@ export const changePassword = async (data: {
     const response = await api.put("/api/auth/password", data);
     return response.data;
   } catch {
-    throw new Error('Failed to change password');
+    return null;
   }
 };
 
@@ -178,12 +158,12 @@ export const updateNotificationPreferences = async (data: {
     const response = await api.put("/api/auth/notifications", data);
     return response.data;
   } catch {
-    throw new Error('Failed to update notification preferences');
+    return null;
   }
 };
 
 export const updatePrivacySettings = async (data: {
-  profileVisibility: 'public' | 'private' | 'connections';
+  profileVisibility: "public" | "private" | "connections";
   showEmail: boolean;
   showActivity: boolean;
 }) => {
@@ -191,6 +171,6 @@ export const updatePrivacySettings = async (data: {
     const response = await api.put("/api/auth/privacy", data);
     return response.data;
   } catch {
-    throw new Error('Failed to update privacy settings');
+    return null;
   }
 };

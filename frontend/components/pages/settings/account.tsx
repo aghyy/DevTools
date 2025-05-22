@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { uploadAvatar, removeAvatar, updateProfile, changePassword } from "@/services/auth";
 import { useAtom } from "jotai";
 import { userDataAtom, updateUserDataAtom } from "@/atoms/auth";
@@ -22,19 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, Mail, User, Lock, Minus } from "lucide-react";
 import { Label } from "@/components/ui/label";
-
-interface ApiError {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-  message?: string;
-}
+import { toast } from "sonner";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [userData] = useAtom(userDataAtom);
   const [, updateUserData] = useAtom(updateUserDataAtom);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,21 +69,13 @@ export default function AccountPage() {
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Error",
-        description: "Please upload a valid image file (JPEG, PNG, or GIF)",
-        variant: "destructive",
-      });
+      toast.error("Please upload a valid image file (JPEG, PNG, or GIF)");
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Error",
-        description: "File size must be less than 5MB",
-        variant: "destructive",
-      });
+      toast.error("File size must be less than 5MB");
       return;
     }
 
@@ -101,21 +83,9 @@ export default function AccountPage() {
     try {
       const updatedUser = await uploadAvatar(file);
       updateUserData(updatedUser);
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as ApiError)?.response?.data?.message || "Failed to upload profile picture";
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.success("Profile picture updated successfully");
+    } catch {
+      toast.error("Failed to upload profile picture");
     } finally {
       setIsUploading(false);
       // Clear the file input
@@ -129,17 +99,9 @@ export default function AccountPage() {
     try {
       const updatedUser = await removeAvatar();
       updateUserData(updatedUser);
-      toast({
-        title: "Success",
-        description: "Profile picture removed successfully",
-      });
-    } catch (error) {
-      console.error("Error removing avatar:", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove profile picture",
-        variant: "destructive",
-      });
+      toast.success("Profile picture removed successfully");
+    } catch {
+      toast.error("Failed to remove profile picture");
     }
   };
 
@@ -161,16 +123,9 @@ export default function AccountPage() {
         email: formData.email,
       });
       updateUserData(updatedUser);
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
+      toast.success("Profile updated successfully");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update profile",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
@@ -178,11 +133,7 @@ export default function AccountPage() {
 
   const handleChangePassword = async () => {
     if (formData.newPassword !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -192,10 +143,7 @@ export default function AccountPage() {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
-      toast({
-        title: "Success",
-        description: "Password changed successfully",
-      });
+      toast.success("Password changed successfully");
       // Clear password fields
       setFormData(prev => ({
         ...prev,
@@ -204,18 +152,14 @@ export default function AccountPage() {
         confirmPassword: '',
       }));
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to change password",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to change password");
     } finally {
       setIsLoading(false);
     }
   };
 
   if (!userData) {
-    return null; // or a loading state
+    return null;
   }
 
   return (
