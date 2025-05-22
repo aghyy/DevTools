@@ -22,6 +22,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -33,6 +34,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { updateFavoritePositions } from '@/services/favoriteToolService';
 import type { FavoriteTool } from '@/services/favoriteToolService';
 import { Skeleton } from "@/components/ui/skeleton"
+import { restrictToParentElement } from '@dnd-kit/modifiers';
 
 function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: favorite.id });
@@ -69,6 +71,18 @@ function SortableFavorite({ favorite, onClick }: { favorite: FavoriteTool, onCli
         </div>
       </SidebarMenuButton>
     </SidebarMenuSubItem>
+  );
+}
+
+function DroppableFavoritesList({ children }: { children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({
+    id: 'favorites-droppable',
+  });
+
+  return (
+    <div ref={setNodeRef} className="w-full">
+      {children}
+    </div>
   );
 }
 
@@ -208,9 +222,13 @@ export function AppSidebar() {
                             <DndContext
                               sensors={sensors}
                               collisionDetection={closestCenter}
+                              modifiers={[restrictToParentElement]}
                               onDragEnd={async (event) => {
                                 const { active, over } = event;
                                 if (!over || active.id === over.id) return;
+                                // Only allow drop if both active and over are in the favorites list
+                                const favoriteIds = sidebarFavorites.map(f => String(f.id));
+                                if (!favoriteIds.includes(String(active.id)) || !favoriteIds.includes(String(over.id))) return;
                                 const oldIndex = sidebarFavorites.findIndex(f => f.id === active.id);
                                 const newIndex = sidebarFavorites.findIndex(f => f.id === over.id);
                                 if (oldIndex === -1 || newIndex === -1) return;
@@ -229,19 +247,21 @@ export function AppSidebar() {
                                 }
                               }}
                             >
-                              <SortableContext
-                                key={sidebarFavorites.map(f => f.id).join('-')}
-                                items={sidebarFavorites.map(f => f.id)}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                {sidebarFavorites.map((favorite) => (
-                                  <SortableFavorite
-                                    key={favorite.id}
-                                    favorite={favorite}
-                                    onClick={() => routeTo(favorite.toolUrl)}
-                                  />
-                                ))}
-                              </SortableContext>
+                              <DroppableFavoritesList>
+                                <SortableContext
+                                  key={sidebarFavorites.map(f => f.id).join('-')}
+                                  items={sidebarFavorites.map(f => f.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  {sidebarFavorites.map((favorite) => (
+                                    <SortableFavorite
+                                      key={favorite.id}
+                                      favorite={favorite}
+                                      onClick={() => routeTo(favorite.toolUrl)}
+                                    />
+                                  ))}
+                                </SortableContext>
+                              </DroppableFavoritesList>
                             </DndContext>
                           )}
                           {!isGuest && (
