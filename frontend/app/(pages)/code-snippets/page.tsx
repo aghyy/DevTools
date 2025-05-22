@@ -37,8 +37,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CodeSnippetForm } from "@/components/code-snippet-form";
-import { CodeSnippetCard } from "@/components/code-snippet-card";
+import { CodeSnippetForm } from "@/components/code-snippets/code-snippet-form";
+import { CodeSnippetCard } from "@/components/code-snippets/code-snippet-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import {
@@ -70,7 +70,7 @@ import {
   getAllPublicCodeSnippets
 } from "@/services/codeSnippetService";
 
-import { CodeHighlighter } from "@/components/code-highlighter";
+import { CodeHighlighter } from "@/components/code-snippets/code-highlighter";
 
 export default function CodeSnippets() {
   const { toast } = useToast();

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Copy, Trash } from "lucide-react";
 
 import { TopSpacing } from "@/components/top-spacing";
-import { RegexHighlighter } from "@/components/regex-highlighter";
-import { RegexExplainer } from "@/components/regex-explainer";
+import { RegexHighlighter } from "@/components/regex/regex-highlighter";
+import { RegexExplainer } from "@/components/regex/regex-explainer";
 import { handleCopy } from "@/utils/clipboard";
 
 import {
