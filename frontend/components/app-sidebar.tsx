@@ -119,7 +119,7 @@ export function AppSidebar() {
     }
   }, [favorites, isReordering]);
 
-  const signout = async () => {
+  const logout = async () => {
     try {
       const response = await authLogout();
       if (response) {
@@ -129,7 +129,7 @@ export function AppSidebar() {
         }, 500);
       }
     } catch {
-      console.log("Error signing out:");
+      console.log("Error logging out:");
     }
   };
 
@@ -351,9 +351,9 @@ export function AppSidebar() {
                       <User />
                       <span>Account</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={signout}>
+                    <DropdownMenuItem onClick={logout}>
                       <LogOut />
-                      <span>Sign out</span>
+                      <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
