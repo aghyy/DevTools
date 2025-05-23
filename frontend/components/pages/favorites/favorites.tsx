@@ -18,7 +18,7 @@ import { useFavoriteTools } from '@/hooks/useFavoriteTools';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { FavoriteTool } from '@/services/favoriteToolService';
 
 function SortableFavoriteCard({ tool, onClick, onRemove, isDragging, index }: { tool: FavoriteTool, onClick: () => void, onRemove: (e: React.MouseEvent) => void, isDragging: boolean, index: number }) {
@@ -26,9 +26,15 @@ function SortableFavoriteCard({ tool, onClick, onRemove, isDragging, index }: { 
 
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.2 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ 
+        duration: 0.2,
+        delay: index * 0.1,
+        exit: { duration: 0.1, delay: 0 }
+      }}
     >
       <div
         ref={setNodeRef}
@@ -172,103 +178,110 @@ export default function FavoritesPage() {
           </div>
         </div>
 
-        {localFavorites?.length === 0 && showEmpty ? (
-          <motion.div 
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="mb-4">
-              <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">No Favorite Tools Yet</h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Add tools to your favorites for quick access by clicking the heart icon on any tool page.
-            </p>
-            <Link href="/tools/base64" passHref>
-              <Button>Explore Tools</Button>
-            </Link>
-          </motion.div>
-        ) : localFavorites && localFavorites.length > 0 ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={event => setActiveId(Number(event.active.id))}
-            onDragEnd={async (event) => {
-              setActiveId(null);
-              const { active, over } = event;
-              if (!over || active.id === over.id) return;
-              const oldIndex = localFavorites.findIndex(f => f.id === active.id);
-              const newIndex = localFavorites.findIndex(f => f.id === over.id);
-              if (oldIndex === -1 || newIndex === -1) return;
-              const newOrder = arrayMove(localFavorites, oldIndex, newIndex);
-              setLocalFavorites(newOrder);
-              setIsReordering(true);
-              // Persist new order
-              const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
-              try {
-                await updateFavoritePositions(positions);
-                // Trigger a background refresh for sidebar/global state
-                refreshFavorites(true); // don't await, keeps UI smooth
-                setTimeout(() => setIsReordering(false), 500); // allow refresh to complete, then allow sync
-              } catch {
-                toast.error('Failed to update order.');
-                setLocalFavorites(favorites); // revert to global state
-                setIsReordering(false);
-              }
-            }}
-            onDragCancel={() => setActiveId(null)}
-          >
-            <SortableContext items={localFavorites.map(f => f.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {localFavorites.map((tool, index) => (
-                  <SortableFavoriteCard
-                    key={tool.id}
-                    tool={tool}
-                    index={index}
-                    isDragging={activeId === tool.id}
-                    onClick={() => router.push(tool.toolUrl)}
-                    onRemove={(e) => {
-                      e.stopPropagation();
-                      handleRemove(tool.id, tool.toolName);
-                    }}
-                  />
-                ))}
+        <AnimatePresence mode="wait">
+          {localFavorites?.length === 0 && showEmpty ? (
+            <motion.div 
+              key="empty"
+              className="text-center py-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="mb-4">
+                <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
               </div>
-            </SortableContext>
-            <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(.4,2,.6,1)' }}>
-              {activeTool && (
-                <motion.div
-                  layout
-                  initial={{ scale: 1, opacity: 0.7 }}
-                  animate={{ scale: 1.08, opacity: 1, boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)' }}
-                  exit={{ scale: 1, opacity: 0.7 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  style={{ zIndex: 100 }}
-                >
-                  <MagicCard className="overflow-hidden cursor-pointer h-[180px]">
-                    <Card className="h-full border-0 bg-transparent">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {activeTool.icon && <Icon icon={getIconComponent(activeTool.icon)} />}
-                            <CardTitle className="text-xl">{activeTool.toolName}</CardTitle>
-                          </div>
-                        </div>
-                        <CardDescription className="mt-2">{getToolDescription(activeTool.toolUrl)}</CardDescription>
-                      </CardHeader>
-                      <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
-                        <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                      </CardFooter>
-                    </Card>
-                  </MagicCard>
+              <h2 className="text-xl font-semibold mb-2">No Favorite Tools Yet</h2>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Add tools to your favorites for quick access by clicking the heart icon on any tool page.
+              </p>
+              <Link href="/tools/base64" passHref>
+                <Button>Explore Tools</Button>
+              </Link>
+            </motion.div>
+          ) : localFavorites && localFavorites.length > 0 ? (
+            <DndContext
+              key="grid"
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={event => setActiveId(Number(event.active.id))}
+              onDragEnd={async (event) => {
+                setActiveId(null);
+                const { active, over } = event;
+                if (!over || active.id === over.id) return;
+                const oldIndex = localFavorites.findIndex(f => f.id === active.id);
+                const newIndex = localFavorites.findIndex(f => f.id === over.id);
+                if (oldIndex === -1 || newIndex === -1) return;
+                const newOrder = arrayMove(localFavorites, oldIndex, newIndex);
+                setLocalFavorites(newOrder);
+                setIsReordering(true);
+                // Persist new order
+                const positions = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
+                try {
+                  await updateFavoritePositions(positions);
+                  // Trigger a background refresh for sidebar/global state
+                  refreshFavorites(true); // don't await, keeps UI smooth
+                  setTimeout(() => setIsReordering(false), 500); // allow refresh to complete, then allow sync
+                } catch {
+                  toast.error('Failed to update order.');
+                  setLocalFavorites(favorites); // revert to global state
+                  setIsReordering(false);
+                }
+              }}
+              onDragCancel={() => setActiveId(null)}
+            >
+              <SortableContext items={localFavorites.map(f => f.id)} strategy={rectSortingStrategy}>
+                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <AnimatePresence mode="popLayout">
+                    {localFavorites.map((tool, index) => (
+                      <SortableFavoriteCard
+                        key={tool.id}
+                        tool={tool}
+                        index={index}
+                        isDragging={activeId === tool.id}
+                        onClick={() => router.push(tool.toolUrl)}
+                        onRemove={(e) => {
+                          e.stopPropagation();
+                          handleRemove(tool.id, tool.toolName);
+                        }}
+                      />
+                    ))}
+                  </AnimatePresence>
                 </motion.div>
-              )}
-            </DragOverlay>
-          </DndContext>
-        ) : null}
+              </SortableContext>
+              <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(.4,2,.6,1)' }}>
+                {activeTool && (
+                  <motion.div
+                    layout
+                    initial={{ scale: 1, opacity: 0.7 }}
+                    animate={{ scale: 1.08, opacity: 1, boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)' }}
+                    exit={{ scale: 1, opacity: 0.7 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    style={{ zIndex: 100 }}
+                  >
+                    <MagicCard className="overflow-hidden cursor-pointer h-[180px]">
+                      <Card className="h-full border-0 bg-transparent">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {activeTool.icon && <Icon icon={getIconComponent(activeTool.icon)} />}
+                              <CardTitle className="text-xl">{activeTool.toolName}</CardTitle>
+                            </div>
+                          </div>
+                          <CardDescription className="mt-2">{getToolDescription(activeTool.toolUrl)}</CardDescription>
+                        </CardHeader>
+                        <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
+                          <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
+                          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                        </CardFooter>
+                      </Card>
+                    </MagicCard>
+                  </motion.div>
+                )}
+              </DragOverlay>
+            </DndContext>
+          ) : null}
+        </AnimatePresence>
       </div>
     </div>
   );
