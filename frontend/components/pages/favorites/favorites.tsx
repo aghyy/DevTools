@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { Heart, ArrowUpRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { removeFromFavorites, updateFavoritePositions } from '@/services/favoriteToolService';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { TopSpacing } from '@/components/top-spacing';
 import { getIconComponent } from '@/utils/icons';
@@ -22,47 +21,54 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import type { FavoriteTool } from '@/services/favoriteToolService';
 
-function SortableFavoriteCard({ tool, onClick, onRemove, isDragging }: { tool: FavoriteTool, onClick: () => void, onRemove: (e: React.MouseEvent) => void, isDragging: boolean }) {
+function SortableFavoriteCard({ tool, onClick, onRemove, isDragging, index }: { tool: FavoriteTool, onClick: () => void, onRemove: (e: React.MouseEvent) => void, isDragging: boolean, index: number }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: tool.id });
+
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 10 : undefined,
-        boxShadow: isDragging ? '0 4px 16px 0 rgba(0,0,0,0.10)' : undefined,
-        opacity: isDragging ? 0.3 : 1,
-      }}
-      {...attributes}
-      {...listeners}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.2 }}
     >
-      <MagicCard className="overflow-hidden cursor-pointer h-[180px]" onClick={onClick}>
-        <Card className="h-full border-0 bg-transparent">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {tool.icon && <Icon icon={getIconComponent(tool.icon)} />}
-                <CardTitle className="text-xl">{tool.toolName}</CardTitle>
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+          zIndex: isDragging ? 10 : undefined,
+          boxShadow: isDragging ? '0 4px 16px 0 rgba(0,0,0,0.10)' : undefined,
+          opacity: isDragging ? 0.3 : 1,
+        }}
+        {...attributes}
+        {...listeners}
+      >
+        <MagicCard className="overflow-hidden cursor-pointer h-[180px]" onClick={onClick}>
+          <Card className="h-full border-0 bg-transparent">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {tool.icon && <Icon icon={getIconComponent(tool.icon)} />}
+                  <CardTitle className="text-xl">{tool.toolName}</CardTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onRemove}
+                  className="h-8 w-8 -mt-1 -mr-1 text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onRemove}
-                className="h-8 w-8 -mt-1 -mr-1 text-muted-foreground"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <CardDescription className="mt-2">{getToolDescription(tool.toolUrl)}</CardDescription>
-          </CardHeader>
-          <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
-            <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-          </CardFooter>
-        </Card>
-      </MagicCard>
-    </div>
+              <CardDescription className="mt-2">{getToolDescription(tool.toolUrl)}</CardDescription>
+            </CardHeader>
+            <CardFooter className="absolute bottom-0 w-full flex items-center justify-between">
+              <div className="text-sm text-muted-foreground hover:underline">Open tool</div>
+              <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            </CardFooter>
+          </Card>
+        </MagicCard>
+      </div>
+    </motion.div>
   );
 }
 
@@ -74,16 +80,29 @@ const getToolDescription = (toolPath: string) => {
 export default function FavoritesPage() {
   const router = useRouter();
   const { favorites, loading, refreshFavorites } = useFavoriteTools();
-  const [localFavorites, setLocalFavorites] = useState<FavoriteTool[]>(favorites);
+  const [localFavorites, setLocalFavorites] = useState<FavoriteTool[] | null>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [showEmpty, setShowEmpty] = useState(false);
 
+  // Initial state sync
   useEffect(() => {
-    // Only sync localFavorites from global favorites if not reordering
-    if (!isReordering) {
+    if (!loading) {
+      setLocalFavorites(favorites);
+      // Only show empty state after a delay to allow animations to start
+      const timer = setTimeout(() => {
+        setShowEmpty(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, favorites]);
+
+  // Reordering sync
+  useEffect(() => {
+    if (!isReordering && localFavorites !== null) {
       setLocalFavorites(favorites);
     }
-  }, [favorites, isReordering]);
+  }, [favorites, isReordering, localFavorites]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -99,7 +118,35 @@ export default function FavoritesPage() {
     }
   };
 
-  const activeTool = activeId ? localFavorites.find(f => f.id === activeId) : null;
+  const activeTool = activeId && localFavorites ? localFavorites.find(f => f.id === activeId) : null;
+
+  // Don't render anything until we have the initial state
+  if (loading || localFavorites === null) {
+    return (
+      <div className="h-full w-full">
+        <div className="relative size-0">
+          <Breadcrumb className="absolute z-50 left-20 top-[22px] w-max">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Favorites</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+        <TopSpacing />
+        <div className="w-full px-8 pt-8 pb-24 mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">Favorite Tools</h1>
+              <p className="text-muted-foreground mt-1">
+                Access your favorite tools quickly
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full">
@@ -125,25 +172,13 @@ export default function FavoritesPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-5 w-1/3 mb-2" />
-                  <Skeleton className="h-4 w-2/3" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-full" />
-                </CardContent>
-                <CardFooter>
-                  <Skeleton className="h-9 w-full" />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : localFavorites.length === 0 ? (
-          <div className="text-center py-12">
+        {localFavorites?.length === 0 && showEmpty ? (
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="mb-4">
               <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
             </div>
@@ -154,8 +189,8 @@ export default function FavoritesPage() {
             <Link href="/tools/base64" passHref>
               <Button>Explore Tools</Button>
             </Link>
-          </div>
-        ) : (
+          </motion.div>
+        ) : localFavorites && localFavorites.length > 0 ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -187,10 +222,11 @@ export default function FavoritesPage() {
           >
             <SortableContext items={localFavorites.map(f => f.id)} strategy={rectSortingStrategy}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {localFavorites.map((tool) => (
+                {localFavorites.map((tool, index) => (
                   <SortableFavoriteCard
                     key={tool.id}
                     tool={tool}
+                    index={index}
                     isDragging={activeId === tool.id}
                     onClick={() => router.push(tool.toolUrl)}
                     onRemove={(e) => {
@@ -232,7 +268,7 @@ export default function FavoritesPage() {
               )}
             </DragOverlay>
           </DndContext>
-        )}
+        ) : null}
       </div>
     </div>
   );
