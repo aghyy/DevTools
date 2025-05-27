@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { trackActivity } from '@/services/activity';
 import { trackClientToolPerformance } from '@/utils/performanceTracker';
 import { toast } from 'sonner';
+import { useAtom } from 'jotai';
+import { isGuestAtom } from '@/atoms/auth';
 
 // This component wraps client-side tools to track both activity and performance
 interface ClientToolTrackerProps {
@@ -22,9 +24,15 @@ export const ClientToolTracker: React.FC<ClientToolTrackerProps> = ({
 }) => {
   const pathname = usePathname();
   const toolName = name.toLowerCase().replace(/\s+/g, '-');
+  const [isGuest] = useAtom(isGuestAtom);
   
   // Track page activity and initial load time
   useEffect(() => {
+    // Skip tracking for guest users
+    if (isGuest) {
+      return;
+    }
+
     const startTime = new Date().getTime();
     
     // Only track when component mounts (page is visited)
@@ -49,7 +57,7 @@ export const ClientToolTracker: React.FC<ClientToolTrackerProps> = ({
     };
 
     logActivity();
-  }, [name, pathname, icon, toolName, trackInitialLoad]);
+  }, [name, pathname, icon, toolName, trackInitialLoad, isGuest]);
 
   // Just render children - this is a transparent wrapper
   return <>{children}</>;
