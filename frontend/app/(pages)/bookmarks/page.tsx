@@ -56,7 +56,6 @@ import { userDataAtom } from "@/atoms/auth";
 import { toast } from "sonner";
 import { ActiveTab } from "@/types/user";
 import { motion } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -372,7 +371,11 @@ export default function Bookmarks() {
 
   // Rendering
   const renderNoResults = () => (
-    <div className="text-center py-16">
+    <motion.div className="text-center py-16"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="flex justify-center mb-4">
         <ExternalLink className="h-16 w-16 text-muted-foreground/50" />
       </div>
@@ -392,7 +395,7 @@ export default function Bookmarks() {
           Add Bookmark
         </Button>
       )}
-    </div>
+    </motion.div>
   );
 
   return (
@@ -409,7 +412,7 @@ export default function Bookmarks() {
 
       <TopSpacing />
 
-      {!isLoading ? (
+      {!isLoading && (
         <div className="w-full px-8 pt-8 pb-24 mx-auto">
           <div className="flex flex-col mb-8">
             <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
@@ -626,65 +629,6 @@ export default function Bookmarks() {
                     </Badge>
                   )}
                 </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full px-8 pt-8 pb-24 mx-auto">
-          <div className="flex flex-col mb-8">
-            <Skeleton className="h-9 w-48 mb-2" />
-            <Skeleton className="h-5 w-64" />
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Main content skeleton */}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4 space-y-4">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-32 w-full" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-16" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sidebar skeleton */}
-            <div className="md:w-64 space-y-6">
-              <Skeleton className="h-10 w-full" />
-              
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-full" />
-                  ))}
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(6)].map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-20" />
-                  ))}
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-20" />
-                  ))}
-                </div>
               </div>
             </div>
           </div>

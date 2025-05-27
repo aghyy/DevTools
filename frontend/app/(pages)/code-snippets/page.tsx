@@ -39,7 +39,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeSnippetForm } from "@/components/code-snippets/code-snippet-form";
 import { CodeSnippetCard } from "@/components/code-snippets/code-snippet-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   Plus,
@@ -265,18 +264,19 @@ export default function CodeSnippets() {
     const initializeData = async () => {
       setIsLoading(true);
       try {
-        // Set initial tab based on auth state
-        if (!userData) {
-          setActiveTab("public");
-          await fetchPublicSnippets();
-        } else {
+        // Always fetch public snippets first
+        await fetchPublicSnippets();
+
+        // If user is logged in, fetch their personal data
+        if (userData) {
           setActiveTab("personal");
           await Promise.all([
-            fetchPublicSnippets(),
             fetchPersonalSnippets(),
             fetchLanguages(),
             fetchTags()
           ]);
+        } else {
+          setActiveTab("public");
         }
       } catch (err) {
         console.error('Failed to initialize code snippets:', err);
@@ -292,13 +292,13 @@ export default function CodeSnippets() {
   // Handle tab changes
   useEffect(() => {
     const loadTabData = async () => {
-      if (isLoading || !userData) return; // Don't load if guest or loading
+      if (isLoading) return;
 
       setIsLoading(true);
       try {
         if (activeTab === "public") {
           await fetchPublicSnippets();
-        } else {
+        } else if (userData) {
           await Promise.all([
             fetchPersonalSnippets(),
             fetchLanguages(),
@@ -464,7 +464,7 @@ export default function CodeSnippets() {
 
       <TopSpacing />
 
-      {!isLoading ? (
+      {!isLoading && (
         <div className="w-full px-8 pt-8 pb-24 mx-auto">
           <div className="flex flex-col mb-8">
             <h1 className="text-3xl font-bold mb-2">Code Snippets</h1>
@@ -506,9 +506,7 @@ export default function CodeSnippets() {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Main content */}
             <div className="flex-1">
-              {isLoading ? (
-                <></>
-              ) : filteredSnippets.length > 0 ? (
+              {filteredSnippets.length > 0 ? (
                 <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                   variants={container}
@@ -563,7 +561,12 @@ export default function CodeSnippets() {
                   )}
                 </motion.div>
               ) : (
-                <div className="text-center p-10 border rounded-lg">
+                <motion.div
+                  className="text-center p-10 border rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Code2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No code snippets found</h3>
                   <p className="text-muted-foreground mb-4">
@@ -579,7 +582,7 @@ export default function CodeSnippets() {
                       Add Your First Snippet
                     </Button>
                   )}
-                </div>
+                </motion.div>
               )}
             </div>
 
@@ -686,65 +689,6 @@ export default function CodeSnippets() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full px-8 pt-8 pb-24 mx-auto">
-          <div className="flex flex-col mb-8">
-            <Skeleton className="h-9 w-48 mb-2" />
-            <Skeleton className="h-5 w-64" />
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Main content skeleton */}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4 space-y-4">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-32 w-full" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-16" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sidebar skeleton */}
-            <div className="md:w-64 space-y-6">
-              <Skeleton className="h-10 w-full" />
-              
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-full" />
-                  ))}
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(6)].map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-20" />
-                  ))}
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <Skeleton className="h-5 w-24" />
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-20" />
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
