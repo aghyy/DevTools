@@ -73,21 +73,26 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [_open, _setOpen] = React.useState(defaultOpen)
     const [mounted, setMounted] = React.useState(false)
-    const open = openProp ?? _open
+    const [_open, _setOpen] = React.useState(defaultOpen)
+    const open = mounted ? (openProp ?? _open) : defaultOpen
 
     // Handle client-side initialization
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
       setMounted(true)
-      const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
-      if (stored !== null) {
-        const parsed = JSON.parse(stored)
-        if (setOpenProp) {
-          setOpenProp(parsed)
-        } else {
-          _setOpen(parsed)
+      try {
+        const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
+        if (stored !== null) {
+          const parsed = JSON.parse(stored)
+          if (setOpenProp) {
+            setOpenProp(parsed)
+          } else {
+            _setOpen(parsed)
+          }
         }
+      } catch (error) {
+        // If there's any error reading from localStorage, just use the default state
+        console.warn('Failed to read sidebar state from localStorage:', error)
       }
     }, [setOpenProp])
 
@@ -102,7 +107,11 @@ const SidebarProvider = React.forwardRef<
 
         // Only store in localStorage after initial mount
         if (mounted) {
-          localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openState))
+          try {
+            localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openState))
+          } catch (error) {
+            console.warn('Failed to write sidebar state to localStorage:', error)
+          }
         }
       },
       [setOpenProp, open, mounted]
