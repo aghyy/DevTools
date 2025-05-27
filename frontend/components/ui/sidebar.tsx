@@ -74,10 +74,12 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
     const [_open, _setOpen] = React.useState(defaultOpen)
+    const [mounted, setMounted] = React.useState(false)
     const open = openProp ?? _open
 
-    // Initialize from localStorage after mount
+    // Handle client-side initialization
     React.useEffect(() => {
+      setMounted(true)
       const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
       if (stored !== null) {
         const parsed = JSON.parse(stored)
@@ -98,10 +100,12 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // Store the state in localStorage
-        localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openState))
+        // Only store in localStorage after initial mount
+        if (mounted) {
+          localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openState))
+        }
       },
-      [setOpenProp, open]
+      [setOpenProp, open, mounted]
     )
 
     // Helper to toggle the sidebar.
