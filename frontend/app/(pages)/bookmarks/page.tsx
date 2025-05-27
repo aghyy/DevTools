@@ -56,6 +56,7 @@ import { userDataAtom } from "@/atoms/auth";
 import { toast } from "sonner";
 import { ActiveTab } from "@/types/user";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Interface for public bookmarks by user
 interface UserPublicBookmarks {
@@ -408,226 +409,287 @@ export default function Bookmarks() {
 
       <TopSpacing />
 
-      <div className="w-full px-8 pt-8 pb-24 mx-auto">
-        <div className="flex flex-col mb-8">
-          <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
-          <div className="text-muted-foreground">
-            {userData ? (
-              `${userData.firstName}'s bookmarks and favorite resources`
-            ) : (
-              "Public bookmarks shared by the community"
-            )}
+      {!isLoading ? (
+        <div className="w-full px-8 pt-8 pb-24 mx-auto">
+          <div className="flex flex-col mb-8">
+            <h1 className="text-3xl font-bold mb-2">Bookmarks</h1>
+            <div className="text-muted-foreground">
+              {userData ? (
+                `${userData.firstName}'s bookmarks and favorite resources`
+              ) : (
+                "Public bookmarks shared by the community"
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Tabs - Show for everyone but disable personal if not logged in */}
-        {userData && (
-          <div className="flex justify-between items-center mb-4">
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList>
-                <TabsTrigger
-                  value="personal"
-                  className="flex items-center gap-2"
-                  disabled={!userData}
+          {/* Tabs - Show for everyone but disable personal if not logged in */}
+          {userData && (
+            <div className="flex justify-between items-center mb-4">
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsList>
+                  <TabsTrigger
+                    value="personal"
+                    className="flex items-center gap-2"
+                    disabled={!userData}
+                  >
+                    <User className="h-4 w-4" />
+                    Personal
+                  </TabsTrigger>
+                  <TabsTrigger value="public" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Public
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {userData && activeTab === "personal" && (
+                <Button onClick={() => handleOpenForm()} className="gap-1">
+                  <Plus size={16} />
+                  Add Bookmark
+                </Button>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Main content */}
+            <div className="flex-1">
+              {isLoading ? (
+                <></>
+              ) : filteredBookmarks.length > 0 ? (
+                <motion.div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
                 >
-                  <User className="h-4 w-4" />
-                  Personal
-                </TabsTrigger>
-                <TabsTrigger value="public" className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  Public
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+                  {filteredBookmarks.map((bookmark, index) => {
+                    const userBookmarks = publicBookmarks.find(ub =>
+                      ub.bookmarks.some(b => b.id === bookmark.id)
+                    );
 
-            {userData && activeTab === "personal" && (
-              <Button onClick={() => handleOpenForm()} className="gap-1">
-                <Plus size={16} />
-                Add Bookmark
-              </Button>
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Main content */}
-          <div className="flex-1">
-            {isLoading ? (
-              <></>
-            ) : filteredBookmarks.length > 0 ? (
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                variants={container}
-                initial="hidden"
-                animate="show"
-              >
-                {filteredBookmarks.map((bookmark, index) => {
-                  const userBookmarks = publicBookmarks.find(ub =>
-                    ub.bookmarks.some(b => b.id === bookmark.id)
-                  );
-
-                  return (
-                    <motion.div
-                      key={bookmark.id}
-                      custom={index}
-                      variants={item(index)}
-                    >
-                      <BookmarkCard
-                        bookmark={bookmark}
-                        onEdit={activeTab === "personal" && userData ? handleOpenForm : undefined}
-                        onDelete={activeTab === "personal" && userData ? handleDeleteClick : undefined}
-                        showControls={Boolean(activeTab === "personal" && userData)}
-                        userInfo={userBookmarks ? {
-                          firstName: userBookmarks.user.split(' ')[0],
-                          lastName: userBookmarks.user.split(' ')[1] || '',
-                          username: userBookmarks.username
-                        } : undefined}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            ) : (
-              renderNoResults()
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="md:w-64 space-y-6">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search bookmarks..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                    return (
+                      <motion.div
+                        key={bookmark.id}
+                        custom={index}
+                        variants={item(index)}
+                      >
+                        <BookmarkCard
+                          bookmark={bookmark}
+                          onEdit={activeTab === "personal" && userData ? handleOpenForm : undefined}
+                          onDelete={activeTab === "personal" && userData ? handleDeleteClick : undefined}
+                          showControls={Boolean(activeTab === "personal" && userData)}
+                          userInfo={userBookmarks ? {
+                            firstName: userBookmarks.user.split(' ')[0],
+                            lastName: userBookmarks.user.split(' ')[1] || '',
+                            username: userBookmarks.username
+                          } : undefined}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                renderNoResults()
+              )}
             </div>
 
-            {/* Users list - Only show for public bookmarks */}
-            {(activeTab === "public" || !userData) && publicBookmarks.length > 0 && (
+            {/* Sidebar */}
+            <div className="md:w-64 space-y-6">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search bookmarks..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              {/* Users list - Only show for public bookmarks */}
+              {(activeTab === "public" || !userData) && publicBookmarks.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1.5">
+                    {publicBookmarks.map((userBookmarks) => (
+                      <div
+                        key={userBookmarks.username}
+                        className={`flex items-center p-2 rounded-md hover:bg-muted cursor-pointer ${selectedUser === userBookmarks.username ? 'bg-muted' : ''}`}
+                        onClick={() => setSelectedUser(selectedUser === userBookmarks.username ? null : userBookmarks.username)}
+                      >
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarFallback className="text-xs">
+                            {userBookmarks.username.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-sm font-medium">{userBookmarks.user}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {userBookmarks.bookmarks.length} bookmarks
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Popular Tags */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center">
-                    <User className="h-4 w-4 mr-2" />
-                    Users
+                    <TagIcon className="h-4 w-4 mr-2" />
+                    Popular Tags
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1.5">
-                  {publicBookmarks.map((userBookmarks) => (
-                    <div
-                      key={userBookmarks.username}
-                      className={`flex items-center p-2 rounded-md hover:bg-muted cursor-pointer ${selectedUser === userBookmarks.username ? 'bg-muted' : ''}`}
-                      onClick={() => setSelectedUser(selectedUser === userBookmarks.username ? null : userBookmarks.username)}
-                    >
-                      <Avatar className="h-8 w-8 mr-2">
-                        <AvatarFallback className="text-xs">
-                          {userBookmarks.username.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-sm font-medium">{userBookmarks.user}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {userBookmarks.bookmarks.length} bookmarks
-                        </div>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.slice(0, 15).map((tag) => (
+                      <Badge
+                        key={tag.tag}
+                        variant={selectedTag === tag.tag ? "default" : "secondary"}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
+                      >
+                        {tag.tag}
+                        <span className="ml-1 text-xs opacity-70">{tag.count}</span>
+                      </Badge>
+                    ))}
+                    {tags.length === 0 && (
+                      <div className="text-sm text-muted-foreground py-2">
+                        No tags yet
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Popular Tags */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <TagIcon className="h-4 w-4 mr-2" />
-                  Popular Tags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {tags.slice(0, 15).map((tag) => (
-                    <Badge
-                      key={tag.tag}
-                      variant={selectedTag === tag.tag ? "default" : "secondary"}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedTag(selectedTag === tag.tag ? null : tag.tag)}
-                    >
-                      {tag.tag}
-                      <span className="ml-1 text-xs opacity-70">{tag.count}</span>
+              {/* Categories */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <FolderIcon className="h-4 w-4 mr-2" />
+                      Categories
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
+                  <div
+                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    <span>All Categories</span>
+                    <Badge variant="outline" className="ml-auto">
+                      {activeTab === "personal" ? bookmarks.length : filteredBookmarks.length}
                     </Badge>
+                  </div>
+                  {categories.map((category) => (
+                    <div
+                      key={category}
+                      className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      <span>{category}</span>
+                      <Badge variant="outline" className="ml-auto">
+                        {filteredBookmarks.filter(bookmark => bookmark.category === category).length}
+                      </Badge>
+                    </div>
                   ))}
-                  {tags.length === 0 && (
-                    <div className="text-sm text-muted-foreground py-2">
-                      No tags yet
+                  {categories.length === 0 && (
+                    <div className="text-sm text-muted-foreground p-2">
+                      No categories yet
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Categories */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <FolderIcon className="h-4 w-4 mr-2" />
-                    Categories
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                <div
-                  className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === null ? 'bg-muted font-medium' : ''}`}
-                  onClick={() => setSelectedCategory(null)}
+              {/* Mobile filters dialog */}
+              <div className="md:hidden">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setFilterDialogOpen(true)}
                 >
-                  <span>All Categories</span>
-                  <Badge variant="outline" className="ml-auto">
-                    {activeTab === "personal" ? bookmarks.length : filteredBookmarks.length}
-                  </Badge>
-                </div>
-                {categories.map((category) => (
-                  <div
-                    key={category}
-                    className={`text-sm px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted flex items-center justify-between ${selectedCategory === category ? 'bg-muted font-medium' : ''}`}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    <span>{category}</span>
-                    <Badge variant="outline" className="ml-auto">
-                      {filteredBookmarks.filter(bookmark => bookmark.category === category).length}
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                  {(selectedCategory || selectedTag) && (
+                    <Badge variant="secondary" className="ml-2">
+                      {(selectedCategory ? 1 : 0) + (selectedTag ? 1 : 0)}
                     </Badge>
-                  </div>
-                ))}
-                {categories.length === 0 && (
-                  <div className="text-sm text-muted-foreground p-2">
-                    No categories yet
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Mobile filters dialog */}
-            <div className="md:hidden">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setFilterDialogOpen(true)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-                {(selectedCategory || selectedTag) && (
-                  <Badge variant="secondary" className="ml-2">
-                    {(selectedCategory ? 1 : 0) + (selectedTag ? 1 : 0)}
-                  </Badge>
-                )}
-              </Button>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-full px-8 pt-8 pb-24 mx-auto">
+          <div className="flex flex-col mb-8">
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-64" />
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Main content skeleton */}
+            <div className="flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="border rounded-lg p-4 space-y-4">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-32 w-full" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sidebar skeleton */}
+            <div className="md:w-64 space-y-6">
+              <Skeleton className="h-10 w-full" />
+              
+              <div className="border rounded-lg p-4 space-y-4">
+                <Skeleton className="h-5 w-24" />
+                <div className="space-y-2">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-full" />
+                  ))}
+                </div>
+              </div>
+
+              <div className="border rounded-lg p-4 space-y-4">
+                <Skeleton className="h-5 w-24" />
+                <div className="flex flex-wrap gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <Skeleton key={i} className="h-6 w-20" />
+                  ))}
+                </div>
+              </div>
+
+              <div className="border rounded-lg p-4 space-y-4">
+                <Skeleton className="h-5 w-24" />
+                <div className="flex flex-wrap gap-2">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-6 w-20" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form Sheet - Only show for logged in users */}
       {userData && (

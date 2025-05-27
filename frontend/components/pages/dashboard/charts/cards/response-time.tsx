@@ -44,7 +44,7 @@ export default function ResponseTimeCard({ loading, description }: {
       axisLine={false}
       tickLine={false}
       tick={{ fill: themeColors.textMuted, fontSize: 10 }}
-      width={30} // Ensure there's enough space for the axis
+      width={35} // Ensure there's enough space for the axis
       tickFormatter={(value) => chart === 'response' ? `${value.toFixed(0)}` : `${value}`}
       style={{ fontSize: '10px' }}
       domain={chart === 'activity' ? [0, 'dataMax + 2'] : ['dataMin - 5', 'dataMax + 5']}

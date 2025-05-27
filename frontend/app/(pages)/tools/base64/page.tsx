@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash } from "lucide-react";
 import { TopSpacing } from "@/components/top-spacing";
@@ -32,154 +32,68 @@ export default function Base64() {
 function Base64Tool() {
   const [decodedText, setDecodedText] = useState("");
   const [encodedText, setEncodedText] = useState("");
-  const [updateSource, setUpdateSource] = useState<'encoded' | 'decoded' | null>(null);
   const { trackOperation } = useClientToolPerformance('base64');
 
   const router = useRouter();
-  const debounceTimeoutEncoding = useRef<NodeJS.Timeout | null>(null);
-  const debounceTimeoutDecoding = useRef<NodeJS.Timeout | null>(null);
-  const encodingTracker = useRef<{ complete: () => void } | null>(null);
-  const decodingTracker = useRef<{ complete: () => void } | null>(null);
 
   const routeTo = (path: string) => {
     router.push(path);
   }
 
-  // Track page activity
-  useEffect(() => {
-    // Force a re-render on initial mount 
-    setUpdateSource(null);
-  }, []);
-
-  // Update decoded text when user types in the plain text field
   const handleDecodedTextChange = (text: string) => {
-    // Start tracking when user starts typing
-    if (!encodingTracker.current && text !== decodedText) {
-      encodingTracker.current = trackOperation('encode');
-    }
-
     setDecodedText(text);
-    setUpdateSource('decoded');
   };
 
-  // Update encoded text when user types in the Base64 field
   const handleEncodedTextChange = (text: string) => {
-    // Start tracking when user starts typing
-    if (!decodingTracker.current && text !== encodedText) {
-      decodingTracker.current = trackOperation('decode');
+    setEncodedText(text);
+  };
+
+  const handleEncode = () => {
+    if (decodedText === "") {
+      setEncodedText("");
+      return;
     }
 
-    setEncodedText(text);
-    setUpdateSource('encoded');
+    const tracker = trackOperation('encode');
+    try {
+      const result = btoa(decodedText);
+      setEncodedText(result);
+      tracker.complete();
+    } catch {
+      toast.error("Error encoding text. Please check your input.");
+    }
   };
 
-  // Encoding (when plain text changes)
-  useEffect(() => {
-    if (updateSource !== 'decoded') return;
+  const handleDecode = () => {
+    if (encodedText === "") {
+      setDecodedText("");
+      return;
+    }
 
-    if (debounceTimeoutEncoding.current) clearTimeout(debounceTimeoutEncoding.current);
-
-    debounceTimeoutEncoding.current = setTimeout(() => {
-      if (decodedText === "") {
-        setEncodedText("");
-        if (encodingTracker.current) {
-          encodingTracker.current = null; // Discard tracker if input is empty
-        }
-        return;
-      }
-
-      try {
-        const result = btoa(decodedText);
-        setEncodedText(result);
-
-        // Complete tracking if started
-        if (encodingTracker.current) {
-          encodingTracker.current.complete();
-          encodingTracker.current = null;
-        }
-      } catch {
-        toast.error("Error encoding text. Please check your input.");
-        
-        // Still clear tracker on error
-        if (encodingTracker.current) {
-          encodingTracker.current = null;
-        }
-      }
-    }, 500);
-  }, [decodedText, trackOperation, updateSource]);
-
-  // Decoding (when Base64 text changes)
-  useEffect(() => {
-    if (updateSource !== 'encoded') return;
-
-    if (debounceTimeoutDecoding.current) clearTimeout(debounceTimeoutDecoding.current);
-
-    debounceTimeoutDecoding.current = setTimeout(() => {
-      if (encodedText === "") {
-        setDecodedText("");
-        if (decodingTracker.current) {
-          decodingTracker.current = null; // Discard tracker if input is empty
-        }
-        return;
-      }
-      
-      try {
-        const result = atob(encodedText);
-        setDecodedText(result);
-
-        // Complete tracking if started
-        if (decodingTracker.current) {
-          decodingTracker.current.complete();
-          decodingTracker.current = null;
-        }
-      } catch {
-        toast.error("Error decoding text. Please check your input.");
-        
-        // Still clear tracker on error
-        if (decodingTracker.current) {
-          decodingTracker.current = null;
-        }
-      }
-    }, 500);
-  }, [encodedText, trackOperation, updateSource]);
+    const tracker = trackOperation('decode');
+    try {
+      const result = atob(encodedText);
+      setDecodedText(result);
+      tracker.complete();
+    } catch {
+      toast.error("Error decoding text. Please check your input.");
+    }
+  };
 
   const handleClear = () => {
     setDecodedText("");
     setEncodedText("");
-    setUpdateSource(null);
-    
-    // Clear any active trackers
-    if (encodingTracker.current) {
-      encodingTracker.current = null;
-    }
-    
-    if (decodingTracker.current) {
-      decodingTracker.current = null;
-    }
   };
 
-  // Create wrapper functions for paste that manage the update source
   const handlePasteDecoded = () => {
-    // Start tracking when user pastes
-    if (!encodingTracker.current) {
-      encodingTracker.current = trackOperation('encode');
-    }
-    
     handlePaste((text) => {
       setDecodedText(text);
-      setUpdateSource('decoded');
     });
   };
 
   const handlePasteEncoded = () => {
-    // Start tracking when user pastes
-    if (!decodingTracker.current) {
-      decodingTracker.current = trackOperation('decode');
-    }
-    
     handlePaste((text) => {
       setEncodedText(text);
-      setUpdateSource('encoded');
     });
   };
 
@@ -232,6 +146,9 @@ function Base64Tool() {
               onCopy={() => handleCopy(decodedText)}
               onPaste={handlePasteDecoded}
             />
+            <Button onClick={handleEncode} className="w-full">
+              Encode
+            </Button>
           </Card>
 
           <Card className="flex flex-col flex-1 p-6 gap-6">
@@ -244,6 +161,9 @@ function Base64Tool() {
               onCopy={() => handleCopy(encodedText)}
               onPaste={handlePasteEncoded}
             />
+            <Button onClick={handleDecode} className="w-full">
+              Decode
+            </Button>
           </Card>
         </div>
 
