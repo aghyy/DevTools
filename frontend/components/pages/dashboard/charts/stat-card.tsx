@@ -56,7 +56,7 @@ export default function StatCard({ title, value, change, suffix, icon, descripti
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
+              <TooltipContent side="top" className="max-w-xs bg-neutral-100 dark:bg-neutral-900">
                 <p>{description}</p>
               </TooltipContent>
             </Tooltip>
