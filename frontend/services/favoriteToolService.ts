@@ -14,7 +14,7 @@ export interface FavoriteTool {
 }
 
 // API endpoint
-const API_URL = "http://localhost:5039/api/favorite-tools";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/favorite-tools`;
 
 // Configure axios to include credentials
 const api = axios.create({

@@ -356,7 +356,7 @@ export function AppSidebar() {
                   <DropdownMenuTrigger asChild disabled={isGuest}>
                     <SidebarMenuButton className="h-fit">
                       <Avatar className="mr-1 border-2 border-primary/20 hover:border-primary/40 transition-all duration-200">
-                        <AvatarImage src={userData.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined} />
+                        <AvatarImage src={userData.avatar ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/avatars/${userData.avatar}` : undefined} />
                         <AvatarFallback>{`${userData.firstName[0]}${userData.lastName[0]}`}</AvatarFallback>
                       </Avatar>
                       <div>

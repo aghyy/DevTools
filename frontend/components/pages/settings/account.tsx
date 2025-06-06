@@ -273,7 +273,7 @@ export default function AccountPage() {
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-primary/20 hover:border-primary/40 transition-all duration-200">
                   <AvatarImage
-                    src={userData?.avatar ? `http://localhost:5039/uploads/avatars/${userData.avatar}` : undefined}
+                    src={userData?.avatar ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/avatars/${userData.avatar}` : undefined}
                     alt={`${userData?.firstName} ${userData?.lastName}'s profile picture`}
                   />
                   <AvatarFallback className="text-4xl">
