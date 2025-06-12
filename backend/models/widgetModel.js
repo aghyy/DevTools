@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
         'battery', 
         'location', 
         'network', 
-        'time', 
         'screen',
         'connection'
       ),

@@ -29,8 +29,8 @@ export default function WidgetSelector({ onWidgetAdded, currentWidgetCount }: Wi
   }, [isOpen]);
 
   const handleAddWidget = async (widgetType: string) => {
-    if (currentWidgetCount >= 3) {
-      toast.error("Maximum of 3 widgets allowed");
+    if (currentWidgetCount >= 5) {
+      toast.error("Maximum of 5 widgets allowed");
       return;
     }
 
@@ -59,12 +59,12 @@ export default function WidgetSelector({ onWidgetAdded, currentWidgetCount }: Wi
         <Button 
           variant="outline" 
           size="sm"
-          disabled={currentWidgetCount >= 3}
+          disabled={currentWidgetCount >= 5}
           className="h-8"
         >
           <Plus className="h-4 w-4" />
           Add Widget
-          {currentWidgetCount >= 3 && " (Max 3)"}
+          {currentWidgetCount >= 5 && " (Max 5)"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">

@@ -30,7 +30,7 @@ const updateUserWidgets = async (req, res) => {
     }
 
     // Validate widget types
-    const validTypes = ['browser', 'memory', 'device', 'battery', 'location', 'network', 'time', 'screen', 'connection'];
+    const validTypes = ['memory', 'device', 'battery', 'location', 'network', 'screen'];
     const invalidWidgets = widgets.filter(w => !validTypes.includes(w.widgetType));
     
     if (invalidWidgets.length > 0) {
@@ -74,10 +74,10 @@ const addWidget = async (req, res) => {
       return res.status(400).json({ error: "Widget type is required" });
     }
 
-    // Check if user already has 3 widgets
+    // Check if user already has 5 widgets
     const existingCount = await Widget.count({ where: { userId } });
-    if (existingCount >= 3) {
-      return res.status(400).json({ error: "Maximum of 3 widgets allowed" });
+    if (existingCount >= 5) {
+      return res.status(400).json({ error: "Maximum of 5 widgets allowed" });
     }
 
     // Get the next position
@@ -148,12 +148,6 @@ const getAvailableWidgets = async (req, res) => {
   try {
     const availableWidgets = [
       {
-        type: 'browser',
-        name: 'Browser Info',
-        description: 'Shows current browser information',
-        icon: 'Globe'
-      },
-      {
         type: 'memory',
         name: 'Memory Usage',
         description: 'Displays JavaScript heap memory usage',
@@ -184,22 +178,10 @@ const getAvailableWidgets = async (req, res) => {
         icon: 'Wifi'
       },
       {
-        type: 'time',
-        name: 'Local Time',
-        description: 'Shows current local time and timezone',
-        icon: 'Clock'
-      },
-      {
         type: 'screen',
         name: 'Screen Info',
         description: 'Shows screen resolution and color depth',
         icon: 'Monitor'
-      },
-      {
-        type: 'connection',
-        name: 'Connection Status',
-        description: 'Shows online/offline status',
-        icon: 'Signal'
       }
     ];
 
