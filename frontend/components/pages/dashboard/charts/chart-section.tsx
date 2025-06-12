@@ -2,7 +2,7 @@ import ResponseTimeCard from "@/components/pages/dashboard/charts/cards/response
 import WeeklyActivityCard from "@/components/pages/dashboard/charts/cards/weekly-activity";
 import RessourceUsageCard from "@/components/pages/dashboard/charts/cards/ressource-usage";
 import { useChartDescriptions } from "@/hooks/charts";
-import { MostUsedItem, Activity as ActivityType } from "@/services/activity";
+import { MostUsedItem } from "@/services/activity";
 import { motion } from "framer-motion";
 
 const containerVariants = {
@@ -36,11 +36,9 @@ const cardVariants = {
 
 export default function ChartSection({
   loading,
-  recentItems,
   mostUsedItems
 }: {
   loading: boolean,
-  recentItems: ActivityType[],
   mostUsedItems: MostUsedItem[]
 }) {
   const { weeklyActivity, responseTime, resourceUsage } = useChartDescriptions();
@@ -54,7 +52,7 @@ export default function ChartSection({
       exit="hidden"
     >
       <motion.div variants={cardVariants} className="col-span-1">
-        <WeeklyActivityCard loading={loading} recentItems={recentItems} description={weeklyActivity} />
+        <WeeklyActivityCard loading={loading} description={weeklyActivity} />
       </motion.div>
 
       <motion.div variants={cardVariants} className="col-span-1">

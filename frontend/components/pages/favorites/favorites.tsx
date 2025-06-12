@@ -28,9 +28,9 @@ function SortableFavoriteCard({ tool, onClick, onRemove, isDragging, index }: { 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.2,
-        delay: index * 0.1
+      transition={{
+        duration: 0.1,
+        delay: index * 0.05
       }}
     >
       <div
@@ -178,7 +178,7 @@ export default function FavoritesPage() {
         </div>
 
         {localFavorites?.length === 0 ? (
-          <motion.div 
+          <motion.div
             className="text-center py-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: showEmpty ? 1 : 0 }}
@@ -270,4 +270,4 @@ export default function FavoritesPage() {
       </div>
     </div>
   );
-} 
+}

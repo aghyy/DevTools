@@ -173,7 +173,7 @@ export default function Dashboard() {
             <BarChart4 className="h-4 w-4 md:h-5 md:w-5" />
             Activity Overview
           </h2>
-          <ChartSection loading={loading} recentItems={recentItems} mostUsedItems={mostUsedItems} />
+          <ChartSection loading={loading} mostUsedItems={mostUsedItems} />
         </motion.div>
 
         {/* Recent Activity */}

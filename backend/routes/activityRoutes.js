@@ -1,6 +1,6 @@
 const express = require("express");
 const activityController = require("../controllers/activityController");
-const { trackActivity, getUserActivities, getActivityStats, getMostUsedItems } = activityController;
+const { trackActivity, getUserActivities, getWeeklyActivityData, getActivityStats, getMostUsedItems } = activityController;
 const userAuth = require("../middlewares/userAuth");
 
 const router = express.Router();
@@ -10,6 +10,9 @@ router.post("/", userAuth.verifyToken, trackActivity);
 
 // Get user's recent activities
 router.get("/", userAuth.verifyToken, getUserActivities);
+
+// Get weekly activity data for charts
+router.get("/weekly", userAuth.verifyToken, getWeeklyActivityData);
 
 // Get user's activity statistics
 router.get("/stats", userAuth.verifyToken, getActivityStats);

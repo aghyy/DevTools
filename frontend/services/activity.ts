@@ -103,3 +103,14 @@ export const getMostUsedItems = async (limit: number = 5) => {
     return [];
   }
 };
+
+// Get weekly activity data for charts
+export const getWeeklyActivityData = async () => {
+  try {
+    const response = await api.get('/api/activities/weekly');
+    return response.data;
+  } catch {
+    toast.error(`Error fetching weekly activity data`);
+    return { current: 0, change: 0, data: [] };
+  }
+};

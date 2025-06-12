@@ -5,13 +5,12 @@ import { BarChart4 } from "lucide-react";
 import { useTheme } from "next-themes";
 import CustomTooltip from "../tooltip";
 import { useThemeColors } from "@/hooks/charts";
-import { Activity as ActivityType } from "@/services/activity";
+import { getWeeklyActivityData } from "@/services/activity";
 import { useEffect, useState } from "react";
 import { ComparisonChartData } from "@/types/charts";
 
-export default function WeeklyActivityCard({ loading, recentItems, description }: {
+export default function WeeklyActivityCard({ loading, description }: {
   loading: boolean;
-  recentItems: ActivityType[];
   description: string;
 }) {
   const { theme, systemTheme } = useTheme();
@@ -25,119 +24,34 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
     data: [] 
   });
 
-  const renderYAxis = (chart: string) => (
+  const renderYAxis = () => (
     <YAxis
       axisLine={false}
       tickLine={false}
       tick={{ fill: themeColors.textMuted, fontSize: 10 }}
-      width={30} // Ensure there's enough space for the axis
-      tickFormatter={(value) => chart === 'response' ? `${value.toFixed(0)}` : `${value}`}
+      width={30}
+      tickFormatter={(value) => Math.round(value).toString()}
       style={{ fontSize: '10px' }}
-      domain={chart === 'activity' ? [0, 'dataMax + 2'] : ['dataMin - 5', 'dataMax + 5']}
+      domain={[0, 'dataMax + 1']}
     />
   );
 
-  useEffect(() => {
-    // Process activity data for timeline chart
-    const processActivityTimeline = (activities: ActivityType[]) => {
-      if (!activities.length) return [];
-
-      const now = new Date();
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(now.getDate() - 7);
-      
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(now.getDate() - 14);
-
-      // Create maps to count activities by day for current and previous weeks
-      const currentWeekDayCount = new Map<string, number>();
-      const previousWeekDayCount = new Map<string, number>();
-
-      // Initialize days of the week
-      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      
-      // Initialize counters for both weeks
-      weekdays.forEach(day => {
-        currentWeekDayCount.set(day, 0);
-        previousWeekDayCount.set(day, 0);
-      });
-
-      // Count activities by day for both current and previous weeks
-      activities.forEach(activity => {
-        if (activity.createdAt) {
-          const date = new Date(activity.createdAt);
-          const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-          
-          if (date >= oneWeekAgo && date <= now) {
-            currentWeekDayCount.set(dayStr, (currentWeekDayCount.get(dayStr) || 0) + 1);
-          } else if (date >= twoWeeksAgo && date < oneWeekAgo) {
-            previousWeekDayCount.set(dayStr, (previousWeekDayCount.get(dayStr) || 0) + 1);
-          }
+    useEffect(() => {
+    const fetchWeeklyData = async () => {
+      if (!loading) {
+        try {
+          const data = await getWeeklyActivityData();
+          setActivityTrend(data);
+        } catch (error) {
+          console.error('Error fetching weekly activity data:', error);
+          // Set default empty data
+          setActivityTrend({ current: 0, change: 0, data: [] });
         }
-      });
-
-      // Get the current day of the week
-      const today = new Date().getDay();
-      
-      // Create ordered array of days starting from 7 days ago
-      const orderedDays = Array(7).fill(0).map((_, i) => {
-        const dayIndex = (today - 6 + i + 7) % 7;
-        return weekdays[dayIndex];
-      });
-
-      // Convert to array format needed by Recharts
-      return orderedDays.map(day => ({
-        name: day,
-        current: currentWeekDayCount.get(day) || 0,
-        previous: previousWeekDayCount.get(day) || 0
-      }));
+      }
     };
 
-    // Get total activity count for last 7 days vs previous 7 days
-    const getActivityTrend = () => {
-      if (!recentItems.length) return { current: 0, change: 0, data: [] };
-
-      const now = new Date();
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(now.getDate() - 7);
-
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(now.getDate() - 14);
-
-      // Filter activities for current week
-      const currentWeekActivities = recentItems.filter(activity => {
-        if (!activity.createdAt) return false;
-        const date = new Date(activity.createdAt);
-        return date >= oneWeekAgo && date <= now;
-      });
-
-      // Filter activities for previous week
-      const previousWeekActivities = recentItems.filter(activity => {
-        if (!activity.createdAt) return false;
-        const date = new Date(activity.createdAt);
-        return date >= twoWeeksAgo && date < oneWeekAgo;
-      });
-
-      // Calculate current week total
-      const currentWeekCount = currentWeekActivities.length;
-
-      // Calculate previous week total
-      const previousWeekCount = previousWeekActivities.length;
-
-      // Calculate percentage change
-      const change = previousWeekCount === 0
-        ? 100
-        : ((currentWeekCount - previousWeekCount) / previousWeekCount) * 100;
-
-      return {
-        current: currentWeekCount,
-        change,
-        data: processActivityTimeline(recentItems)
-      };
-    };
-
-    setActivityTrend(getActivityTrend());
-  }, [recentItems]);
+    fetchWeeklyData();
+  }, [loading]);
 
   return (
     <>
@@ -156,7 +70,7 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
               data={activityTrend.data}
               margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
             >
-              {renderYAxis("activity")}
+              {renderYAxis()}
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} stroke={themeColors.chartColors.activity.grid} />
               <XAxis
                 dataKey="name"
@@ -171,7 +85,7 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
               />
               <Line
                 type="monotone"
-                name="Previous"
+                name="Previous Week"
                 dataKey="previous"
                 stroke={themeColors.chartColors.activity.previous}
                 strokeWidth={1.5}
@@ -180,7 +94,7 @@ export default function WeeklyActivityCard({ loading, recentItems, description }
               />
               <Line
                 type="monotone"
-                name="Current"
+                name="Current Week"
                 dataKey="current"
                 stroke={themeColors.chartColors.activity.current}
                 strokeWidth={2}
