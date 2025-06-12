@@ -1,12 +1,15 @@
 const express = require("express");
 const performanceController = require("../controllers/performanceController");
-const { recordPerformance, getDailyAverages, getToolsBreakdown } = performanceController;
+const { recordPerformance, getResponseTimeChartData, getDailyAverages, getToolsBreakdown } = performanceController;
 const userAuth = require("../middlewares/userAuth");
 
 const router = express.Router();
 
 // Record performance (optional auth - anonymous metrics allowed)
 router.post("/", userAuth.optionalToken, recordPerformance);
+
+// Get optimized response time chart data (requires authentication)
+router.get("/chart-data", userAuth.verifyToken, getResponseTimeChartData);
 
 // Get performance data (requires authentication)
 router.get("/daily-averages", userAuth.verifyToken, getDailyAverages);

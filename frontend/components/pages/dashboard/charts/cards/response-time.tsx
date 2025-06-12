@@ -7,8 +7,7 @@ import { useThemeColors } from "@/hooks/charts";
 import { Hammer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PerformanceStats } from "@/types/charts";
-import api from "@/utils/axios";
-import { toast } from "sonner";
+import { getResponseTimeChartData } from "@/services/performanceService";
 
 // Extended PerformanceStats type that includes tool names
 interface DetailedPerformanceStats extends PerformanceStats {
@@ -18,7 +17,7 @@ interface DetailedPerformanceStats extends PerformanceStats {
     avgResponseTime: number;
     count: number;
   }[];
-  weeklyAvg?: number; // New field for weekly average
+  weeklyAvg?: number;
 }
 
 export default function ResponseTimeCard({ loading, description }: {
@@ -39,47 +38,41 @@ export default function ResponseTimeCard({ loading, description }: {
     weeklyAvg: 0 
   });
 
-  const renderYAxis = (chart: string) => (
+  const renderYAxis = () => (
     <YAxis
       axisLine={false}
       tickLine={false}
       tick={{ fill: themeColors.textMuted, fontSize: 10 }}
-      width={35} // Ensure there's enough space for the axis
-      tickFormatter={(value) => chart === 'response' ? `${value.toFixed(0)}` : `${value}`}
+      width={35}
+      tickFormatter={(value) => Math.round(value).toString()}
       style={{ fontSize: '10px' }}
-      domain={chart === 'activity' ? [0, 'dataMax + 2'] : ['dataMin - 5', 'dataMax + 5']}
+      domain={[0, 'dataMax + 5']}
     />
   );
 
   useEffect(() => {
-    const fetchPerformanceStats = async () => {
-      try {
-        // Request daily averages from the API
-        const response = await api.get('/api/performance/daily-averages');
-        
-        // Get additional data about the tools being tracked
-        const toolsResponse = await api.get('/api/performance/tools-breakdown');
-        
-        // Calculate weekly average from all data points
-        const weeklyAvg = response.data.data.reduce((sum: number, item: { value: number }) => 
-          sum + item.value, 0) / response.data.data.length;
-        
-        // Combine the data
-        const combinedData = {
-          ...response.data,
-          tools: toolsResponse.data.tools || [],
-          topTools: toolsResponse.data.topTools || [],
-          weeklyAvg: parseFloat(weeklyAvg.toFixed(2))
-        };
-        
-        setPerformanceStats(combinedData);
-      } catch {
-        toast.error("Failed to load performance data");
+    const fetchPerformanceData = async () => {
+      if (!loading) {
+        try {
+          const data = await getResponseTimeChartData();
+          setPerformanceStats(data);
+        } catch (error) {
+          console.error('Error fetching response time data:', error);
+          // Set default empty data
+          setPerformanceStats({ 
+            current: 0, 
+            change: 0, 
+            data: [], 
+            tools: [], 
+            topTools: [], 
+            weeklyAvg: 0 
+          });
+        }
       }
     };
 
-    fetchPerformanceStats();
-  }, []);
+    fetchPerformanceData();
+  }, [loading]);
 
   // Format the description to include tool information
   const getEnhancedDescription = () => {
@@ -113,7 +106,7 @@ export default function ResponseTimeCard({ loading, description }: {
               data={performanceStats.data}
               margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
             >
-              {renderYAxis("response")}
+              {renderYAxis()}
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} stroke={themeColors.chartColors.response.grid} />
               <XAxis
                 dataKey="name"

@@ -35,6 +35,176 @@ const recordPerformance = async (req, res) => {
   }
 };
 
+// Get optimized response time chart data
+const getResponseTimeChartData = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    
+    // Calculate date ranges
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    
+    // Get performance metrics for the last 7 days
+    const whereClause = {
+      createdAt: {
+        [Op.gte]: sevenDaysAgo
+      },
+      success: true // Only include successful requests
+    };
+    
+    // Add user filter if available
+    if (userId) {
+      whereClause.userId = userId;
+    }
+    
+    const metrics = await PerformanceMetric.findAll({
+      where: whereClause,
+      attributes: ['createdAt', 'responseTime'],
+      order: [['createdAt', 'ASC']]
+    });
+
+    // Helper function to get date string in YYYY-MM-DD format
+    const getDateString = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Helper function to get day abbreviation
+    const getDayAbbreviation = (date) => {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    };
+
+    // Generate all 7 days
+    const allDays = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(now.getDate() - i);
+      allDays.push({
+        dateStr: getDateString(date),
+        name: getDayAbbreviation(date),
+        date: date
+      });
+    }
+
+    // Group metrics by date and calculate averages
+    const dailyMetrics = new Map();
+    
+    metrics.forEach(metric => {
+      const metricDate = new Date(metric.createdAt);
+      const dateStr = getDateString(metricDate);
+      
+      if (!dailyMetrics.has(dateStr)) {
+        dailyMetrics.set(dateStr, []);
+      }
+      dailyMetrics.get(dateStr).push(metric.responseTime);
+    });
+
+    // Build chart data with all 7 days
+    const chartData = allDays.map(day => {
+      const dayMetrics = dailyMetrics.get(day.dateStr) || [];
+      const avgResponseTime = dayMetrics.length > 0 
+        ? dayMetrics.reduce((sum, time) => sum + time, 0) / dayMetrics.length 
+        : 0;
+      
+      return {
+        name: day.name,
+        value: Math.round(avgResponseTime * 100) / 100, // Round to 2 decimal places
+        count: dayMetrics.length
+      };
+    });
+
+    // Calculate current week average
+    const totalResponseTime = chartData.reduce((sum, day) => {
+      return day.count > 0 ? sum + (day.value * day.count) : sum;
+    }, 0);
+    const totalRequests = chartData.reduce((sum, day) => sum + day.count, 0);
+    const currentAvg = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
+
+    // Get previous week data for comparison
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(now.getDate() - 14);
+    
+    const previousWeekClause = {
+      createdAt: {
+        [Op.gte]: fourteenDaysAgo,
+        [Op.lt]: sevenDaysAgo
+      },
+      success: true
+    };
+    
+    if (userId) {
+      previousWeekClause.userId = userId;
+    }
+    
+    const previousMetrics = await PerformanceMetric.findAll({
+      where: previousWeekClause,
+      attributes: [
+        [Sequelize.fn('AVG', Sequelize.col('responseTime')), 'avgResponseTime'],
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ]
+    });
+
+    const previousData = previousMetrics[0]?.get({ plain: true });
+    const previousAvg = previousData?.avgResponseTime ? parseFloat(previousData.avgResponseTime) : 0;
+    
+    // Calculate percentage change
+    let change = 0;
+    if (previousAvg > 0 && currentAvg > 0) {
+      change = ((currentAvg - previousAvg) / previousAvg) * 100;
+    } else if (currentAvg > 0 && previousAvg === 0) {
+      change = 100; // 100% increase from zero
+    }
+
+    // Get tool information
+    const toolsData = await PerformanceMetric.findAll({
+      where: whereClause,
+      attributes: [
+        [Sequelize.fn('DISTINCT', Sequelize.col('toolName')), 'toolName']
+      ],
+      order: [['toolName', 'ASC']]
+    });
+
+    const tools = toolsData.map(tool => tool.get({ plain: true }).toolName);
+
+    // Get top tools breakdown
+    const topToolsData = await PerformanceMetric.findAll({
+      where: whereClause,
+      attributes: [
+        'toolName',
+        [Sequelize.fn('AVG', Sequelize.col('responseTime')), 'avgResponseTime'],
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['toolName'],
+      order: [[Sequelize.literal('count'), 'DESC']],
+      limit: 5
+    });
+
+    const topTools = topToolsData.map(tool => {
+      const data = tool.get({ plain: true });
+      return {
+        name: data.toolName,
+        avgResponseTime: Math.round(parseFloat(data.avgResponseTime) * 100) / 100,
+        count: parseInt(data.count)
+      };
+    });
+
+    return res.status(200).json({
+      current: Math.round(currentAvg * 100) / 100,
+      change: Math.round(change * 100) / 100,
+      data: chartData,
+      tools,
+      topTools,
+      weeklyAvg: Math.round(currentAvg * 100) / 100
+    });
+  } catch (error) {
+    console.error("Error fetching response time chart data:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Get daily average response times for the last N days
 const getDailyAverages = async (req, res) => {
   try {
@@ -163,6 +333,7 @@ const getToolsBreakdown = async (req, res) => {
 
 module.exports = {
   recordPerformance,
+  getResponseTimeChartData,
   getDailyAverages,
   getToolsBreakdown
 }; 
