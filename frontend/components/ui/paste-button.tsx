@@ -82,4 +82,4 @@ export function PasteButton({
   }
 
   return buttonContent;
-} 
+}

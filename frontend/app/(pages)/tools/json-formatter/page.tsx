@@ -159,8 +159,8 @@ function CodeEditor({
           )}
           {showCopyPaste && (
             <div className="flex gap-2 w-full justify-end">
-              <CopyButton value={value} variant="small-icon" />
-              <PasteButton onPaste={handlePasteValue} variant="small-icon" />
+              <CopyButton value={value} variant="icon" />
+              <PasteButton onPaste={handlePasteValue} variant="icon" />
             </div>
           )}
         </div>
@@ -379,6 +379,8 @@ function JSONFormatter() {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
+                <PasteButton onPaste={setJsonInput} variant="icon" size="sm" />
+                <CopyButton value={jsonInput} variant="icon" size="sm" />
                 <Button variant="outline" size="sm" onClick={handleClear}>
                   Clear
                 </Button>
@@ -402,7 +404,6 @@ function JSONFormatter() {
   "version": "2.0"
 }`}
               error={jsonError}
-              showCopyPaste={true}
             />
           </CardContent>
         </Card>

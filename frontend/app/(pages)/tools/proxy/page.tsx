@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ClipboardCopy, Copy, Globe } from "lucide-react";
+import { Copy, Globe } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import Image from "next/image";
@@ -21,10 +21,9 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { allExamples, ExampleOption } from ".";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { handleCopy } from "@/utils/clipboard";
 import FavoriteButton from "@/components/favorite-button";
 import { toast } from "sonner";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export default function Proxy() {
   const router = useRouter();
@@ -184,7 +183,7 @@ export default function Proxy() {
         {/* Proxy Information */}
         <Card>
           <CardHeader>
-            <CardTitle>📡 Proxy Overview</CardTitle>
+            <CardTitle>Proxy Overview</CardTitle>
             <CardDescription>This proxy is primarily used to handle CORS issues, but it can be utilized for other purposes as well.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -235,21 +234,7 @@ export default function Proxy() {
               </div>
               <code className="bg-primary/5 p-6 rounded-md text-sm whitespace-pre overflow-x-auto relative">
                 <div className="absolute top-2 right-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <span>
-                          <div
-                            onClick={() => handleCopy(getCodeExample())}
-                            className="p-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-[hsl(var(--secondary-hover))] border font-sans"
-                          >
-                            <ClipboardCopy className="h-3 w-3" />
-                          </div>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>Copy</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <CopyButton value={getCodeExample()} variant="icon" size="sm" />
                 </div>
                 {getCodeExample()}
               </code>
@@ -263,7 +248,7 @@ export default function Proxy() {
         {/* Live Test Card */}
         <Card>
           <CardHeader>
-            <CardTitle>🧪 Live Test</CardTitle>
+            <CardTitle>Live Test</CardTitle>
             <CardDescription>Test the proxy with any URL and see the response in real-time.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -330,7 +315,7 @@ export default function Proxy() {
         {/* How it Works */}
         <Card>
           <CardHeader>
-            <CardTitle>📚 How It Works</CardTitle>
+            <CardTitle>How It Works</CardTitle>
             <CardDescription>Here&apos;s a quick guide on how to make the most of the proxy.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

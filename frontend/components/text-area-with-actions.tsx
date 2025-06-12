@@ -36,8 +36,8 @@ export const TextAreaWithActions: React.FC<TextAreaWithActionsProps> = ({
           {label}
         </label>
         <div className="flex gap-2">
-          <CopyButton value={value} variant="small-icon" />
-          <PasteButton onPaste={handlePasteValue} variant="small-icon" />
+          <CopyButton value={value} variant="icon" />
+          <PasteButton onPaste={handlePasteValue} variant="icon" />
         </div>
       </div>
       <Textarea
