@@ -158,7 +158,7 @@ function CodeEditor({
             <label className="block text-lg font-semibold">{label}</label>
           )}
           {showCopyPaste && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full justify-end">
               <CopyButton value={value} variant="small-icon" />
               <PasteButton onPaste={handlePasteValue} variant="small-icon" />
             </div>
@@ -366,8 +366,7 @@ function JSONFormatter() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <span className="text-2xl">✍️</span>
-                  JSON Input
+                  <span className="text-2xl">JSON Input</span>
                   {validationStatus === 'valid' && (
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   )}
@@ -403,7 +402,6 @@ function JSONFormatter() {
   "version": "2.0"
 }`}
               error={jsonError}
-              label="JSON Input"
               showCopyPaste={true}
             />
           </CardContent>
