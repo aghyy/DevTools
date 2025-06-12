@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Copy, Edit, Trash, ChevronUp, ChevronDown, Code, User } from "lucide-react";
-import { CodeSnippet } from "@/types/codeSnippets";
+import { CodeSnippet } from "@/types/code-snippets";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CodeHighlighter } from "./code-highlighter";

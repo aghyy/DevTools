@@ -20,7 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { X, Plus, Globe, Lock, Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CodeSnippet, CodeSnippetFormData } from "@/types/codeSnippets";
+import { CodeSnippet, CodeSnippetFormData } from "@/types/code-snippets";
 import {
   Select,
   SelectContent,

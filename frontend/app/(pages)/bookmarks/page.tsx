@@ -8,8 +8,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
-import { BookmarkCard } from "@/components/bookmarks/bookmark-card";
-import { BookmarkForm } from "@/components/bookmarks/bookmark-form";
+import { BookmarkCard } from "@/components/pages/bookmarks/bookmark-card";
+import { BookmarkForm } from "@/components/pages/bookmarks/bookmark-form";
 import {
   Sheet,
   SheetContent,

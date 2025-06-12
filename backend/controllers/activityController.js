@@ -35,30 +35,17 @@ const trackActivity = async (req, res) => {
 const getUserActivities = async (req, res) => {
   try {
     const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 100; // Default limit for processing
 
-    // First get all recent activities
+    // Get all recent activities ordered by most recent first
     const allActivities = await Activity.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
+      limit: limit, // Reasonable limit for recent activities
       attributes: { exclude: ['metadata'] }
     });
-    
-    // Manual deduplication by path and day
-    const uniquePathsAndDays = new Set();
-    const deduplicated = [];
-    
-    for (const activity of allActivities) {
-      // Extract the date part from createdAt (YYYY-MM-DD)
-      const day = activity.createdAt.toISOString().split('T')[0];
-      const pathDayKey = `${activity.path}-${day}`;
-      
-      if (!uniquePathsAndDays.has(pathDayKey)) {
-        uniquePathsAndDays.add(pathDayKey);
-        deduplicated.push(activity);
-      }
-    }
 
-    return res.status(200).json(deduplicated);
+    return res.status(200).json(allActivities);
   } catch (error) {
     console.error("Error fetching user activities:", error);
     return res.status(500).json({ error: "Internal server error" });

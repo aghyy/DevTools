@@ -71,9 +71,10 @@ export const trackActivity = async (
 };
 
 // Get user's recent activities
-export const getRecentActivities = async () => {
+export const getRecentActivities = async (limit?: number) => {
   try {
-    const response = await api.get(`/api/activities`);
+    const queryParam = limit ? `?limit=${limit}` : '';
+    const response = await api.get(`/api/activities${queryParam}`);
     return response.data as Activity[];
   } catch {
     toast.error(`Error fetching recent activities`);

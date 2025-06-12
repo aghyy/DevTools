@@ -24,13 +24,13 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 10,
     scale: 0.98
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     scale: 1,
     transition: {
@@ -49,6 +49,39 @@ export default function RecentActivities({ loading, recentItems }: { loading: bo
   const routeTo = (path: string) => {
     router.push(path);
   };
+
+  // Deduplicate activities by name and path, keeping the most recent
+  const getUniqueRecentActivities = (activities: ActivityType[], maxItems: number = 8) => {
+    if (!activities || activities.length === 0) return [];
+    
+    // Create a map to track unique activities by name + path
+    const uniqueActivities = new Map<string, ActivityType>();
+    
+    // Sort by createdAt DESC to ensure most recent first
+    const sortedActivities = [...activities].sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    
+    // Add unique activities to map (most recent wins due to sorting)
+    for (const activity of sortedActivities) {
+      const uniqueKey = `${activity.name}:${activity.path}`;
+      
+      if (!uniqueActivities.has(uniqueKey)) {
+        uniqueActivities.set(uniqueKey, activity);
+        
+        // Stop when we have enough unique items
+        if (uniqueActivities.size >= maxItems) {
+          break;
+        }
+      }
+    }
+    
+    return Array.from(uniqueActivities.values());
+  };
+
+  // Get deduplicated recent activities
+  const uniqueRecentItems = getUniqueRecentActivities(recentItems, 8);
 
   // Format relative time
   const formatRelativeTime = (dateStr: string) => {
@@ -81,19 +114,19 @@ export default function RecentActivities({ loading, recentItems }: { loading: bo
             <Skeleton key={i} className="h-20 md:h-24 w-full rounded-lg" />
           ))}
         </motion.div>
-      ) : recentItems.length > 0 ? (
-        <motion.div 
+      ) : uniqueRecentItems.length > 0 ? (
+        <motion.div
           key="content"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {recentItems.slice(0, 8).map((item) => {
+          {uniqueRecentItems.map((item) => {
             const IconComponent = getIconComponent(item.icon);
             return (
               <motion.div
-                key={item.id}
+                key={`${item.id}-${item.name}-${item.path}`}
                 variants={itemVariants}
               >
                 <MagicCard

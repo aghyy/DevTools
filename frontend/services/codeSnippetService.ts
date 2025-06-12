@@ -6,7 +6,7 @@ import {
   CodeSnippetLanguage, 
   CodeSnippetTag, 
   PublicCodeSnippets 
-} from "@/types/codeSnippets";
+} from "@/types/code-snippets";
 import { toast } from "sonner";
 
 // Get all code snippets for current user
