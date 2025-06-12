@@ -67,7 +67,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
     await trackActivity({
       type: "codeSnippet",
       name: `Copied: ${snippet.title}`,
-      path: `/code-snippets/${snippet.id}`,
+      path: `/code-snippets?id=${snippet.id}`,
       icon: "Copy",
     }).catch(() => toast.error("Failed to track copy activity."));
     
@@ -80,7 +80,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
       await trackActivity({
         type: "codeSnippet",
         name: `Editing: ${snippet.title}`,
-        path: `/code-snippets/${snippet.id}`,
+        path: `/code-snippets?id=${snippet.id}`,
         icon: "Edit",
       }).catch(() => toast.error("Failed to track edit activity."));
       
@@ -94,7 +94,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
       await trackActivity({
         type: "codeSnippet",
         name: `Deleting: ${snippet.title}`,
-        path: `/code-snippets/${snippet.id}`,
+        path: `/code-snippets?id=${snippet.id}`,
         icon: "Trash",
       }).catch(() => toast.error("Failed to track delete activity."));
       
@@ -108,7 +108,7 @@ export const CodeSnippetCard: React.FC<CodeSnippetCardProps> = ({
       await trackActivity({
         type: "codeSnippet",
         name: `Viewed: ${snippet.title}`,
-        path: `/code-snippets/${snippet.id}`,
+        path: `/code-snippets?id=${snippet.id}`,
         icon: "Code",
       }).catch(() => toast.error("Failed to track view activity."));
       

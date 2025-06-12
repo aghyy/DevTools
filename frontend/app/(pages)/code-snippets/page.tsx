@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TopSpacing } from "@/components/top-spacing";
 import { useAtom } from "jotai";
 import { userDataAtom } from "@/atoms/auth";
@@ -98,6 +99,10 @@ const item = (index: number) => ({
 });
 
 export default function CodeSnippets() {
+  // Next.js router and search params
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   // Atoms
   const [userData] = useAtom(userDataAtom);
 
@@ -321,6 +326,53 @@ export default function CodeSnippets() {
     applyFilters();
   }, [applyFilters]);
 
+  // Handle URL parameter for snippet detail view
+  useEffect(() => {
+    const snippetId = searchParams.get('id');
+    
+    if (snippetId && !isNaN(parseInt(snippetId))) {
+      const numericId = parseInt(snippetId);
+      let foundSnippet: CodeSnippet | null = null;
+      let foundUserInfo: { firstName: string; lastName: string; username: string } | null = null;
+
+      // First try to find in user's personal snippets
+      if (userData && codeSnippets.length > 0) {
+        foundSnippet = codeSnippets.find(s => s.id === numericId) || null;
+      }
+
+      // If not found in personal snippets, search in public snippets
+      if (!foundSnippet && publicSnippets.length > 0) {
+        for (const userSnippets of publicSnippets) {
+          const snippet = userSnippets.codeSnippets.find(s => s.id === numericId);
+          if (snippet) {
+            foundSnippet = snippet;
+            foundUserInfo = {
+              firstName: userSnippets.firstName,
+              lastName: userSnippets.lastName,
+              username: userSnippets.username
+            };
+            break;
+          }
+        }
+      }
+
+      if (foundSnippet) {
+        setDetailSnippet(foundSnippet);
+        setDetailUserInfo(foundUserInfo);
+        setIsDetailOpen(true);
+      } else if (codeSnippets.length > 0 || publicSnippets.length > 0) {
+        // Only show error if data is loaded but snippet not found
+        toast.error("Code snippet not found");
+        closeDetailView();
+      }
+    } else {
+      // No ID parameter, close detail view
+      setIsDetailOpen(false);
+      setDetailSnippet(null);
+      setDetailUserInfo(null);
+    }
+  }, [searchParams, codeSnippets, publicSnippets, userData]);
+
   // Form handling
   const handleOpenForm = (snippet?: CodeSnippet) => {
     setEditingSnippet(snippet);
@@ -414,28 +466,10 @@ export default function CodeSnippets() {
 
   // Handle opening a snippet in detail view
   const handleViewSnippet = (snippet: CodeSnippet) => {
-    setDetailSnippet(snippet);
-
-    // Find user info for public snippets
-    if (activeTab === "public") {
-      const userSnippets = publicSnippets.find(us =>
-        us.codeSnippets.some(s => s.id === snippet.id)
-      );
-
-      if (userSnippets) {
-        setDetailUserInfo({
-          firstName: userSnippets.firstName,
-          lastName: userSnippets.lastName,
-          username: userSnippets.username
-        });
-      } else {
-        setDetailUserInfo(null);
-      }
-    } else {
-      setDetailUserInfo(null);
-    }
-
-    setIsDetailOpen(true);
+    // Update URL with search parameter while keeping the page in background
+    const url = new URL(window.location.href);
+    url.searchParams.set('id', snippet.id.toString());
+    router.push(url.pathname + url.search, { scroll: false });
   };
 
   // Close detail view
@@ -443,12 +477,20 @@ export default function CodeSnippets() {
     setIsDetailOpen(false);
     setDetailSnippet(null);
     setDetailUserInfo(null);
+    
+    // Remove the ID parameter from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('id');
+    router.push(url.pathname + url.search, { scroll: false });
   };
 
   // Handle copying code to clipboard
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
+    toast.success("Code copied to clipboard");
   };
+
+
 
   return (
     <div className="h-full w-full">
@@ -742,7 +784,11 @@ export default function CodeSnippets() {
       )}
 
       {/* Detail View Sheet */}
-      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+      <Sheet open={isDetailOpen} onOpenChange={(open) => {
+        if (!open) {
+          closeDetailView();
+        }
+      }}>
         <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-xl">{detailSnippet?.title}</SheetTitle>
@@ -798,10 +844,7 @@ export default function CodeSnippets() {
                 <div className="flex justify-between">
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      handleCopy(detailSnippet.code);
-                      toast.success("Code copied to clipboard");
-                    }}
+                    onClick={() => handleCopy(detailSnippet.code)}
                   >
                     <Copy className="mr-2 h-4 w-4" />
                     Copy Code
@@ -816,6 +859,7 @@ export default function CodeSnippets() {
           </div>
         </SheetContent>
       </Sheet>
+
     </div>
   );
 }
