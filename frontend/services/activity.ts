@@ -46,14 +46,14 @@ export const trackActivity = async (
     return response.data;
   } catch (error: unknown) {
     const apiError = error as ApiError;
-    // Add useful debug info
-    toast.error(`Error tracking activity (${activity.type}:${activity.name})`);
 
-    // If the error is due to authentication, don't retry
+    // If the error is due to authentication, silently fail (don't show errors)
     if (apiError.response?.status === 401) {
-      toast.error("Authentication required. Activity not tracked.");
       return;
     }
+
+    // For non-auth errors, show error and retry
+    toast.error(`Error tracking activity (${activity.type}:${activity.name})`);
 
     // For other errors (like network issues), retry once after a delay
     return new Promise((resolve, reject) => {
