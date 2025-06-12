@@ -1,5 +1,4 @@
 import axios from "axios";
-import { trackActivity } from "@/services/activity";
 import { toast } from "sonner";
 
 // Define the FavoriteTool interface
@@ -35,14 +34,6 @@ export const addToFavorites = async (
   try {
     const response = await api.post(API_URL, { toolUrl, toolName, icon });
 
-    // Track activity after adding to favorites
-    await trackActivity({
-      type: "favorite",
-      name: toolName,
-      path: toolUrl,
-      icon: icon || "Heart",
-    });
-
     return response.data.favoriteTool;
   } catch {
     toast.error("Failed to add tool to favorites");
@@ -68,21 +59,7 @@ export const getFavoriteTools = async (): Promise<FavoriteTool[]> => {
  */
 export const removeFromFavorites = async (id: number): Promise<void> => {
   try {
-    // Get the favorite info before deleting (to track activity)
-    const favorites = await getFavoriteTools();
-    const favorite = favorites.find((f) => f.id === id);
-
     await api.delete(`${API_URL}/${id}`);
-
-    // If we found the favorite, track the removal as activity
-    if (favorite) {
-      await trackActivity({
-        type: "favorite",
-        name: `Removed: ${favorite.toolName}`,
-        path: favorite.toolUrl,
-        icon: favorite.icon || "Heart",
-      });
-    }
   } catch {
     toast.error("Failed to remove tool from favorites");
   }
