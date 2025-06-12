@@ -16,7 +16,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
-import { handleCopy, handlePaste } from '@/utils/clipboard';
+
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { toast } from "sonner";
@@ -85,17 +85,7 @@ function Base64Tool() {
     setEncodedText("");
   };
 
-  const handlePasteDecoded = () => {
-    handlePaste((text) => {
-      setDecodedText(text);
-    });
-  };
 
-  const handlePasteEncoded = () => {
-    handlePaste((text) => {
-      setEncodedText(text);
-    });
-  };
 
   return (
     <div className="h-full w-full">
@@ -143,8 +133,6 @@ function Base64Tool() {
               placeholder="Type or paste your plain text here..."
               value={decodedText}
               onChange={handleDecodedTextChange}
-              onCopy={() => handleCopy(decodedText)}
-              onPaste={handlePasteDecoded}
             />
             <Button onClick={handleEncode} className="w-full">
               Encode
@@ -158,8 +146,6 @@ function Base64Tool() {
               placeholder="Type or paste your Base64 text here..."
               value={encodedText}
               onChange={handleEncodedTextChange}
-              onCopy={() => handleCopy(encodedText)}
-              onPaste={handlePasteEncoded}
             />
             <Button onClick={handleDecode} className="w-full">
               Decode

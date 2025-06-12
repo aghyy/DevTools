@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
-import { handleCopy, handlePaste } from '@/utils/clipboard';
+
 import FavoriteButton from "@/components/favorite-button";
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
@@ -318,8 +318,6 @@ function HashTool() {
               placeholder="Type or paste your plain text here..."
               value={decodedText}
               onChange={handleChangeDecodedText}
-              onCopy={() => handleCopy(decodedText)}
-              onPaste={() => handlePaste(setDecodedText)}
             />
 
             <Button
@@ -337,8 +335,6 @@ function HashTool() {
               placeholder={`Type or paste your ${algorithm.toUpperCase()} hash here...`}
               value={encodedText}
               onChange={handleChangeEncodedText}
-              onCopy={() => handleCopy(encodedText)}
-              onPaste={() => handlePaste(setEncodedText)}
             />
 
             <Button

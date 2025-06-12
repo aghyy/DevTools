@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiWithoutCredentials } from "@/utils/axios";
-import { Link2, Copy, ExternalLink, Trash, RefreshCw } from "lucide-react";
+import { Link2, ExternalLink, Trash, RefreshCw } from "lucide-react";
 
 import { TopSpacing } from "@/components/top-spacing";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { handleCopy } from "@/utils/clipboard";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -42,7 +42,7 @@ export default function URLShortener() {
   const [useCustomCode, setUseCustomCode] = useState(false);
   const [shortenedUrl, setShortenedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+
   const [codeConflict, setCodeConflict] = useState(false);
 
   const routeTo = (path: string) => {
@@ -113,13 +113,7 @@ export default function URLShortener() {
     }
   };
 
-  const copyToClipboard = () => {
-    if (shortenedUrl) {
-      handleCopy(shortenedUrl);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    }
-  };
+
 
   const openUrl = () => {
     if (shortenedUrl) {
@@ -243,10 +237,13 @@ export default function URLShortener() {
             </div>
 
             <div className="flex gap-2 mt-2">
-              <Button variant="outline" onClick={copyToClipboard} className="flex-1">
-                <Copy className="h-4 w-4 mr-2" />
-                {copySuccess ? "Copied!" : "Copy"}
-              </Button>
+              <CopyButton 
+                value={shortenedUrl} 
+                variant="button" 
+                className="flex-1"
+              >
+                Copy
+              </CopyButton>
               <Button variant="outline" onClick={openUrl} className="flex-1">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open

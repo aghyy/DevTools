@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Copy, Trash } from "lucide-react";
+import { RefreshCw, Trash } from "lucide-react";
 
 import { TopSpacing } from "@/components/top-spacing";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import FavoriteButton from "@/components/favorite-button";
-import { handleCopy } from '@/utils/clipboard';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { debounce } from '@/utils/debounce';
@@ -186,15 +186,13 @@ function TokenGenerator() {
             <div className="flex justify-between items-center">
               <Label htmlFor="token" className="text-lg font-semibold">Generated Token</Label>
               <div className="flex gap-2">
-                <Button
-                  variant="secondary"
+                <CopyButton
+                  value={token}
+                  variant="icon"
                   size="icon"
-                  onClick={() => handleCopy(token)}
                   disabled={!token}
                   className="h-8 w-8"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                />
                 <Button
                   variant="secondary"
                   size="icon"

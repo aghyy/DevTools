@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Copy, Trash } from "lucide-react";
+import { RefreshCw, Trash } from "lucide-react";
 import { ulid } from 'ulid';
 
 import { TopSpacing } from "@/components/top-spacing";
@@ -23,7 +23,7 @@ import {
   RadioGroupItem
 } from "@/components/ui/radio-group";
 import FavoriteButton from "@/components/favorite-button";
-import { handleCopy } from '@/utils/clipboard';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useClientToolPerformance } from '@/utils/performanceTracker';
 import { ClientToolTracker } from '@/components/client-tool-tracker';
 import { debounce } from '@/utils/debounce';
@@ -256,15 +256,14 @@ function UlidGenerator() {
         <Card className="flex flex-col p-6 gap-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Generated ULIDs</h2>
-            <Button
-              variant="secondary"
+            <CopyButton
+              value={getAllFormattedValues()}
+              variant="button"
               size="sm"
-              onClick={() => handleCopy(getAllFormattedValues())}
               className="gap-2"
             >
-              <Copy className="h-4 w-4" />
               Copy All
-            </Button>
+            </CopyButton>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -275,14 +274,12 @@ function UlidGenerator() {
                   readOnly
                   className="font-mono"
                 />
-                <Button
-                  variant="outline"
+                <CopyButton
+                  value={getFormattedValue(id)}
+                  variant="icon"
                   size="icon"
-                  onClick={() => handleCopy(getFormattedValue(id))}
                   className="h-10 w-10 flex-shrink-0"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                />
               </div>
             ))}
           </div>

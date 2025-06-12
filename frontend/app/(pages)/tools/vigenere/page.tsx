@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-import { handleCopy, handlePaste } from '@/utils/clipboard';
+
 import { encrypt, decrypt } from '@/utils/vigenere';
 import { VigenereVariant, VigenereOperation } from '@/types/vigenere';
 import FavoriteButton from '@/components/favorite-button';
@@ -179,8 +179,6 @@ function VigenereTool() {
             placeholder="Type or paste your message to encrypt/decrypt..."
             value={message}
             onChange={setMessage}
-            onCopy={() => handleCopy(message)}
-            onPaste={() => handlePaste(setMessage)}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,8 +273,6 @@ function VigenereTool() {
               placeholder="Result will appear here..."
               value={result}
               onChange={() => { }}
-              onCopy={() => handleCopy(result)}
-              onPaste={() => handlePaste(setMessage)}
             />
           </Card>
         )}
