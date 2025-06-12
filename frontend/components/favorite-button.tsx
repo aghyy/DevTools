@@ -3,7 +3,7 @@ import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addToFavorites, removeFromFavorites } from '@/services/favoriteToolService';
 import { toast } from 'sonner';
-import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+import { useFavoriteTools } from '@/hooks/use-favorite-tools';
 
 interface FavoriteButtonProps {
   toolUrl: string;

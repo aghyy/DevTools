@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { MagicCard } from '@/components/ui/magic-card';
 import Icon from '@/components/icon';
 import { getIconComponent } from '@/utils/icons';
-import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+import { useFavoriteTools } from '@/hooks/use-favorite-tools';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const containerVariants = {
