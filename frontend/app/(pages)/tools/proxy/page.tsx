@@ -234,7 +234,7 @@ export default function Proxy() {
               </div>
               <code className="bg-primary/5 p-6 rounded-md text-sm whitespace-pre overflow-x-auto relative">
                 <div className="absolute top-2 right-2">
-                  <CopyButton value={getCodeExample()} variant="icon" size="sm" />
+                  <CopyButton value={getCodeExample()} variant="icon" size="sm" className="bg-primary/5" />
                 </div>
                 {getCodeExample()}
               </code>
