@@ -284,7 +284,7 @@ export default function AccountPage() {
                   <Button
                     variant="destructive"
                     size="icon"
-                    className="absolute -top-1 -right-1 rounded-full bg-red-500 hover:bg-red-500/80"
+                    className="absolute -top-1 -right-1 rounded-full bg-red-500 hover:bg-red-500/90"
                     onClick={handleRemoveAvatar}
                     disabled={isUploading}
                   >

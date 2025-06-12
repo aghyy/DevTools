@@ -44,7 +44,7 @@ export default function StatCard({ title, value, change, suffix, icon, descripti
             )}>
               {icon}
             </div>
-            <CardTitle className="text-base font-medium text-muted-foreground">{title}</CardTitle>
+            <CardTitle className="text-base font-medium text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">{title}</CardTitle>
           </div>
           <TooltipProvider delayDuration={300}>
             <Tooltip>

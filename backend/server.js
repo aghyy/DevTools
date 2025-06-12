@@ -11,7 +11,7 @@ const bookmarkRoutes = require('./routes/bookmarkRoutes');
 const favoriteToolRoutes = require('./routes/favoriteToolRoutes');
 const codeSnippetRoutes = require('./routes/codeSnippetRoutes');
 const performanceRoutes = require('./routes/performanceRoutes');
-const healthRoutes = require('./routes/healthRoutes');
+const widgetRoutes = require('./routes/widgetRoutes');
 const path = require('path');
 
 const PORT = process.env.PORT || 5039;
@@ -73,7 +73,7 @@ app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/favorite-tools', favoriteToolRoutes);
 app.use('/api/code-snippets', codeSnippetRoutes);
 app.use('/api/performance', performanceRoutes);
-app.use('/api/health', healthRoutes);
+app.use('/api/widgets', widgetRoutes);
 
 // Sync database with models
 db.sequelize.sync({ alter: true })

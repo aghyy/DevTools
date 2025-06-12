@@ -17,6 +17,8 @@ import {
   Heart,
   Clock3,
   Activity,
+  BarChart4,
+  LayoutDashboard,
 } from "lucide-react";
 
 import {
@@ -33,6 +35,7 @@ import MostUsed from "@/components/pages/dashboard/most-used";
 import DashboardFavorites from "@/components/pages/dashboard/favorites-section";
 import FeaturedSection from "@/components/pages/dashboard/featured-section";
 import { toast } from "sonner";
+import WidgetSystem from "@/components/widgets/WidgetSystem";
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -67,6 +70,23 @@ const cardVariants = {
     transition: {
       duration: 0.4,
       ease: "easeOut"
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+    scale: 0.98
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1]
     }
   }
 };
@@ -129,12 +149,30 @@ export default function Dashboard() {
           <UserWelcome userData={userData} loading={loading} />
         </motion.div>
 
+        {/* Widget System */}
+        <motion.div
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="mb-6 md:mb-8"
+        >
+          <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
+            <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
+            System Widgets
+          </h2>
+          <WidgetSystem />
+        </motion.div>
+
         {/* Charts */}
         <motion.div
           variants={sectionVariants}
           initial="initial"
           animate="animate"
         >
+          <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
+            <BarChart4 className="h-4 w-4 md:h-5 md:w-5" />
+            Activity Overview
+          </h2>
           <ChartSection loading={loading} recentItems={recentItems} mostUsedItems={mostUsedItems} />
         </motion.div>
 
