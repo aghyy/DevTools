@@ -58,8 +58,8 @@ function ToolCard({ tool, index }: ToolCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.2,
-        delay: index * 0.1
+        duration: 0.1,
+        delay: index * 0.05
       }}
     >
       <MagicCard className="overflow-hidden cursor-pointer h-[180px]" onClick={() => router.push(tool.url)}>
