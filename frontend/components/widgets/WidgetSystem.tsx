@@ -119,7 +119,7 @@ export default function WidgetSystem({ className }: WidgetSystemProps) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-24 bg-muted rounded animate-pulse" />
+            <div key={i} className="h-44 bg-muted rounded animate-pulse" />
           ))}
         </div>
       </div>

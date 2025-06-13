@@ -26,7 +26,7 @@ export default function BaseWidget({ title, icon, children, onRemove, className 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
-      className={cn("group h-24", className)}
+      className={cn("group h-44", className)}
     >
       <Card className={cn(
         "border shadow-sm hover:shadow-md transition-all duration-200 relative h-full",
