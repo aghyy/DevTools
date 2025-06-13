@@ -4,11 +4,10 @@ import { getUserWidgets, updateUserWidgets, removeWidget, Widget } from "@/servi
 import MemoryWidget from "./MemoryWidget";
 import BatteryWidget from "./BatteryWidget";
 import LocationWidget from "./LocationWidget";
-
+import ScreenWidget from "./ScreenWidget";
+import DeviceWidget from "./DeviceWidget";
 import NetworkWidget from "./NetworkWidget";
 import WidgetSelector from "./WidgetSelector";
-import { Smartphone, Monitor } from "lucide-react";
-import BaseWidget from "./BaseWidget";
 
 interface WidgetSystemProps {
   className?: string;
@@ -70,41 +69,9 @@ export default function WidgetSystem({ className }: WidgetSystemProps) {
       case 'network':
         return <NetworkWidget key={widget.id} onRemove={onRemove} />;
       case 'device':
-        return (
-          <BaseWidget
-            key={widget.id}
-            title="Device"
-            icon={<Smartphone className="h-4 w-4" />}
-            onRemove={onRemove}
-          >
-            <div className="flex flex-col gap-1">
-              <span className="font-medium text-foreground">
-                {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {navigator.platform}
-              </span>
-            </div>
-          </BaseWidget>
-        );
+        return <DeviceWidget key={widget.id} onRemove={onRemove} />;
       case 'screen':
-        return (
-          <BaseWidget
-            key={widget.id}
-            title="Screen"
-            icon={<Monitor className="h-4 w-4" />}
-            onRemove={onRemove}
-          >
-            <div className="flex flex-col gap-1">
-              <span className="font-medium text-foreground">
-                {screen.width} × {screen.height}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {screen.colorDepth}-bit color
-              </span>
-            </div>
-          </BaseWidget>
-        );
+        return <ScreenWidget key={widget.id} onRemove={onRemove} />;
       default:
         return null;
     }
