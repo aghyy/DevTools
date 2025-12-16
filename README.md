@@ -82,6 +82,25 @@ npm run dev
 
 3. Access the application at [http://localhost:3000](http://localhost:3000)
 
+### Running with Docker
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+**Important:** Ensure your `backend/.env` has:
+```env
+DB_HOST=postgres
+DB_PORT=5432
+```
+
 ## Development
 
 ### Frontend

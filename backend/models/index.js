@@ -1,10 +1,18 @@
 const { Sequelize, DataTypes } = require("sequelize");
+require('dotenv').config();
 
-// Set up Sequelize connection
-const sequelize = new Sequelize("postgres://postgres:postgres@localhost:5432/devtools", {
-  dialect: "postgres",
-  logging: false, // Enable query logging for debugging
-});
+// Set up Sequelize connection using environment variables
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'devtools',
+  process.env.DB_USER || 'postgres',
+  process.env.DB_PASSWORD || 'postgres',
+  {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    dialect: "postgres",
+    logging: false, // Enable query logging for debugging
+  }
+);
 
 // Test the database connection
 sequelize.authenticate()

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TopSpacing } from "@/components/top-spacing";
 import { useAtom } from "jotai";
@@ -99,6 +99,14 @@ const item = (index: number) => ({
 });
 
 export default function CodeSnippets() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+      <CodeSnippetsContent />
+    </Suspense>
+  );
+}
+
+function CodeSnippetsContent() {
   // Next.js router and search params
   const router = useRouter();
   const searchParams = useSearchParams();

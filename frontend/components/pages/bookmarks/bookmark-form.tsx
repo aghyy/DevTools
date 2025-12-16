@@ -28,7 +28,7 @@ const formSchema = z.object({
   url: z.string().url("Please enter a valid URL"),
   description: z.string().optional(),
   category: z.string().optional(),
-  isPublic: z.boolean().default(false),
+  isPublic: z.boolean(),
   tags: z.array(z.string()).optional(),
 });
 
@@ -51,12 +51,12 @@ export const BookmarkForm: React.FC<BookmarkFormProps> = ({
   const [tagInput, setTagInput] = useState("");
   
   // Set default form values
-  const defaultValues: Partial<BookmarkFormValues> = {
+  const defaultValues: BookmarkFormValues = {
     title: initialData?.title || "",
     url: initialData?.url || "",
     description: initialData?.description || "",
     category: initialData?.category || "",
-    isPublic: initialData?.isPublic || false,
+    isPublic: initialData?.isPublic ?? false,
     tags: initialData?.tags || [],
   };
   

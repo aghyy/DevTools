@@ -19,7 +19,7 @@ export interface BookmarkFormData {
   description?: string;
   category?: string;
   tags?: string[];
-  isPublic?: boolean;
+  isPublic: boolean;
 }
 
 export interface BookmarkCategory {
