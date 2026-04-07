@@ -64,7 +64,7 @@ async function handleRedirect(req, res) {
 }
 
 // Serve static files from the uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 app.use('/api/auth', userRoutes);
 app.use('/api/tools', toolRoutes);

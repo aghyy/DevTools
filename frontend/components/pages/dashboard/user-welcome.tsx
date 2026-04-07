@@ -102,7 +102,7 @@ export default function UserWelcome({ userData, loading }: { userData: UserData 
                     animate="visible"
                   >
                     <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-primary/20 hover:border-primary/40 transition-all duration-200 shadow-lg">
-                      <AvatarImage src={userData?.avatar ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/avatars/${userData.avatar}` : undefined} />
+                      <AvatarImage src={userData?.avatar ? `${process.env.NEXT_PUBLIC_API_URL}/api/uploads/avatars/${userData.avatar}` : undefined} />
                       <AvatarFallback className="bg-primary/10 text-lg md:text-xl font-semibold">
                         {userData?.firstName?.charAt(0)}{userData?.lastName?.charAt(0)}
                       </AvatarFallback>
