@@ -137,11 +137,7 @@ export function AppSidebar() {
     try {
       const response = await authLogout();
       if (response) {
-        router.refresh();
-        setTimeout(() => {
-          setUserData(null);
-          setIsGuest(true);
-        }, 500);
+        window.location.href = '/auth/login';
       }
     } catch {
       toast.error("Error logging out.");
