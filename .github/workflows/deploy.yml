@@ -64,7 +64,7 @@ jobs:
           sleep 10
           echo "Checking backend on port 5039..."
           curl -sf --max-time 10 "http://localhost:5039/health" > /dev/null && echo "Backend is healthy." || echo "Backend health check skipped."
-          echo "Checking frontend on port 3000..."
-          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:3000/" | grep -qE '200|307'
+          echo "Checking frontend on port 3004..."
+          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:3004/" | grep -qE '200|307'
           echo "Frontend is healthy."
           echo "Deployment successful!"
