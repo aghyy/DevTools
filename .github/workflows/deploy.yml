@@ -65,16 +65,11 @@ jobs:
           set +a
           BACKEND_PORT="${PORT:-5039}"
           FRONT_PORT="${FRONTEND_PORT:-3004}"
-          echo "Waiting for services to start..."
-          for i in $(seq 1 30); do
-            HTTP_BE=$(curl -s -o /dev/null --max-time 5 -w "%{http_code}" "http://localhost:$BACKEND_PORT/api/health" 2>/dev/null || true)
-            HTTP_FE=$(curl -s -o /dev/null --max-time 5 -w "%{http_code}" "http://localhost:$FRONT_PORT/" 2>/dev/null || true)
-            echo "Attempt $i — backend: $HTTP_BE, frontend: $HTTP_FE"
-            if echo "$HTTP_BE" | grep -qE '^200$' && echo "$HTTP_FE" | grep -qE '^(200|307)$'; then
-              echo "Deployment successful!"
-              exit 0
-            fi
+          for i in 1 2 3 4 5; do
             sleep 5
+            BE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:$BACKEND_PORT/api/health" 2>/dev/null || true)
+            FE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:$FRONT_PORT/" 2>/dev/null || true)
+            echo "Attempt $i — backend: $BE, frontend: $FE"
+            [ "$BE" = "200" ] && echo "$FE" | grep -qE '^(200|307)$' && echo "Deployment successful!" && exit 0
           done
-          echo "Health check timed out after 150s"
-          exit 1
+          echo "Health check failed"; exit 1
