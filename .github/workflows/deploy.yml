@@ -60,9 +60,11 @@ jobs:
 
       - name: Health check
         run: |
-          source .env
+          set -a
+          eval "$(grep -v '^#' .env | sed 's/=\(.*\)/="\1"/')"
+          set +a
           BACKEND_PORT="${PORT:-5039}"
-          FRONT_PORT="${FRONTEND_PORT:-3000}"
+          FRONT_PORT="${FRONTEND_PORT:-3004}"
           echo "Waiting for services to start..."
           sleep 10
           echo "Checking backend on port $BACKEND_PORT..."
