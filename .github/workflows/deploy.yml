@@ -60,11 +60,15 @@ jobs:
 
       - name: Health check
         run: |
+          source .env
+          BACKEND_PORT="${PORT:-5039}"
+          FRONT_PORT="${FRONTEND_PORT:-3000}"
           echo "Waiting for services to start..."
           sleep 10
-          echo "Checking backend on port 5039..."
-          curl -sf --max-time 10 "http://localhost:5039/health" > /dev/null && echo "Backend is healthy." || echo "Backend health check skipped."
-          echo "Checking frontend on port 3004..."
-          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:3004/" | grep -qE '200|307'
+          echo "Checking backend on port $BACKEND_PORT..."
+          curl -sf --max-time 10 "http://localhost:$BACKEND_PORT/api/health" || { echo "Backend health check failed!"; exit 1; }
+          echo "Backend is healthy."
+          echo "Checking frontend on port $FRONT_PORT..."
+          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:$FRONT_PORT/" | grep -qE '200|307'
           echo "Frontend is healthy."
           echo "Deployment successful!"

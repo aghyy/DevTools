@@ -63,6 +63,8 @@ async function handleRedirect(req, res) {
   }
 }
 
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
 // Serve static files from the uploads directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
