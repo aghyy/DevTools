@@ -84,22 +84,38 @@ npm run dev
 
 ### Running with Docker
 
+1. Copy the example environment file and adjust values if needed:
 ```bash
-# Build and start all services
-docker-compose up -d
+cp .env.example .env
+```
 
+2. Build and start all services:
+```bash
+docker compose up -d
+```
+
+3. Access the application at [http://localhost:3000](http://localhost:3000)
+
+Other useful commands:
+```bash
 # View logs
-docker-compose logs -f
+docker compose logs -f
+
+# Rebuild after code changes
+docker compose up -d --build
 
 # Stop services
-docker-compose down
+docker compose down
+
+# Stop and remove all data (database, keys, uploads)
+docker compose down -v
 ```
 
-**Important:** Ensure your `backend/.env` has:
-```env
-DB_HOST=postgres
-DB_PORT=5432
-```
+**Notes:**
+- A single `.env` in the project root configures all services
+- RSA keys for JWT are auto-generated on first run and persisted in a Docker volume
+- The database is managed by Docker — no local PostgreSQL install needed
+- `DB_HOST` is automatically set to `postgres` inside Docker (overridden in compose)
 
 ## Development
 

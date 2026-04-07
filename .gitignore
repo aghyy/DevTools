@@ -1,4 +1,5 @@
 .DS_Store
+.env
 /backend/.env
 /backend/node_modules
 /backend/public/uploads/avatars

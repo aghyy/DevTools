@@ -1,6 +1,7 @@
 const express = require('express');
 const sequelize = require('sequelize');
-const dotenv = require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const db = require('./models');
@@ -12,7 +13,6 @@ const favoriteToolRoutes = require('./routes/favoriteToolRoutes');
 const codeSnippetRoutes = require('./routes/codeSnippetRoutes');
 const performanceRoutes = require('./routes/performanceRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
-const path = require('path');
 
 const PORT = process.env.PORT || 5039;
 const app = express();

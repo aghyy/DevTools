@@ -2,8 +2,6 @@
 
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { apiWithoutCredentials } from '@/utils/axios';
-import { toast } from 'sonner';
 
 type UserPayload = {
   user_id: string;
@@ -12,31 +10,30 @@ type UserPayload = {
   token_type: string;
 };
 
-// Cache for the public key
 let publicKey: string | null = null;
 
 async function getPublicKey(): Promise<string | null> {
   if (publicKey) return publicKey;
 
-  const response = await apiWithoutCredentials('/api/auth/jwt-public-key/', {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-    },
-  });
+  const baseUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
 
-  if (response.status < 200 || response.status >= 300) {
-    toast.error("Failed to fetch public key");
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/jwt-public-key/`, {
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch JWT public key:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    publicKey = data.publicKey;
+    return publicKey;
+  } catch (error) {
+    console.error('Failed to fetch JWT public key:', error);
     return null;
   }
-
-  const data = await response.data;
-  publicKey = data.publicKey;
-  if (!publicKey) {
-    toast.error("Received null public key from API");
-    return null;
-  }
-  return publicKey;
 }
 
 export async function auth(): Promise<UserPayload | null> {

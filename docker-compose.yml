@@ -1,0 +1,45 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5039}:${PORT:-5039}"
+    environment:
+      PORT: ${PORT:-5039}
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-5432}
+      FRONTEND_URL: ${FRONTEND_URL}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+    volumes:
+      - backend_keys:/app/keys
+      - backend_uploads:/app/public/uploads
+    networks:
+      - default
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      INTERNAL_API_URL: http://backend:${PORT:-5039}
+    depends_on:
+      - backend
+
+networks:
+  postgres:
+    external: true
+
+volumes:
+  backend_keys:
+  backend_uploads:
