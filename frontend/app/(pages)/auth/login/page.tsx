@@ -21,7 +21,7 @@ export default function Login() {
     try {
       const response = await loginService(identifier, password);
       if (response) {
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
       }
     } catch {
       toast.error('Error logging in. Please try again.');

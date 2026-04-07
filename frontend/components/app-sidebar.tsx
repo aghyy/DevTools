@@ -88,8 +88,8 @@ function DroppableFavoritesList({ children }: { children: React.ReactNode }) {
 }
 
 export function AppSidebar() {
-  const [isGuest] = useAtom(isGuestAtom);
-  const [userData] = useAtom(userDataAtom);
+  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
+  const [userData, setUserData] = useAtom(userDataAtom);
   const [isLoading, setIsLoading] = useState(true);
   const { favorites, loading: favoritesLoading, refreshFavorites } = useFavoriteTools();
   
@@ -137,7 +137,11 @@ export function AppSidebar() {
     try {
       const response = await authLogout();
       if (response) {
-        window.location.href = '/auth/login';
+        router.refresh();
+        setTimeout(() => {
+          setUserData(null);
+          setIsGuest(true);
+        }, 500);
       }
     } catch {
       toast.error("Error logging out.");
