@@ -88,8 +88,8 @@ function DroppableFavoritesList({ children }: { children: React.ReactNode }) {
 }
 
 export function AppSidebar() {
-  const [isGuest, setIsGuest] = useAtom(isGuestAtom);
-  const [userData, setUserData] = useAtom(userDataAtom);
+  const [isGuest] = useAtom(isGuestAtom);
+  const [userData] = useAtom(userDataAtom);
   const [isLoading, setIsLoading] = useState(true);
   const { favorites, loading: favoritesLoading, refreshFavorites } = useFavoriteTools();
   
