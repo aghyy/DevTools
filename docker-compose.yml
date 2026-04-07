@@ -30,7 +30,7 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-3004}:3004"
+      - "${FRONTEND_PORT:-3004}:3000"
     environment:
       INTERNAL_API_URL: http://backend:${PORT:-5039}
     depends_on:
