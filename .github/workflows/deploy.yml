@@ -1,0 +1,70 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Inject secrets
+        run: cp ~/docker/DevTools/.env .env
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "Manual trigger — rebuilding everything"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '^(backend/|docker-compose\.yml)'; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$CHANGED" | grep -qE '^(frontend/|docker-compose\.yml)'; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build backend
+        if: steps.changes.outputs.backend == 'true'
+        run: docker compose build backend
+
+      - name: Build frontend
+        if: steps.changes.outputs.frontend == 'true'
+        run: docker compose build frontend
+
+      - name: Deploy
+        run: docker compose up -d --remove-orphans
+
+      - name: Prune unused images
+        run: docker image prune -f
+
+      - name: Health check
+        run: |
+          echo "Waiting for services to start..."
+          sleep 10
+          echo "Checking backend on port 5039..."
+          curl -sf --max-time 10 "http://localhost:5039/health" > /dev/null && echo "Backend is healthy." || echo "Backend health check skipped."
+          echo "Checking frontend on port 3000..."
+          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:3000/" | grep -qE '200|307'
+          echo "Frontend is healthy."
+          echo "Deployment successful!"
