@@ -44,7 +44,7 @@ const createAccount = async (req, res) => {
     res.cookie("jwt", token, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.COOKIE_SECURE === "true",
       sameSite: "lax",
     });
 
@@ -102,7 +102,7 @@ const login = async (req, res) => {
     res.cookie("jwt", token, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.COOKIE_SECURE === "true",
       sameSite: "lax",
     });
 
@@ -116,7 +116,7 @@ const login = async (req, res) => {
 const logout = (req, res) => {
   res.clearCookie("jwt", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
   });
   return res.status(200).json({ message: "Logged out successfully" });
