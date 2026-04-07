@@ -71,6 +71,12 @@ jobs:
           curl -sf --max-time 10 "http://localhost:$BACKEND_PORT/api/health" || { echo "Backend health check failed!"; exit 1; }
           echo "Backend is healthy."
           echo "Checking frontend on port $FRONT_PORT..."
-          curl -sf -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:$FRONT_PORT/" | grep -qE '200|307'
-          echo "Frontend is healthy."
+          HTTP_CODE=$(curl -s -o /dev/null --max-time 10 -w "%{http_code}" "http://localhost:$FRONT_PORT/")
+          echo "Frontend returned HTTP $HTTP_CODE"
+          if echo "$HTTP_CODE" | grep -qE '^(200|307)$'; then
+            echo "Frontend is healthy."
+          else
+            echo "Frontend health check failed!"
+            exit 1
+          fi
           echo "Deployment successful!"
