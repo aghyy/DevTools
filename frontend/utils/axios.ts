@@ -24,8 +24,11 @@ const handleError = (error: AxiosError<ErrorResponse>) => {
   return Promise.reject(error);
 };
 
+const resolvedBaseURL =
+  typeof window === "undefined" ? process.env.NEXT_PUBLIC_API_URL : "";
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: resolvedBaseURL,
   withCredentials: true,
 });
 
@@ -35,7 +38,7 @@ api.interceptors.response.use(
 );
 
 export const apiWithoutCredentials = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: resolvedBaseURL,
 });
 
 apiWithoutCredentials.interceptors.response.use(
